@@ -1,0 +1,75 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "http://repo.spring.io/release"
+        }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.2.RELEASE")
+        classpath("io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+
+jar {
+    baseName = 'micro-customer'
+    version =  '0.0.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencyManagement {
+     imports {
+          mavenBom 'org.springframework.cloud:spring-cloud-starter-parent:Angel.SR4'
+     }
+}
+
+dependencies {
+    compile('org.springframework.cloud:spring-cloud-starter-eureka')
+    compile('org.springframework.cloud:spring-cloud-starter-hystrix')
+    // tag::jetty[]
+    compile("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: "spring-boot-starter-tomcat"
+    }
+    compile("org.springframework.boot:spring-boot-starter-jetty")
+    compile("org.springframework:spring-web")
+    // end::jetty[]
+    compile("org.springframework.boot:spring-boot-starter-actuator")
+    //testCompile("junit:junit")
+    //testCompile("org.springframework.boot:spring-boot-starter-test")
+    compile group: 'com.cloudant', name:'cloudant-client', version: '2.7.0'
+    testCompile('junit:junit:[4,)')
+}
+
+test {
+    useJUnit()
+    testLogging {
+        events 'started', 'passed'
+        showStandardStreams = true
+    }
+}
+
+task docker {
+    doLast {
+        copy {
+            from 'build/libs/micro-customer-0.0.1.jar'
+            into 'docker'
+        }
+        file("docker/micro-customer-0.0.1.jar").renameTo(file("docker/app.jar"))
+
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
