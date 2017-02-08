@@ -28,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
@@ -161,7 +162,7 @@ public class CustomerController {
         	
         	logger.debug("caller: " + customerId);
         	
-        	if (!customerId.equals("id")) {
+        	if (!customerId.equals(id)) {
         		// if i'm getting a customer ID that doesn't match my own ID, then return 401
         		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         	}
@@ -200,15 +201,21 @@ public class CustomerController {
             //cust.setPassword(payload.getPassword());
  
             
-            cloudant.save(payload);
+            final Response resp = cloudant.save(payload);
+            
+            if (resp.getError() == null) {
+				// HTTP 201 CREATED
+				final URI location =  ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(resp.getId()).toUri();
+				return ResponseEntity.created(location).build();
+            } else {
+            	return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resp.getError());
+            }
+
         } catch (Exception ex) {
             logger.error("Error creating customer: " + ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating customer: " + ex.toString());
         }
         
-        // HTTP 201 CREATED
-        final URI location =  ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(payload.getCustomerId()).toUri();
-        return ResponseEntity.created(location).build();
     }
 
 
