@@ -162,7 +162,7 @@ public class CustomerController {
         	
         	logger.debug("caller: " + customerId);
         	
-        	if (!customerId.equals("id")) {
+        	if (!customerId.equals(id)) {
         		// if i'm getting a customer ID that doesn't match my own ID, then return 401
         		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         	}
