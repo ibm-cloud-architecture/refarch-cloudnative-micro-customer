@@ -135,9 +135,9 @@ Note that *only* the customer object identified by `IBM-App-User` is returned to
 
 ### Search Customer by username
 
-Call the `search` API to find the customer by username.  This API is used by the [Auth Microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) to authenticate users.
+Call the `search` API to find the customer by username.  This API is used by the [Auth Microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) to authenticate users.  
 
 ```
-# curl -H "IBM-App-User: bff5631f24c849e8897645be8b66af16"  http://<Zuul IP>/customer-microservice/micro/customer/search?username=foo
+# curl http://<Zuul IP>/customer-microservice/micro/customer/search?username=foo
 [{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16"}]
 ```
