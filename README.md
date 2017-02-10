@@ -11,6 +11,7 @@ This project demonstrates how to build a Microservices application implemented a
 - Register the container with Eureka service registry (part of [Spring Cloud Netflix project](http://cloud.spring.io/spring-cloud-netflix/)
 - Persist Customer data in an [IBM Cloudant](https://console.ng.bluemix.net/docs/services/Cloudant/index.html#Cloudant) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
 
+
 ![Customer Microservice](customer_microservice.png)
 
 ## Pre-requisites
