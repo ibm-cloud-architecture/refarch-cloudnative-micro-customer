@@ -11,6 +11,9 @@ This project demonstrates how to build a Microservices application implemented a
 - Register the container with Eureka service registry (part of [Spring Cloud Netflix project](http://cloud.spring.io/spring-cloud-netflix/)
 - Persist Customer data in an [IBM Cloudant](https://console.ng.bluemix.net/docs/services/Cloudant/index.html#Cloudant) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
 
+
+![Customer Microservice](customer_microservice.png)
+
 ## Pre-requisites
 
 ### Install Docker
@@ -23,6 +26,8 @@ Install the [Cloud Foundry CLI](https://console.ng.bluemix.net/docs/starters/ins
 
 ### Provision Cloudant Database in Bluemix
 
+*Note that two components use Cloudant in BlueCompute, the Customer microservice and the [Social Review microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-socialreview).  If deploying both components to the same space, they can share the Cloudant database instance, as the Customer microservice saves documents to the `customer` database, and the Social Review microservice saves documents to the `socialreviewdb` and `socialreviewdb-staging` databases.
+
 1. Login to your Bluemix console  
 2. Open browser to create Cloudant Service using this link [https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db](https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db)  
 3. Name your Cloudant service name like `refarch-cloudantdb`  
@@ -34,6 +39,8 @@ Install the [Cloud Foundry CLI](https://console.ng.bluemix.net/docs/starters/ins
 You can use the following button to deploy the Customer microservice to Bluemix, or you can follow the instructions manually below.
 
 [![Create BlueCompute Deployment Toolchain](https://console.ng.bluemix.net/devops/graphics/create_toolchain_button.png)](https://console.ng.bluemix.net/devops/setup/deploy?repository=https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git)
+
+The deployment will use the Cloudant credentials in the space and provision a container group with the Customer Microservice in the Bluemix Container Service.
 
 ## Build the Docker container.
 
