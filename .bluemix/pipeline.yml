@@ -89,7 +89,7 @@ stages:
   inputs:
   - type: job
     stage: BUILD
-    job: Build Docker Image
+    job: Build
     dir_name: null
   triggers:
   - type: stage
@@ -111,6 +111,9 @@ stages:
     type: text
   - name: NEW_RELIC_LICENSE_KEY
     value: ${NEW_RELIC_LICENSE}
+    type: text
+  - name: IGNORE_MAPPING_ROUTE
+    value: 'true'
     type: text
   jobs:
   - name: Deploy Container
