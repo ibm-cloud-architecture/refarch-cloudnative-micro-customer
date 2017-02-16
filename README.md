@@ -15,7 +15,7 @@ This project demonstrates how to build a Microservices application implemented a
 
 ### REST API
 
-The Customer Microservice REST API is behind the Zuul Proxy, which validates the caller using signed JWT tokens.  As such, only API exposed by API Connect are considered publically callable.  All Public REST API are OAuth 2.0 protected by the API Connect OAuth provider.  
+The Customer Microservice REST API is behind the Zuul Proxy, which validates the caller using signed JWT tokens.  As such, only API exposed by API Connect are considered public API.  All Public REST API are OAuth 2.0 protected by the API Connect OAuth provider.  
 
 - `GET /micro/customer` (public)
   - Returns all customers.  The caller of this API must pass API Connect a valid OAuth token.  API Connect will pass down the customer ID in the `IBM-App-User` header.  A JSON object array is returned consisting of only users that match the customer ID (either length 0 or 1).
@@ -60,7 +60,7 @@ Install the [Cloud Foundry CLI](https://console.ng.bluemix.net/docs/starters/ins
 
 ### Provision Cloudant Database in Bluemix
 
-*Note that two components use Cloudant in BlueCompute, the Customer microservice and the [Social Review microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-socialreview).  If deploying both components to the same space, they can share the Cloudant database instance, as the Customer microservice saves documents to the `customer` database, and the Social Review microservice saves documents to the `socialreviewdb` and `socialreviewdb-staging` databases.
+*Note that two components use Cloudant in BlueCompute, the Customer microservice and the [Social Review microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-socialreview).  If deploying both components to the same space, they can share the Cloudant database instance, as the Customer microservice saves documents to the `customers` database, and the Social Review microservice saves documents to the `socialreviewdb` and `socialreviewdb-staging` databases.*
 
 1. Login to your Bluemix console  
 2. Open browser to create Cloudant Service using this link [https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db](https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db)  

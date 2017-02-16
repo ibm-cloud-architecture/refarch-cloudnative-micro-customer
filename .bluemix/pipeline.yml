@@ -207,7 +207,7 @@ stages:
         -i https://${route_name}.${route_domain}/micro/customer
             
         # unmap the temp route
-        cf ic route unmap -n ${route_name} -d ${route_domain} ${CONTAINER_NAME}_${BUILD_NUMBER}
+        ice_retry route unmap -n ${route_name} -d ${route_domain} ${CONTAINER_NAME}_${BUILD_NUMBER}
         cf delete-route -f -n ${route_name} ${route_domain}
                 
         # source the deploy property file
