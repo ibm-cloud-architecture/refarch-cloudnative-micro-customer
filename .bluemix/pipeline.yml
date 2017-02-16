@@ -191,7 +191,25 @@ stages:
         /bin/bash deployscripts/deploygroup.sh
         
         RESULT=$?
-        
+
+
+        uuid=`python  -c 'import uuid; print uuid.uuid1()'`
+        route_name="customer-${uuid}"
+        route_domain="mybluemix.net"
+
+        # temp map the route
+        ice_retry route map -n ${route_name} -d ${route_domain} ${CONTAINER_NAME}_${BUILD_NUMBER}
+            
+        # add "foo"/"bar"
+        curl -X POST \
+        -H "Content-Type: application/json" \
+        -d '{"username": "foo", "password": "bar", "firstName": "foo", "lastName": "bar", "email": "foo@bar.com"}' \
+        -i https://${route_name}.${route_domain}/micro/customer
+            
+        # unmap the temp route
+        cf ic route unmap -n ${route_name} -d ${route_domain} ${CONTAINER_NAME}_${BUILD_NUMBER}
+        cf delete-route -f -n ${route_name} ${route_domain}
+                
         # source the deploy property file
         if [ -f "${DEPLOY_PROPERTY_FILE}" ]; then
           source "$DEPLOY_PROPERTY_FILE"

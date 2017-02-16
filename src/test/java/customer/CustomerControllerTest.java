@@ -27,6 +27,7 @@ public class CustomerControllerTest {
 		inv.setLastName("Last");
 		inv.setUsername("user1");
 		inv.setPassword("asdf");
+		inv.setEmail("my@email.com");
 		inv.setImageUrl("/image/myimage.jpg");
 		
 		
@@ -38,6 +39,7 @@ public class CustomerControllerTest {
 		
 		myJsonStr.append("{");
 		myJsonStr.append("\"customerId\":\"").append(id).append("\",");
+		myJsonStr.append("\"email\":").append("\"my@email.com\"").append(",");
 		myJsonStr.append("\"firstName\":").append("\"Name\"").append(",");
 		myJsonStr.append("\"lastName\":").append("\"Last\"").append(",");
 		myJsonStr.append("\"imageUrl\":").append("\"/image/myimage.jpg\"").append(",");
@@ -68,6 +70,7 @@ public class CustomerControllerTest {
 		
 		myJsonStr.append("{");
 		myJsonStr.append("\"customerId\":\"").append(id).append("\",");
+		myJsonStr.append("\"email\":").append("\"my@email.com\"").append(",");
 		myJsonStr.append("\"firstName\":").append("\"John\"").append(",");
 		myJsonStr.append("\"lastName\":").append("\"Smith\"").append(",");
 		myJsonStr.append("\"imageUrl\":").append("\"/image/myimage.jpg\"").append(",");
@@ -89,6 +92,7 @@ public class CustomerControllerTest {
 		assert(inv.getImageUrl().equals("/image/myimage.jpg"));
 		assert(inv.getUsername().equals("user1"));
 		assert(inv.getPassword().equals("asdf"));
+		assert(inv.getEmail().equals("my@email.com"));
 		
 		
 	}
