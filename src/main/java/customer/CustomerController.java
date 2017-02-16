@@ -245,6 +245,7 @@ public class CustomerController {
             cust.setFirstName(payload.getFirstName());
             cust.setLastName(payload.getLastName());
             cust.setImageUrl(payload.getImageUrl());
+            cust.setEmail(payload.getEmail());
             
             // TODO: hash password
             cust.setPassword(payload.getPassword());

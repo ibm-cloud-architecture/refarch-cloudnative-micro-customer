@@ -6,12 +6,47 @@ https://github.com/ibm-cloud-architecture/refarch-cloudnative*
 
 This project demonstrates how to build a Microservices application implemented as a Spring Boot application and deployed in a docker container.  It provides basic operations of creating and querying customer profiles from [IBM Cloudant](https://console.ng.bluemix.net/docs/services/Cloudant/index.html#Cloudant) NoSQL database as part of the Customer Profile function of BlueCompute.  Additionally the [Auth Microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) calls this microservice to perform Customer username/password authentication.  This project covers the following technical areas:
 
-- Build a microservice as a Spring Boot Java application
+>- Build a microservice as a Spring Boot Java application
 - Deploy the Customer microservice as a container on the [IBM Bluemix Container Service](https://console.ng.bluemix.net/docs/containers/container_index.html).
 - Register the container with Eureka service registry (part of [Spring Cloud Netflix project](http://cloud.spring.io/spring-cloud-netflix/)
 - Persist Customer data in an [IBM Cloudant](https://console.ng.bluemix.net/docs/services/Cloudant/index.html#Cloudant) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
 
 ![Customer Microservice](customer_microservice.png)
+
+### REST API
+
+The Customer Microservice REST API is behind the Zuul Proxy, which validates the caller using signed JWT tokens.  As such, only API exposed by API Connect are considered public API.  All Public REST API are OAuth 2.0 protected by the API Connect OAuth provider.  
+
+- `GET /micro/customer` (public)
+  - Returns all customers.  The caller of this API must pass API Connect a valid OAuth token.  API Connect will pass down the customer ID in the `IBM-App-User` header.  A JSON object array is returned consisting of only users that match the customer ID (either length 0 or 1).
+
+- `GET /micro/customer/{id}` (public)
+  - Return customer by ID.  The caller of this API must pass API Connect a valid OAuth token.  API Connect will pass down the customer ID in the `IBM-App-User` header.  If the `id` matches the customer ID passed in the `IBM-App-User` header, it is returned as a JSON object in the response; otherwise `HTTP 401` is returned.
+
+- `GET /micro/customer/search` (private)
+  - Return customer by username.  This API is called by the [Auth Microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) when authenticating a user.  A JSON object array is returned consisting of only users that match the customer username (either length 0 or 1).
+
+- `POST /micro/customer` (private)
+  - Create a customer.  This API is not exposed to API Connect as user creation is not a supported function of the BlueCompute application.  The Customer object must be passed as JSON object in the request body with the following format:
+    ```
+    {
+      "username": <username>,
+      "password": <password>,
+      "email": <email address>,
+      "firstName": <first name>,
+      "lastName": <last name>,
+      "imageUrl": <image URL>
+    }
+    ```
+
+    On success, `HTTP 201` is returned with the ID of the created user in the `Location` response header.
+
+- `PUT /micro/customer/{id}` (private)
+  - Update a customer record.  This API is not exposed to API Connect as updating the user profile is not a function of the BlueCompute application.  The full Customer object must be passed in the request body.
+
+- `DELETE /micro/customer/{id}` (private)
+  - Delete a customer record.  This API is not exposed to API Connect as deleting the user profile is not a function of the BlueCompute application.
+
 
 ## Pre-requisites
 
@@ -25,7 +60,7 @@ Install the [Cloud Foundry CLI](https://console.ng.bluemix.net/docs/starters/ins
 
 ### Provision Cloudant Database in Bluemix
 
-*Note that two components use Cloudant in BlueCompute, the Customer microservice and the [Social Review microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-socialreview).  If deploying both components to the same space, they can share the Cloudant database instance, as the Customer microservice saves documents to the `customer` database, and the Social Review microservice saves documents to the `socialreviewdb` and `socialreviewdb-staging` databases.
+*Note that two components use Cloudant in BlueCompute, the Customer microservice and the [Social Review microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-socialreview).  If deploying both components to the same space, they can share the Cloudant database instance, as the Customer microservice saves documents to the `customers` database, and the Social Review microservice saves documents to the `socialreviewdb` and `socialreviewdb-staging` databases.*
 
 1. Login to your Bluemix console  
 2. Open browser to create Cloudant Service using this link [https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db](https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db)  
@@ -37,9 +72,16 @@ Install the [Cloud Foundry CLI](https://console.ng.bluemix.net/docs/starters/ins
 
 You can use the following button to deploy the Customer microservice to Bluemix, or you can follow the instructions manually below.
 
-[![Create BlueCompute Deployment Toolchain](https://console.ng.bluemix.net/devops/graphics/create_toolchain_button.png)](https://console.ng.bluemix.net/devops/setup/deploy?repository=https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git)
+The deployment will:
+1. Discover and pass in the Cloudant credentials from the Cloudant instance in the space 
+2. Provision a container group with the Customer Microservice in the Bluemix Container Service.  
+3. Once the container group has been created, a temporary route is mapped to the container group, a user with the username 'foo' and password 'bar' is inserted into the database, and temporary route is removed.
 
-The deployment will use the Cloudant credentials in the space and provision a container group with the Customer Microservice in the Bluemix Container Service.
+The toolchain contains optional parameters:
+- `New Relic License Key` - enter the license key for New Relic agent integration.  
+- `Eureka Registry URL` to register the Customer microservice with a Eureka registry
+
+[![Create BlueCompute Deployment Toolchain](https://console.ng.bluemix.net/devops/graphics/create_toolchain_button.png)](https://console.ng.bluemix.net/devops/setup/deploy?repository=https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git)
 
 ## Build the Docker container.
 
@@ -118,7 +160,7 @@ Zuul performs authorization using signed JWT tokens generated by API Connect.  A
 Create a customer profile for the user `foo` with the password `bar`.  Make sure that you replace `<temp-routename>` with your temporary route.
 
 ```
-# curl -X POST -H "Content-Type: application/json" -d '{"username": "foo", "password": "bar", "firstName": "foo", "lastName": "bar"}' -i https://<temp-routename>/micro/customer
+# curl -X POST -H "Content-Type: application/json" -d '{"username": "foo", "password": "bar", "firstName": "foo", "lastName": "bar", "email": "foo@bar.com"}' -i https://<temp-routename>/micro/customer
 HTTP/1.1 201 Created
 X-Backside-Transport: OK OK
 Connection: Keep-Alive
@@ -137,7 +179,7 @@ Verify the customer.  The caller must pass a header, `IBM-App-User`, to the API,
 
 ```
 # curl -H "IBM-App-User: bff5631f24c849e8897645be8b66af16"  http://<temp-routename>/micro/customer
-{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16"}
+{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16","email":"foo@bar.com"}
 ```
 
 Note that *only* the customer object identified by `IBM-App-User` is returned to the caller.
@@ -149,13 +191,19 @@ Call the `search` API to find the customer by username.  This API is used by the
 
 ```
 # curl http://<temp-routename>/micro/customer/search?username=foo
-[{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16"}]
+[{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16","email":"foo@bar.com"}]
 ```
 
 ### Unmap the temporary route
 
-When verification is complete, unmap the route so that the only access to the customer microservice is through Zuul.
+When verification is complete, unmap the route so that the only access to the customer microservice is through Zuul.  
 
 ```
 # cf ic route unmap -n <temp-routename> -d mybluemix.net customer-microservice 
+```
+
+Delete the temporary route.
+
+```
+# cf delete-route -n <temp-routename> mybluemix.net
 ```

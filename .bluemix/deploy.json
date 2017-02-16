@@ -20,6 +20,10 @@
         "new-relic-lic-key": {
             "description": "New Relic License Key",
             "type": "string"
+        },
+        "eureka-url": {
+            "description": "Eureka Registry URL",
+            "type": "string"
         }
     },
     "required": [
@@ -32,6 +36,13 @@
             "type": "validator",
             "url": "/devops/setup/bm-helper/helper.html"
         },
+        {
+            "type": "text",
+            "readonly": false,
+            "title": "Eureka Registry URL",
+            "key": "eureka-url"
+        },
+
         {
             "type": "text",
             "readonly": false,
