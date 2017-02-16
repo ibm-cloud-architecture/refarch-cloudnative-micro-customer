@@ -72,9 +72,16 @@ Install the [Cloud Foundry CLI](https://console.ng.bluemix.net/docs/starters/ins
 
 You can use the following button to deploy the Customer microservice to Bluemix, or you can follow the instructions manually below.
 
-[![Create BlueCompute Deployment Toolchain](https://console.ng.bluemix.net/devops/graphics/create_toolchain_button.png)](https://console.ng.bluemix.net/devops/setup/deploy?repository=https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git)
+The deployment will:
+1. Discover and pass in the Cloudant credentials from the Cloudant instance in the space 
+2. Provision a container group with the Customer Microservice in the Bluemix Container Service.  
+3. Once the container group has been created, a temporary route is mapped to the container group, a user with the username 'foo' and password 'bar' is inserted into the database, and temporary route is removed.
 
-The deployment will use the Cloudant credentials in the space and provision a container group with the Customer Microservice in the Bluemix Container Service.  Once the container group has been created, a temporary route is mapped to the container group, a user with the username 'foo' and password 'bar' is inserted into the database, and temporary route is removed.
+The toolchain contains optional parameters:
+- `New Relic License Key` - enter the license key for New Relic agent integration.  
+- `Eureka Registry URL` to register the Customer microservice with a Eureka registry
+
+[![Create BlueCompute Deployment Toolchain](https://console.ng.bluemix.net/devops/graphics/create_toolchain_button.png)](https://console.ng.bluemix.net/devops/setup/deploy?repository=https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git)
 
 ## Build the Docker container.
 

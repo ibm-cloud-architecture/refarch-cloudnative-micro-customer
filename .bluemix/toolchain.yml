@@ -33,7 +33,7 @@ pipeline-micro-customer:
        MIN_INSTANCES: "1"
        MAX_INSTANCES: "3"
        DESIRED_INSTANCES: "2"
-       EUREKA_REGISTRY_URL: "https://{{pipeline-netflix-eureka.parameters.name}}-{{deploy.parameters.deploy-space}}.{{deploy.parameters.route-domain}}/eureka/"
+       EUREKA_REGISTRY_URL: "{{deploy.parameters.eureka-url}}"
        NEW_RELIC_LICENSE: "{{deploy.parameters.new-relic-lic-key}}"
        IMAGE_NAME: "{{pipeline-micro-customer.parameters.name}}-{{deploy.parameters.deploy-space}}"
       execute: false
@@ -45,4 +45,5 @@ deploy:
     deploy-region: "{{region}}"
     deploy-org: "{{organization}}"
     deploy-space: "{{space}}"
+    eureka-url: "https://<eureka-hostname>/eureka/"
     new-relic-lic-key: ""
