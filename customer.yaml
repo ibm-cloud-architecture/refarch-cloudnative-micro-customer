@@ -1,0 +1,46 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: customer-microservice
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: bluecompute
+        tier: backend
+        micro: customer
+    spec:
+      containers:
+      - name: customer-service
+        image: registry.ng.bluemix.net/chrisking/us-micro-customer:jkwong-dev
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /opt/binding-refarch-cloudantdb
+          name: binding-refarch-cloudantdb
+        ports:
+        - containerPort: 8080
+      volumes:
+      - name: binding-refarch-cloudantdb
+        secret:
+          defaultMode: 420
+          secretName: binding-refarch-cloudantdb
+---        
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-service
+  labels:
+    app: bluecompute
+    tier: backend
+    micro: customer
+spec:
+  ports:
+  - protocol: TCP
+    port: 8080
+  selector:
+    app: bluecompute
+    tier: backend
+    micro: customer
+...
