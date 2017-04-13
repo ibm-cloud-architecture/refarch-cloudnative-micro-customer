@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -100,6 +105,7 @@ public class CustomerController {
     /**
      * @return customer by username
      */
+    @PreAuthorize("#oauth2.hasScope('admin')")
     @RequestMapping(value = "/customer/search", method = RequestMethod.GET)
     @ResponseBody ResponseEntity<?> searchCustomers(@RequestHeader Map<String, String> headers, @RequestParam(required=true) String username) {
         try {
@@ -123,27 +129,42 @@ public class CustomerController {
     }
 
     
-
-    /**
+    private String getCustomerId() {
+    	final SecurityContext ctx = SecurityContextHolder.getContext();
+    	if (ctx.getAuthentication() == null) {
+    		return null;
+    	};
+    	
+    	if (!ctx.getAuthentication().isAuthenticated()) {
+    		return null;
+    	}
+    	
+    	final OAuth2Authentication oauth = (OAuth2Authentication)ctx.getAuthentication();
+    	
+    	logger.debug("CustomerID: " + oauth.getName());
+    	
+    	return oauth.getName();
+    }
+     /**
      * @return all customer
      */
-    @HystrixCommand(fallbackMethod="failGood")
+//    @HystrixCommand(fallbackMethod="failGetCustomers")
     @RequestMapping(value = "/customer", method = RequestMethod.GET)
-    @ResponseBody ResponseEntity<?> getCustomers(@RequestHeader Map<String, String> headers) {
+    ResponseEntity<?> getCustomers() {
         try {
-        	final String customerId = headers.get("ibm-app-user");
+        	final String customerId = getCustomerId();
         	if (customerId == null) {
         		// if no user passed in, this is a bad request
-        		return ResponseEntity.badRequest().body("Missing header: ibm-app-user");
+        		return ResponseEntity.badRequest().body("Invalid Bearer Token: Missing customer ID");
         	}
         	
-        	logger.info("caller: " + customerId);
+        	logger.debug("caller: " + customerId);
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
             
-            return ResponseEntity.ok(cust);
+            return ResponseEntity.ok(Arrays.asList(cust));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw e;
         }
         
     }
@@ -154,10 +175,10 @@ public class CustomerController {
     @RequestMapping(value = "/customer/{id}", method = RequestMethod.GET)
     ResponseEntity<?> getById(@RequestHeader Map<String, String> headers, @PathVariable String id) {
         try {
-			final String customerId = headers.get("ibm-app-user");
+        	final String customerId = getCustomerId();
         	if (customerId == null) {
         		// if no user passed in, this is a bad request
-        		return ResponseEntity.badRequest().body("Missing header: ibm-app-user");
+        		return ResponseEntity.badRequest().body("Invalid Bearer Token: Missing customer ID");
         	}
         	
         	logger.debug("caller: " + customerId);
@@ -227,10 +248,10 @@ public class CustomerController {
     ResponseEntity<?> update(@RequestHeader Map<String, String> headers, @PathVariable String id, @RequestBody Customer payload) {
 
         try {
-			final String customerId = headers.get("ibm-app-user");
+        	final String customerId = getCustomerId();
         	if (customerId == null) {
         		// if no user passed in, this is a bad request
-        		return ResponseEntity.badRequest().body("Missing header: ibm-app-user");
+        		return ResponseEntity.badRequest().body("Invalid Bearer Token: Missing customer ID");
         	}
         	
         	logger.info("caller: " + customerId);
@@ -286,10 +307,11 @@ public class CustomerController {
         return ResponseEntity.ok().build();
     }
 
-    private Iterable<Customer> failGood(@RequestHeader Map<String, String> headers) {
+    @SuppressWarnings("unused")
+	private ResponseEntity<?> failGetCustomers(@RequestHeader Map<String, String> headers) {
         // Simply return an empty array
-        ArrayList<Customer> inventoryList = new ArrayList<Customer>();
-        return inventoryList;
+        final List<Customer> inventoryList = new ArrayList<Customer>();
+        return ResponseEntity.ok(inventoryList);
     }
 
     /**
