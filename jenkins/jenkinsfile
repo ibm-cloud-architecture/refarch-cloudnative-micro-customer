@@ -14,23 +14,27 @@ podTemplate(label: 'mypod',
         container('gradle') {
             stage ('Build') {
                 checkout scm
-                sh ""#!/bin/bash
+                sh """
+                #!/bin/bash
 
                 ./gradlew build -x test
-                ""
+                """
             }
             stage ('Build Docker Image') {
-                sh ""#!/bin/bash
+                sh """
+                #!/bin/bash
 
                 ./gradlew docker 
                 cd docker && docker build -t registry.ng.bluemix.net/chrisking/micro-customer:${env.BUILD_NUMBER} .
-                ""
+                """
             }
             stage ('Push Docker Image to Registry') {
-                sh ""#!/bin/bash
+                sh """
+                #!/bin/bash
+
                 docker tag registry.ng.bluemix.net/chrisking/micro-customer-jkwong:${env.BUILD_NUMBER}
                 docker push registry.ng.bluemix.net/chrisking/micro-customer-jkwong:${env.BUILD_NUMBER}
-                ""
+                """
             }
         }
     }
