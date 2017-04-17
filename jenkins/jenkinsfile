@@ -32,7 +32,6 @@ podTemplate(label: 'mypod',
                 sh """
                 #!/bin/bash
 
-                docker tag registry.ng.bluemix.net/chrisking/micro-customer-jkwong:${env.BUILD_NUMBER}
                 docker push registry.ng.bluemix.net/chrisking/micro-customer-jkwong:${env.BUILD_NUMBER}
                 """
             }
