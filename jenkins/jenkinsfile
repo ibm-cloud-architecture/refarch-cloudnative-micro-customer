@@ -1,0 +1,37 @@
+podTemplate(label: 'mypod',
+    volumes: [hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
+              secretVolume(secretName: 'bx-auth-secret', mountPath: '/var/run/secrets/bx-auth-secret')],
+    containers: [
+        containerTemplate(
+            name: 'gradle',
+            image: 'fabiogomezdiaz/bc-jenkins-slave:v9',
+            alwaysPullImage: true,
+            ttyEnabled: true,
+            command: 'cat'
+    )]) {
+
+    node ('mypod') {
+        container('gradle') {
+            stage ('Build') {
+                checkout scm
+                sh ""#!/bin/bash
+
+                ./gradlew build -x test
+                ""
+            }
+            stage ('Build Docker Image') {
+                sh ""#!/bin/bash
+
+                ./gradlew docker 
+                cd docker && docker build -t registry.ng.bluemix.net/chrisking/micro-customer:${env.BUILD_NUMBER} .
+                ""
+            }
+            stage ('Push Docker Image to Registry') {
+                sh ""#!/bin/bash
+                docker tag registry.ng.bluemix.net/chrisking/micro-customer-jkwong:${env.BUILD_NUMBER}
+                docker push registry.ng.bluemix.net/chrisking/micro-customer-jkwong:${env.BUILD_NUMBER}
+                ""
+            }
+        }
+    }
+}
