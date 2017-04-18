@@ -31,10 +31,46 @@ podTemplate(label: 'mypod',
             stage ('Push Docker Image to Registry') {
                 sh """
                 #!/bin/bash
+                # Install plugins
+                bx plugin install container-service -r Bluemix
+                bx plugin install container-registry -r Bluemix
+
+                # TODO: use API key instead of password?
+
+                # Login to Bluemix and init plugins
+                bx login -a api.ng.bluemix.net \
+                -u `cat /var/run/secrets/bx-auth-secret/CF_EMAIL` \
+                -p `cat /var/run/secrets/bx-auth-secret/CF_PASSWORD` \
+                -c `cat /var/run/secrets/bx-auth-secret/CF_ACCOUNT` \
+                -o `cat /var/run/secrets/bx-auth-secret/CF_ORG` \
+                -s `cat /var/run/secrets/bx-auth-secret/CF_SPACE`
+
+                bx cs init
+                bx cr login
 
                 docker push registry.ng.bluemix.net/chrisking/micro-customer-jkwong:${env.BUILD_NUMBER}
                 """
             }
+            stage ('Deploy to Kubernetes') {
+                sh """
+                #!/bin/bash
+
+                yaml w customer.yml spec.template.spec.containers[0].image registry.ng.bluemix.net/chrisking/micro-customer-jkwong:${env.BUILD_NUMBER} > deployment.yml
+
+                # TODO: rolling update
+                kubectl --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token` create -f deployment.yml
+                kubectl --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token` create -f customer-service.yml
+                """
+            }
+            stage ('Clean up old images') {
+                sh """
+                #!/bin/bash
+                
+                # TODO: delete old images 
+
+                """
+            }
+
         }
     }
 }

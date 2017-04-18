@@ -26,21 +26,4 @@ spec:
         secret:
           defaultMode: 420
           secretName: binding-refarch-cloudantdb
----        
-apiVersion: v1
-kind: Service
-metadata:
-  name: customer-service
-  labels:
-    app: bluecompute
-    tier: backend
-    micro: customer
-spec:
-  ports:
-  - protocol: TCP
-    port: 8080
-  selector:
-    app: bluecompute
-    tier: backend
-    micro: customer
 ...

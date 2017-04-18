@@ -5,3 +5,4 @@
 /.settings
 /.classpath
 /docker/app.jar
+.*.swp
