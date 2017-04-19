@@ -94,7 +94,7 @@ podTemplate(label: 'mypod',
                 token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
                 image_name=registry.ng.bluemix.net/\${REGISTRY_NAMESPACE}/micro-customer:${env.BUILD_NUMBER}
 
-                customer_deployment=`kubectl --token=\${token} get deployments | grep customer-service | head -1 | awk '{print \$1}'`
+                customer_deployment=`kubectl --token=\${token} get deployments | grep customer-microservice | head -1 | awk '{print \$1}'`
                 if [ -z "\${customer_deployment}" ]; then
                     cat kubernetes/customer.yaml | \
                     yaml w - spec.template.spec.containers[0].image \${image_name}| \
