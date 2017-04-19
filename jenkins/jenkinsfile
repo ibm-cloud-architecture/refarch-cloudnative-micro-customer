@@ -66,7 +66,7 @@ podTemplate(label: 'mypod',
                 bx cs init
 
                 # find cloudant service
-                export CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*$//'`
+                export CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*\$//'`
 
                 if [ -z "${env.CLOUDANT_SVC_NAME}" ]; then
                   echo "No Cloudant service found!"
@@ -84,7 +84,7 @@ podTemplate(label: 'mypod',
                 sh """
                 #!/bin/bash
 
-                export CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*$//'`
+                export CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*\$//'`
 
                 # TODO: get the secret name from the service name?
                 export CLOUDANT_SECRET_NAME="binding-refarch-cloudantdb"
