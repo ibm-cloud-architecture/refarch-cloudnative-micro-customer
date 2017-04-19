@@ -62,6 +62,7 @@ podTemplate(label: 'mypod',
                 #!/bin/bash
 
                 KUBE_TOKEN=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
+                kubectl --token=\${KUBE_TOKEN} config view 
                 KUBE_CLUSTER_NAME=`kubectl --token=\${KUBE_TOKEN} config view | yaml - r current-context`
 
                 # Install plugins
