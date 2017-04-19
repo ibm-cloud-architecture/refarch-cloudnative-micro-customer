@@ -89,21 +89,35 @@ podTemplate(label: 'mypod',
                 export CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*\$//'`
 
                 # TODO: get the secret name from the service name?
-                export CLOUDANT_SECRET_NAME="binding-refarch-cloudantdb"
-                export REGISTRY_NAMESPACE=chrisking
+                CLOUDANT_SECRET_NAME="binding-refarch-cloudantdb"
+                REGISTRY_NAMESPACE=chrisking
+                token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
+                image_name=registry.ng.bluemix.net/\${REGISTRY_NAMESPACE}/micro-customer:${env.BUILD_NUMBER}
 
-                cat kubernetes/customer.yaml | \
-                yaml w - spec.template.spec.containers[0].image registry.ng.bluemix.net/\${REGISTRY_NAMESPACE}/micro-customer:${env.BUILD_NUMBER} | \
-                yaml w - spec.template.spec.containers[0].volumeMounts[0].mountPath /var/run/secrets/binding-refarch-cloudantdb | \
-                yaml w - spec.template.spec.containers[0].volumeMounts[0].name binding-refarch-cloudantdb | \
-                yaml w - spec.template.spec.volumes[0].name binding-refarch-cloudantdb | \
-                yaml w - spec.template.spec.volumes[0].secret.defaultMode 420 | \
-                yaml w - spec.template.spec.volumes[0].secret.secretName \${CLOUDANT_SECRET_NAME} \
-                > deployment.yml
+                customer_deployment=`kubectl --token=\${token} get deployments | grep customer-service | head -1 | awk '{print \$1}'`
+                if [ -z "\${customer_deployment}" ]; then
+                    cat kubernetes/customer.yaml | \
+                    yaml w - spec.template.spec.containers[0].image \${image_name}| \
+                    yaml w - spec.template.spec.containers[0].volumeMounts[0].mountPath /var/run/secrets/binding-refarch-cloudantdb | \
+                    yaml w - spec.template.spec.containers[0].volumeMounts[0].name binding-refarch-cloudantdb | \
+                    yaml w - spec.template.spec.volumes[0].name binding-refarch-cloudantdb | \
+                    yaml w - spec.template.spec.volumes[0].secret.defaultMode 420 | \
+                    yaml w - spec.template.spec.volumes[0].secret.secretName \${CLOUDANT_SECRET_NAME} \
+                    > deployment.yml
+    
+                    kubectl --token=\${token} create -f deployment.yml
+                else
+                    # rolling update
+                    echo -e "Doing a rolling update on auth Deployment"
+                    kubectl --token=\${token} set image deployment/customer-microservice customer-service=\${image_name}
 
-                # TODO: rolling update
-                kubectl --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token` create -f deployment.yml
-                kubectl --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token` create -f kubernetes/customer-service.yml
+                    # Watch the rollout update
+                    kubectl --token=\${token} rollout status deployment/customer-microservice
+
+                fi
+
+                kubectl --token=\${token} create -f kubernetes/customer-service.yaml
+
                 """
             }
             stage ('Clean up old images') {
