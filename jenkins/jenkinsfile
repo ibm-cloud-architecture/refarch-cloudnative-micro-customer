@@ -103,8 +103,8 @@ podTemplate(label: 'mypod',
                     yaml w - spec.template.spec.volumes[0].name binding-refarch-cloudantdb | \
                     yaml w - spec.template.spec.volumes[0].secret.defaultMode 420 | \
                     yaml w - spec.template.spec.volumes[0].secret.secretName \${CLOUDANT_SECRET_NAME} \
-                    yaml w - spec.template.spec.containers[1].volumeMounts[1].mountPath /var/run/secrets/hs256-key | \
-                    yaml w - spec.template.spec.containers[1].volumeMounts[1].name hs256-key| \
+                    yaml w - spec.template.spec.containers[0].volumeMounts[1].mountPath /var/run/secrets/hs256-key | \
+                    yaml w - spec.template.spec.containers[0].volumeMounts[1].name hs256-key| \
 
                     yaml w - spec.template.spec.volumes[1].name hs256-key | \
                     yaml w - spec.template.spec.volumes[1].secret.defaultMode 420 | \
