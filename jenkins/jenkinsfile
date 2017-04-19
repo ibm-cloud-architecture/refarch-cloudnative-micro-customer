@@ -61,13 +61,15 @@ podTemplate(label: 'mypod',
                 sh """
                 #!/bin/bash
 
-                # Install plugins
+                KUBE_TOKEN=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
+                KUBE_CLUSTER_NAME=`kubectl --token=\${KUBE_TOKEN} config view | yaml r - current-context`
 
+                # Install plugins
                 bx plugin install container-service -r Bluemix
                 bx cs init
 
                 # find cloudant service
-                export CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*\$//'`
+                CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*\$//'`
 
                 if [ -z "\${CLOUDANT_SVC_NAME}" ]; then
                   echo "No Cloudant service found!"
@@ -75,8 +77,7 @@ podTemplate(label: 'mypod',
                 fi
 
                 # bind it to kube secret
-                export KUBE_CLUSTER_NAME=`kubectl --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token` config view | yaml r - current-context`
-                echo "Binding cloudant service \${CLOUDANT_SVC_NAME} to cluster \${KUBE_CLUSTER_NAME}
+                echo "Binding cloudant service \${CLOUDANT_SVC_NAME} to cluster \${KUBE_CLUSTER_NAME}"
                 bx cs cluster-service-bind \${KUBE_CLUSTER_NAME} default \${CLOUDANT_SVC_NAME}
 
                 """
