@@ -122,7 +122,10 @@ podTemplate(label: 'mypod',
 
                 fi
 
-                kubectl --token=\${token} create -f kubernetes/customer-service.yaml
+                customer_service=`kubectl --token=\${token} get service| grep customer-service | head -1 | awk '{print \$1}'`
+                if [ -z "\${customer_service}" ]; then
+                    kubectl --token=\${token} create -f kubernetes/customer-service.yaml
+                fi
 
                 """
             }

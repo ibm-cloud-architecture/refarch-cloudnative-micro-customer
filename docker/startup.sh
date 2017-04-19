@@ -14,7 +14,7 @@ cloudant_password=`cat /var/run/secrets/binding-refarch-cloudantdb/binding | jq 
 cloudant_host=`cat /var/run/secrets/binding-refarch-cloudantdb/binding | jq '.host' | sed -e 's/"//g'`
 
 JAVA_OPTS="${JAVA_OPTS} -Dspring.application.cloudant.username=${cloudant_username} -Dspring.application.cloudant.password=${cloudant_password} -Dspring.application.cloudant.host=${cloudant_host}"
-JAVA_OPTS="${JAVA_OPTS} -DjwtConfig.sharedSecret=${hs256_key}"
+JAVA_OPTS="${JAVA_OPTS} -Djwt.sharedSecret=${hs256_key}"
 
 # disable eureka
 JAVA_OPTS="${JAVA_OPTS} -Deureka.client.enabled=false -Deureka.client.registerWithEureka=false -Deureka.fetchRegistry=false"
