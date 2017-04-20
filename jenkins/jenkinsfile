@@ -104,6 +104,7 @@ podTemplate(label: 'mypod',
 
                 customer_deployment=`kubectl --token=\${token} get deployments | grep customer-microservice | head -1 | awk '{print \$1}'`
                 if [ -z "\${customer_deployment}" ]; then
+                    echo -e "Deploying customer microservice"
                     cat kubernetes/customer.yaml | \
                     yaml w - spec.template.spec.containers[0].image \${image_name}| \
                     yaml w - spec.template.spec.containers[0].volumeMounts[0].mountPath /var/run/secrets/binding-refarch-cloudantdb | \
@@ -122,7 +123,7 @@ podTemplate(label: 'mypod',
                     kubectl --token=\${token} create -f deployment.yml
                 else
                     # rolling update
-                    echo -e "Doing a rolling update on auth Deployment"
+                    echo -e "Doing a rolling update on customer microservice deployment"
                     kubectl --token=\${token} set image deployment/customer-microservice customer-service=\${image_name}
 
                     # Watch the rollout update
