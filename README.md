@@ -133,7 +133,7 @@ Copy the text that appears in "Encoded"; this is the signed JWT that will be use
 
 ### Create a Customer
 
-Create a customer profile for the user `foo` with the password `bar`.  Make sure that you replace `<temp-routename>` with your temporary route.
+Create a customer profile for the user `foo` with the password `bar`.  Make sure that you replace `<JWT>` with your generated JWT from the previous step.
 
 ```
 # curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <JWT>" -d '{"username": "foo", "password": "bar", "firstName": "foo", "lastName": "bar", "email": "foo@bar.com"}' -i http://localhost:8080/micro/customer
