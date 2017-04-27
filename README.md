@@ -25,7 +25,7 @@ The Customer Microservice REST API is OAuth protected.
 - `GET /micro/customer/search`
   - Return customer by username.  The caller of this API must pass a valid OAuth token with the scope `admin`.  This API is called by the [Auth Microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) when authenticating a user.  A JSON object array is returned consisting of only users that match the customer username (either length 0 or 1).
 
-- `POST /micro/customer` (private)
+- `POST /micro/customer`
   - Create a customer. - Return customer by username.  The caller of this API must pass a valid OAuth token with the scope `admin`.  The Customer object must be passed as JSON object in the request body with the following format:
     ```
     {
