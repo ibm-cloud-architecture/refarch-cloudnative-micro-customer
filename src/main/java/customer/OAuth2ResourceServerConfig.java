@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
@@ -36,9 +37,14 @@ public class OAuth2ResourceServerConfig extends ResourceServerConfigurerAdapter 
         http
             .requestMatchers().antMatchers("/customer", "/customer/search").and()
             .authorizeRequests()
-            .antMatchers("/customer").access("#oauth2.hasScope('blue')").and()
+				.antMatchers(HttpMethod.POST, "/customer").access("#oauth2.hasScope('admin')")
+				.antMatchers(HttpMethod.GET, "/customer/search").access("#oauth2.hasScope('admin')")
+            .and()
             .authorizeRequests()
-            .antMatchers("/customer/search").access("#oauth2.hasScope('admin')").and()
+				.antMatchers(HttpMethod.GET, "/customer").access("#oauth2.hasScope('blue')")
+				.antMatchers(HttpMethod.PUT, "/customer").access("#oauth2.hasScope('blue')")
+				.antMatchers(HttpMethod.DELETE, "/customer").access("#oauth2.hasScope('blue')")
+            .and()
             .exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
     }
     
