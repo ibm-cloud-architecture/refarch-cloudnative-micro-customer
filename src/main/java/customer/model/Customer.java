@@ -3,7 +3,8 @@ package customer.model;
 public class Customer {
 	private String _id;
     
-    private String _rev;
+    @SuppressWarnings("unused")
+	private String _rev;
     
     private String username;
     private String password;

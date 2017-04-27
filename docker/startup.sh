@@ -7,6 +7,18 @@ export JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom"
 # Load agent support if required
 source ./agents/newrelic.sh
 
+# open the secrets
+hs256_key=`cat /var/run/secrets/hs256-key/key`
+cloudant_username=`cat /var/run/secrets/binding-refarch-cloudantdb/binding | jq '.username' | sed -e 's/"//g'`
+cloudant_password=`cat /var/run/secrets/binding-refarch-cloudantdb/binding | jq '.password' | sed -e 's/"//g'`
+cloudant_host=`cat /var/run/secrets/binding-refarch-cloudantdb/binding | jq '.host' | sed -e 's/"//g'`
+
+JAVA_OPTS="${JAVA_OPTS} -Dspring.application.cloudant.username=${cloudant_username} -Dspring.application.cloudant.password=${cloudant_password} -Dspring.application.cloudant.host=${cloudant_host}"
+JAVA_OPTS="${JAVA_OPTS} -Djwt.sharedSecret=${hs256_key}"
+
+# disable eureka
+JAVA_OPTS="${JAVA_OPTS} -Deureka.client.enabled=false -Deureka.client.registerWithEureka=false -Deureka.fetchRegistry=false"
+
 echo "Starting with Java Options ${JAVA_OPTS}"
 
 # Start the application
