@@ -172,7 +172,7 @@ podTemplate(
                             if [ -z `echo \${all_images} | grep \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i}` ]; then
                                 continue
                             fi
-                            echo "Deleting \${BX_REGISTRY}\/${BX_NAMESPACE}/bc-customer:\${i} ..."
+                            echo "Deleting \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i} ..."
                             bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i}
                         done
                         
