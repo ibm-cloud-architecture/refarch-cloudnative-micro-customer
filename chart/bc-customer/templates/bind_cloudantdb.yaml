@@ -23,7 +23,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: create-cloudantdb
-        image: jkwong/bluemix-cluster-deployer
+        image: ibmcase/bluemix-cluster-deployer
         command: [ "/bin/bash", "-c" ]
         args: ["source /scripts/bx_login.sh; bx cs init; bx cs cluster-service-bind ${KUBE_CLUSTER_NAME} default {{ .Values.cloudant.serviceName }}"]
         imagePullPolicy: Always
