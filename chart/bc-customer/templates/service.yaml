@@ -15,4 +15,6 @@ spec:
     protocol: TCP
     name: {{ .Values.service.name }}
   selector:
-    app: {{ template "fullname" . }}
+    app: bluecompute
+    tier: backend
+    micro: customer
