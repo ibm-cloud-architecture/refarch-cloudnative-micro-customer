@@ -1,0 +1,4 @@
+apiVersion: v1
+description: BlueCompute Customer Microservice
+name: bc-customer
+version: 0.1.0

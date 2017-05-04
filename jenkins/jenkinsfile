@@ -1,152 +1,207 @@
-podTemplate(label: 'mypod',
-    volumes: [hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
-              secretVolume(secretName: 'bx-auth-secret', mountPath: '/var/run/secrets/bx-auth-secret')],
+podTemplate(
+    label: 'pod',
     containers: [
         containerTemplate(
-            name: 'gradle',
-            image: 'fabiogomezdiaz/bc-jenkins-slave:v10',
-            alwaysPullImage: true,
-            ttyEnabled: true,
+            name: 'java', 
+            image: 'openjdk:8-jdk-alpine', 
+            alwaysPullImage: true, 
+            ttyEnabled: true, 
             command: 'cat'
-    )]) {
+        ),
+        containerTemplate(
+            name: 'docker', 
+            image: 'ibmcase/bluemix-image-deploy:latest', 
+            alwaysPullImage: true, 
+            ttyEnabled: true
+        ),
+        containerTemplate(
+            name: 'helm', 
+            image: 'ibmcase/helm:latest', 
+            alwaysPullImage: true, 
+            ttyEnabled: true, 
+            command: 'cat'
+        ),
+        containerTemplate(
+            name: 'kubectl', 
+            image: 'ibmcase/kubectl:latest', 
+            alwaysPullImage: true, 
+            ttyEnabled: true, 
+            command: 'cat'
+        )
+    ],
+    volumes: [
+      hostPathVolume(
+          hostPath: '/var/run/docker.sock', 
+          mountPath: '/var/run/docker.sock'
+      ),
+      secretVolume(
+          secretName: 'bluemix-api-key', 
+          mountPath: '/var/run/secrets/bluemix-api-key'
+      ),
+      configMapVolume(
+          configMapName: 'bluemix-target', 
+          mountPath: '/var/run/configs/bluemix-target'
+      )
+    ],
+) {
+    node ('pod') {
+        try {
+            checkout scm
+            container('java') {
+                stage('Build Gradle Project') {
+                    sh """
+                    #!/bin/bash
+                    ./gradlew build -x test
+                    ./gradlew docker
+                    """
+                }
+            }
 
-    node ('mypod') {
-        container('gradle') {
-            stage ('Build') {
-                checkout scm
+            container('docker') {
+                stage ('Build Docker Image') {
+                    sh """
+                    #!/bin/bash
+                    BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                    BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-registry-namespace`
+
+                    cd docker
+                    docker build -t \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER} .
+                    """
+                }
+                stage ('Push Docker Image to Registry') {
+                    sh """
+                    #!/bin/bash
+                    export BLUEMIX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
+                    BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
+                    BX_API_ENDPOINT=`cat /var/run/configs/bluemix-target/bluemix-api-endpoint`
+                    BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                    BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-registry-namespace`
+
+                    # Bluemix Login
+                    bx login -a \${BX_API_ENDPOINT} -s \${BX_SPACE}
+
+                    # initialize docker using container registry secret
+                    bx cr login
+
+                    docker push \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER}
+                    """
+                }
+            }
+            container('helm') {
+                stage ('Install Chart') {
+                    sh """
+                    #!/bin/bash
+                    BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                    BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-registry-namespace`
+
+                    # Init helm
+                    helm init
+
+                    # Edit chart values using yaml (NEED TO INSTALL YAML) - Call image chart deployer
+                    cd chart/bc-customer
+
+                    # Replace tag
+                    cat values.yaml | \
+                        yaml w - image.repository \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer | \
+                        yaml w - image.tag ${env.BUILD_NUMBER} > \
+                            values_new.yaml
+
+                    mv values_new.yaml values.yaml
+
+                    # Install/Upgrade Chart
+                    release=`helm list | grep bc-customer | awk '{print \$1}' | head -1`
+
+                    if [[ -z "\${release// }" ]]; then
+                        echo "Installing bc-customer chart for the first time"
+                        helm install .
+                    else
+                        echo "Upgrading bc-customer chart release"
+                        helm upgrade \${release} .
+                    fi
+
+                    """
+                }
+            }
+        } catch (exception) {
+            container('docker') {
+                stage ('Cleanup Bad Image') {
+                    sh """
+                    #!/bin/bash
+                    set -x
+
+                    export BLUEMIX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
+                    BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
+                    BX_API_ENDPOINT=`cat /var/run/configs/bluemix-target/bluemix-api-endpoint`
+                    BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                    BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-registry-namespace`
+
+                    # Bluemix Login
+                    bx login -a \${BX_API_ENDPOINT} -s \${BX_SPACE}
+
+                    # initialize docker using container registry secret
+                    bx cr login
+                    bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER}
+                   
+                    """
+                }
+            }
+
+        }
+
+        container('kubectl') {
+            stage ('Cleanup Helm Install Jobs') {
                 sh """
                 #!/bin/bash
-
-                ./gradlew build -x test
+                set -x
+                
+                # Delete all helm jobs for this chart
+                cd chart/bc-customer
+                chart_name=`yaml read Chart.yaml name`
+                chart_version=`yaml read Chart.yaml version`
+                
+                kubectl delete jobs -l chart=\${chart_name}-\${chart_version}
                 """
             }
-            stage ('Build Docker Image') {
+        }
+        container('docker') {
+            stage ('Cleanup Old Images') {
                 sh """
                 #!/bin/bash
+                set -x
 
-                REGISTRY_NAMESPACE=chrisking
+                export BLUEMIX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
+                BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
+                BX_API_ENDPOINT=`cat /var/run/configs/bluemix-target/bluemix-api-endpoint`
+                BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-registry-namespace`
 
-                ./gradlew docker 
-                cd docker 
-                docker build -t registry.ng.bluemix.net/\${REGISTRY_NAMESPACE}/micro-customer:${env.BUILD_NUMBER} .
-                """
-            }
-            stage ('Push Docker Image to Registry') {
-                sh """
-                #!/bin/bash
+                # Bluemix Login
+                bx login -a \${BX_API_ENDPOINT} -s \${BX_SPACE}
 
-                REGISTRY_NAMESPACE=chrisking
-
-                # Install plugins
-                bx plugin install container-registry -r Bluemix
-
-                # TODO: use API key instead of password?
-
-                # Login to Bluemix and init plugins
-                bx login -a api.ng.bluemix.net \
-                -u `cat /var/run/secrets/bx-auth-secret/CF_EMAIL` \
-                -p `cat /var/run/secrets/bx-auth-secret/CF_PASSWORD` \
-                -c `cat /var/run/secrets/bx-auth-secret/CF_ACCOUNT` \
-                -o `cat /var/run/secrets/bx-auth-secret/CF_ORG` \
-                -s `cat /var/run/secrets/bx-auth-secret/CF_SPACE`
-
-                # initialize container registry plugin
+                # initialize docker using container registry secret
                 bx cr login
 
-                # push image into bluemix private registry
-                docker push registry.ng.bluemix.net/\${REGISTRY_NAMESPACE}/micro-customer:${env.BUILD_NUMBER}
-                """
-            }
-            stage ('Bind services to cluster') {
-                sh """
-                #!/bin/bash
+                # find out which images to delete -- keep last N images in the registry
+                MAX_IMAGES_TO_KEEP=3
+                all_images=`bx cr image-list -q | grep \${BX_REGISTRY} | grep \${BX_NAMESPACE} | grep bc-customer`
+                all_image_tags=`echo "\${all_images}" | awk -F: '{print \$2;}' | sort -n`
+                total_num_images=`echo "\${all_images}" | wc -l | awk '{print \$1;}'`
 
-                KUBE_TOKEN=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
-                KUBE_CLUSTER_NAME=`cat /var/run/secrets/bx-auth-secret/CLUSTER_NAME`
-
-                # Install plugins
-                bx plugin install container-service -r Bluemix
-                bx cs init
-
-                # find cloudant service
-                CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*\$//'`
-
-                if [ -z "\${CLOUDANT_SVC_NAME}" ]; then
-                  echo "No Cloudant service found!"
-                  exit 1
+                if [ \${total_num_images} -le \${MAX_IMAGES_TO_KEEP} ]; then
+                    exit 0
                 fi
 
-                # bind it to kube secret
-                echo "Binding cloudant service \${CLOUDANT_SVC_NAME} to cluster \${KUBE_CLUSTER_NAME}"
-                bx cs cluster-service-bind \${KUBE_CLUSTER_NAME} default \${CLOUDANT_SVC_NAME}
+                num_to_delete=\$((total_num_images - MAX_IMAGES_TO_KEEP))
+                images_to_delete=`echo "\${all_image_tags}" | sort -n | head -n \${num_to_delete}`
 
-
-                hs256_key=`kubectl --token=\${KUBE_TOKEN} get secrets | grep "hs256-key" | awk '{print \$1}'`
-                if [ -z "\${hs256_key}" ]; then
-                    echo "Creating HS256 shared secret ..."
-                    kubectl --token=\${KUBE_TOKEN} create secret generic hs256-key --from-literal=key=`cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 256 | head -n 1 | xargs echo -n`
-
-                fi
-
-                """
-            }
-            stage ('Deploy pod to Kubernetes') {
-                sh """
-                #!/bin/bash
-
-                CLOUDANT_SVC_NAME=`bx service list | grep cloudantNoSQLDB | sed -e 's/[ ]*cloudantNoSQLDB.*\$//'`
-
-                # TODO: get the secret name from the service name?
-                CLOUDANT_SECRET_NAME="binding-\${CLOUDANT_SVC_NAME}"
-                REGISTRY_NAMESPACE=chrisking
-                token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
-                image_name=registry.ng.bluemix.net/\${REGISTRY_NAMESPACE}/micro-customer:${env.BUILD_NUMBER}
-
-                customer_deployment=`kubectl --token=\${token} get deployments | grep customer-microservice | head -1 | awk '{print \$1}'`
-                if [ -z "\${customer_deployment}" ]; then
-                    echo -e "Deploying customer microservice"
-                    cat kubernetes/customer.yaml | \
-                    yaml w - spec.template.spec.containers[0].image \${image_name}| \
-                    yaml w - spec.template.spec.containers[0].volumeMounts[0].mountPath /var/run/secrets/binding-refarch-cloudantdb | \
-                    yaml w - spec.template.spec.containers[0].volumeMounts[0].name binding-refarch-cloudantdb | \
-                    yaml w - spec.template.spec.volumes[0].name binding-refarch-cloudantdb | \
-                    yaml w - spec.template.spec.volumes[0].secret.defaultMode 420 | \
-                    yaml w - spec.template.spec.volumes[0].secret.secretName \${CLOUDANT_SECRET_NAME} \
-                    yaml w - spec.template.spec.containers[0].volumeMounts[1].mountPath /var/run/secrets/hs256-key | \
-                    yaml w - spec.template.spec.containers[0].volumeMounts[1].name hs256-key| \
-
-                    yaml w - spec.template.spec.volumes[1].name hs256-key | \
-                    yaml w - spec.template.spec.volumes[1].secret.defaultMode 420 | \
-                    yaml w - spec.template.spec.volumes[1].secret.secretName hs256-key \
-                    > deployment.yml
-    
-                    kubectl --token=\${token} create -f deployment.yml
-                else
-                    # rolling update
-                    echo -e "Doing a rolling update on customer microservice deployment"
-                    kubectl --token=\${token} set image deployment/customer-microservice customer-service=\${image_name}
-
-                    # Watch the rollout update
-                    kubectl --token=\${token} rollout status deployment/customer-microservice
-
-                fi
-
-                customer_service=`kubectl --token=\${token} get service| grep customer-service | head -1 | awk '{print \$1}'`
-                if [ -z "\${customer_service}" ]; then
-                    kubectl --token=\${token} create -f kubernetes/customer-service.yaml
-                fi
-
-                """
-            }
-            stage ('Clean up old images') {
-                sh """
-                #!/bin/bash
+                for i in \${images_to_delete}; do
+                    # delete images smaller than current build
+                    echo "Deleting \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i} ..."
+                    bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i}
+                done
                 
-                # TODO: delete old images 
-
                 """
             }
-
         }
     }
 }
