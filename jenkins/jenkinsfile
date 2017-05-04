@@ -186,6 +186,11 @@ podTemplate(
                 all_images=`bx cr image-list -q | grep \${BX_REGISTRY} | grep \${BX_NAMESPACE} | grep bc-customer`
                 all_image_tags=`echo "\${all_images}" | awk -F: '{print \$2;}' | sort -n`
                 total_num_images=`echo "\${all_images}" | wc -l | awk '{print \$1;}'`
+
+                if [ \${total_num_images} -le \${MAX_IMAGES_TO_KEEP} ]; then
+                    exit 0
+                fi
+
                 num_to_delete=\$((total_num_images - MAX_IMAGES_TO_KEEP))
                 images_to_delete=`echo "\${all_image_tags}" | sort -n | head -n \${num_to_delete}`
 
