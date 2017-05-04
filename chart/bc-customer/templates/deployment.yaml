@@ -1,9 +1,12 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: bc-customer
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app: bluecompute
+    tier: backend
+    micro: customer
 spec:
   replicas: {{ .Values.replicaCount }}
   template:
@@ -12,9 +15,10 @@ spec:
         app: bluecompute
         tier: backend
         micro: customer
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
       containers:
-      - name: {{ .Chart.Name }}
+      - name: bc-customer
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
