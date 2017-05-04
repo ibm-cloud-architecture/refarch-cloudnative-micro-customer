@@ -43,11 +43,8 @@ podTemplate(
           mountPath: '/var/run/configs/bluemix-target'
       )
     ],
-
-    ) {
-
+) {
     node ('pod') {
-
         stage('Build') {
             checkout scm
             container('java') {
@@ -113,6 +110,8 @@ podTemplate(
                         yaml w - image.repository \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer | \
                         yaml w - image.tag ${env.BUILD_NUMBER} > \
                             values_new.yaml
+
+                    mv values_new.yaml values.yaml
 
                     # Install/Upgrade Chart
                     release=`helm list | grep bc-customer | awk '{print \$1}' | head -1`
