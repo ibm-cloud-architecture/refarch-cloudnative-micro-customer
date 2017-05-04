@@ -45,34 +45,148 @@ podTemplate(
     ],
 ) {
     node ('pod') {
-        stage('Build') {
-            checkout scm
-            container('java') {
-                stage('Build Gradle Project') {
-                    sh """
-                    #!/bin/bash
-                    ./gradlew build -x test
-                    ./gradlew docker
-                    """
+        try {
+            stage('Build') {
+                checkout scm
+                container('java') {
+                    stage('Build Gradle Project') {
+                        sh """
+                        #!/bin/bash
+                        ./gradlew build -x test
+                        ./gradlew docker
+                        """
+                    }
                 }
             }
-        }
 
-        stage('Docker') {
-            container('docker') {
-                stage ('Build Docker Image') {
-                    sh """
-                    #!/bin/bash
-                    BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
-                    BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-namespace`
+            stage('Docker') {
+                container('docker') {
+                    stage ('Build Docker Image') {
+                        sh """
+                        #!/bin/bash
+                        BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                        BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-namespace`
 
-                    cd docker
-                    docker build -t \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER} .
-                    """
+                        cd docker
+                        docker build -t \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER} .
+                        """
+                    }
+                    stage ('Push Docker Image to Registry') {
+                        sh """
+                        #!/bin/bash
+                        export BLUEMIX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
+                        BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
+                        BX_API_ENDPOINT=`cat /var/run/configs/bluemix-target/bluemix-api-endpoint`
+                        BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                        BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-namespace`
+
+                        # Bluemix Login
+                        bx login -a \${BX_API_ENDPOINT} -s \${BX_SPACE}
+
+                        # initialize docker using container registry secret
+                        bx cr login
+
+                        docker push \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER}
+                        """
+                    }
                 }
-                stage ('Push Docker Image to Registry') {
+            }
+
+            stage('Chart') {
+                container('helm') {
+                    stage ('Install Chart') {
+                        sh """
+                        #!/bin/bash
+                        BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                        BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-namespace`
+
+                        # Init helm
+                        helm init
+
+                        # Edit chart values using yaml (NEED TO INSTALL YAML) - Call image chart deployer
+                        cd chart/bc-customer
+
+                        # Replace tag
+                        cat values.yaml | \
+                            yaml w - image.repository \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer | \
+                            yaml w - image.tag ${env.BUILD_NUMBER} > \
+                                values_new.yaml
+
+                        mv values_new.yaml values.yaml
+
+                        # Install/Upgrade Chart
+                        release=`helm list | grep bc-customer | awk '{print \$1}' | head -1`
+
+                        if [[ -z "\${release// }" ]]; then
+                            echo "Installing bc-customer chart for the first time"
+                            helm install .
+                        else
+                            echo "Upgrading bc-customer chart release"
+                            helm upgrade \${release} .
+                        fi
+
+                        """
+                    }
+                }
+            }
+            stage('Cleanup') {
+                container('kubectl') {
+                    stage ('Cleanup Helm Install Jobs') {
+                        sh """
+                        #!/bin/bash
+                        set -x
+                        
+                        # Delete all helm jobs for this chart
+                        cd chart/bc-customer
+                        chart_name=`yaml read Chart.yaml name`
+                        chart_version=`yaml read Chart.yaml version`
+                        
+                        kubectl delete jobs -l chart=\${chart_name}-\${chart_version}
+                        """
+                    }
+                }
+                container('docker') {
+                    stage ('Cleanup Old Images') {
+                        sh """
+                        #!/bin/bash
+                        set -x
+
+                        export BLUEMIX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
+                        BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
+                        BX_API_ENDPOINT=`cat /var/run/configs/bluemix-target/bluemix-api-endpoint`
+                        BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                        BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-namespace`
+
+                        # Bluemix Login
+                        bx login -a \${BX_API_ENDPOINT} -s \${BX_SPACE}
+
+                        # initialize docker using container registry secret
+                        bx cr login
+
+                        # all images
+                        all_images=`bx cr image-list -q | grep \${BX_REGISTRY} | grep \${BX_NAMESPACE} | grep bc-customer`
+
+                        MAX_BUILD=\$((${env.BUILD_NUMBER} - 1))
+                        for i in `seq 1 \${MAX_BUILD}`; do
+                            # delete images smaller than current build
+                            if [ -z `echo \${all_images} | grep \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i}` ]; then
+                                continue
+                            fi
+                            echo "Deleting \${BX_REGISTRY}\/${BX_NAMESPACE}/bc-customer:\${i} ..."
+                            bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i}
+                        done
+                        
+                        """
+                    }
+                }
+            }
+        } catch (exception) {
+            container('docker') {
+                stage ('Cleanup Bad Image') {
                     sh """
                     #!/bin/bash
+                    set -x
+
                     export BLUEMIX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
                     BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
                     BX_API_ENDPOINT=`cat /var/run/configs/bluemix-target/bluemix-api-endpoint`
@@ -84,66 +198,12 @@ podTemplate(
 
                     # initialize docker using container registry secret
                     bx cr login
-
-                    docker push \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER}
+                    bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER}
+                   
                     """
                 }
             }
-        }
 
-        stage('Chart') {
-            container('helm') {
-                stage ('Install Chart') {
-                    sh """
-                    #!/bin/bash
-                    BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
-                    BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-namespace`
-
-                    # Init helm
-                    helm init
-
-                    # Edit chart values using yaml (NEED TO INSTALL YAML) - Call image chart deployer
-                    cd chart/bc-customer
-
-                    # Replace tag
-                    cat values.yaml | \
-                        yaml w - image.repository \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer | \
-                        yaml w - image.tag ${env.BUILD_NUMBER} > \
-                            values_new.yaml
-
-                    mv values_new.yaml values.yaml
-
-                    # Install/Upgrade Chart
-                    release=`helm list | grep bc-customer | awk '{print \$1}' | head -1`
-
-                    if [[ -z "\${release// }" ]]; then
-                        echo "Installing bc-customer chart for the first time"
-                        helm install .
-                    else
-                        echo "Upgrading bc-customer chart release"
-                        helm upgrade \${release} .
-                    fi
-
-                    """
-                }
-            }
-        }
-        stage('Cleanup') {
-            container('kubectl') {
-                stage ('Cleanup Helm Install Jobs') {
-                    sh """
-                    #!/bin/bash
-                    set -x
-                    
-                    # Delete all helm jobs for this chart
-                    cd ../chart/bc-customer
-                    chart_name=`yaml read Chart.yaml name`
-                    chart_version=`yaml read Chart.yaml version`
-                    
-                    kubectl delete jobs -l chart=\${chart_name}-\${chart_version}
-                    """
-                }
-            }
         }
     }
 }
