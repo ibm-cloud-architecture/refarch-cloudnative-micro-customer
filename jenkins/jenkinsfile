@@ -190,7 +190,7 @@ podTemplate(
                 set +e
                 all_images=`bx cr image-list -q | grep \${BX_REGISTRY} | grep \${BX_NAMESPACE} | grep bc-customer`
 
-                if ( -z \${all_images} ]; then
+                if [ -z \${all_images} ]; then
                     exit 0
                 fi
 
