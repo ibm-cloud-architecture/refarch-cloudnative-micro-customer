@@ -65,7 +65,7 @@ podTemplate(
                     BX_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-registry-namespace`
 
                     cd docker
-                    docker build -t \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER} .
+                    docker build -t \${BX_REGISTRY}/\${BX_NAMESPACE}/bluecompute-customer:${env.BUILD_NUMBER} .
                     """
                 }
                 stage ('Push Docker Image to Registry') {
@@ -83,7 +83,7 @@ podTemplate(
                     # initialize docker using container registry secret
                     bx cr login
 
-                    docker push \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER}
+                    docker push \${BX_REGISTRY}/\${BX_NAMESPACE}/bluecompute-customer:${env.BUILD_NUMBER}
                     """
                 }
             }
@@ -98,24 +98,24 @@ podTemplate(
                     helm init
 
                     # Edit chart values using yaml (NEED TO INSTALL YAML) - Call image chart deployer
-                    cd chart/bc-customer
+                    cd chart/bluecompute-customer
 
                     # Replace tag
                     cat values.yaml | \
-                        yaml w - image.repository \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer | \
+                        yaml w - image.repository \${BX_REGISTRY}/\${BX_NAMESPACE}/bluecompute-customer | \
                         yaml w - image.tag ${env.BUILD_NUMBER} > \
                             values_new.yaml
 
                     mv values_new.yaml values.yaml
 
                     # Install/Upgrade Chart
-                    release=`helm list | grep bc-customer | awk '{print \$1}' | head -1`
+                    release=`helm list | grep bluecompute-customer | awk '{print \$1}' | head -1`
 
                     if [[ -z "\${release// }" ]]; then
-                        echo "Installing bc-customer chart for the first time"
+                        echo "Installing bluecompute-customer chart for the first time"
                         helm install .
                     else
-                        echo "Upgrading bc-customer chart release"
+                        echo "Upgrading bluecompute-customer chart release"
                         helm upgrade \${release} .
                     fi
 
@@ -143,7 +143,7 @@ podTemplate(
 
                     set +e
                     # delete the build
-                    bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:${env.BUILD_NUMBER}
+                    bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bluecompute-customer:${env.BUILD_NUMBER}
                     set -e
                    
                     """
@@ -159,7 +159,7 @@ podTemplate(
                 set -x
                 
                 # Delete all helm jobs for this chart
-                cd chart/bc-customer
+                cd chart/bluecompute-customer
                 chart_name=`yaml read Chart.yaml name`
                 chart_version=`yaml read Chart.yaml version`
                 
@@ -188,7 +188,7 @@ podTemplate(
                 # find out which images to delete -- keep last N images in the registry
                 MAX_IMAGES_TO_KEEP=3
                 set +e
-                all_images=`bx cr image-list -q | grep \${BX_REGISTRY} | grep \${BX_NAMESPACE} | grep bc-customer`
+                all_images=`bx cr image-list -q | grep \${BX_REGISTRY} | grep \${BX_NAMESPACE} | grep bluecompute-customer`
 
                 if [ -z \${all_images} ]; then
                     exit 0
@@ -206,8 +206,8 @@ podTemplate(
 
                 for i in \${images_to_delete}; do
                     # delete images smaller than current build
-                    echo "Deleting \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i} ..."
-                    bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bc-customer:\${i}
+                    echo "Deleting \${BX_REGISTRY}/\${BX_NAMESPACE}/bluecompute-customer:\${i} ..."
+                    bx cr image-rm \${BX_REGISTRY}/\${BX_NAMESPACE}/bluecompute-customer:\${i}
                 done
 
                 set -e
