@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{.Release.Name}}-bind-cloudantdb"
+  name: "{{.Release.Name}}-create-cloudantdb"
   labels:
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
@@ -10,11 +10,11 @@ metadata:
     # This is what defines this resource as a hook. Without this line, the
     # job is considered part of the release.
     "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-weight": "40"
 spec:
   template:
     metadata:
-      name: "{{.Release.Name}}-bind-cloudantdb"
+      name: "{{.Release.Name}}-create-cloudantdb"
       labels:
         heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
@@ -23,9 +23,9 @@ spec:
       restartPolicy: Never
       containers:
       - name: create-cloudantdb
-        image: ibmcase/bluemix-cluster-deployer
+        image: ibmcase/bluemix-deployer
         command: [ "/bin/bash", "-c" ]
-        args: ["source /scripts/bx_login.sh; bx cs init; bx cs cluster-service-bind ${KUBE_CLUSTER_NAME} default {{ .Values.cloudant.serviceName }}"]
+        args: ["source /scripts/bx_login.sh; bx service list | grep cloudantNoSQLDB | grep '^{{ .Values.cloudant.serviceName }} ' || bx service create cloudantNoSQLDB {{ .Values.cloudant.servicePlan}} {{ .Values.cloudant.serviceName }}"]
         imagePullPolicy: Always
         env:
         - name: BX_SPACE

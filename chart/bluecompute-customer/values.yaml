@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 replicaCount: 2
 image:
-  repository: registry.ng.bluemix.net/chrisking/micro-customer
-  tag: 22
+  repository: ibmcase/bluecompute-customer
+  tag: latest
   pullPolicy: Always
 service:
   name: customer-service
