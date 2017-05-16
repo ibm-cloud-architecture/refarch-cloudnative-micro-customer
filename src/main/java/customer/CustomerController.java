@@ -98,8 +98,15 @@ public class CustomerController {
      * check
      */
     @RequestMapping("/check")
-    @ResponseBody String check() {
-        return "it works!";
+    @ResponseBody ResponseEntity<String> check() {
+    	// test the cloudant connection
+    	try {
+			getCloudantDatabase().info();
+            return  ResponseEntity.ok("It works!");
+    	} catch (Exception e) {
+    		logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    	}
     }
     
     /**

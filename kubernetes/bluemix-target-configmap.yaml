@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bluemix-target
+  namespace: default
+data:
+  bluemix-api-endpoint: api.ng.bluemix.net
+  bluemix-org: my-org
+  bluemix-registry: registry.ng.bluemix.net
+  bluemix-registry-namespace: my_namespace
+  bluemix-space: my-bluemix-space
+  kube-cluster-name: my-cluster

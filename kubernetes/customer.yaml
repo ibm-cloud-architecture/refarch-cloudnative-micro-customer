@@ -23,6 +23,16 @@ spec:
           name: hs256-key
         ports:
         - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /micro/customer/check
+            port: 8080
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /micro/customer/check
+            port: 8080
+          initialDelaySeconds: 60
       volumes:
       - name: binding-refarch-cloudantdb
         secret:
