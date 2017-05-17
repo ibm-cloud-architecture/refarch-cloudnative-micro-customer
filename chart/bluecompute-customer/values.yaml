@@ -2,20 +2,27 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 replicaCount: 2
+
 image:
   repository: ibmcase/bluecompute-customer
   tag: latest
   pullPolicy: Always
+
 service:
   name: customer-service
   type: ClusterIP
   externalPort: 8080
   internalPort: 8080
+
 cloudant:
+  skipDelete: false
   serviceName: refarch-cloudantdb
   servicePlan: Lite
+
 hs256key:
+  skipDelete: false
   secretName: hs256-key
+
 resources:
   limits:
     cpu: 100m
@@ -24,3 +31,15 @@ resources:
     cpu: 100m
     memory: 128Mi
 
+configMap:
+  skipDelete: false
+  bluemixAPIEndpoint: api.ng.bluemix.net
+  bluemixOrg: PUT_YOUR_BLUEMIX_ORG_HERE
+  bluemixSpace: PUT_YOUR_BLUEMIX_SPACE_HERE
+  bluemixRegistry: registry.ng.bluemix.net
+  bluemixRegistryNamespace: PUT_YOUR_BLUEMIX_REGISTRY_NAMESPACE_HERE
+  kubeClusterName: PUT_YOUR_CLUSTER_NAME_HERE
+
+secret:
+  skipDelete: false
+  apiKey: PUT_YOUR_API_KEY_HERE

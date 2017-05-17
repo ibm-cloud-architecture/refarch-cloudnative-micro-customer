@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{.Chart.Name}}-create-hs256-key-{{.Release.Name}}"
+  name: "{{.Chart.Name}}-delete-configmap-{{.Release.Name}}"
   labels:
     app: bluecompute
     heritage: {{.Release.Service | quote }}
@@ -10,12 +10,12 @@ metadata:
   annotations:
     # This is what defines this resource as a hook. Without this line, the
     # job is considered part of the release.
-    "helm.sh/hook": pre-install
+    "helm.sh/hook": post-delete
     "helm.sh/hook-weight": "32"
 spec:
   template:
     metadata:
-      name: "{{.Chart.Name}}-create-hs256-key-{{.Release.Name}}"
+      name: "{{.Chart.Name}}-delete-configmap-{{.Release.Name}}"
       labels:
         app: bluecompute
         heritage: {{.Release.Service | quote }}
@@ -24,8 +24,14 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-      - name: create-hs256-key
-        image: lachlanevenson/k8s-kubectl
-        command: ["/bin/sh", "-c" ]
-        args: [ "kubectl get secrets {{ .Values.hs256key.secretName}} ||  kubectl create secret generic {{ .Values.hs256key.secretName }} --from-literal=key=`cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 256 | head -n 1 | xargs echo -n` "]
-        imagePullPolicy: Always
+      - name: delete-configmap
+        image: ibmcase/kubectl:latest
+        command: [ "/bin/bash", "-c" ]
+        args: ["if [[ \"{{ .Values.configMap.skipDelete }}\" == \"true\" ]]; then \
+          echo \"Skipping\"; \
+          exit 0; \
+        else \
+          kubectl --namespace {{ .Release.Namespace }} delete configmaps bluemix-target || \
+          echo \"bluemix-target already deleted\"; \
+        fi"]
+        imagePullPolicy: IfNotPresent
