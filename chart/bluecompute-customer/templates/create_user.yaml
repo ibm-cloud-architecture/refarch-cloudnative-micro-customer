@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{.Chart.Name}}-create-user-{{.Release.Name}}"
+  labels:
+    heritage: {{.Release.Service | quote }}
+    release: {{.Release.Name | quote }}
+    chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "42"
+spec:
+  template:
+    metadata:
+      name: "{{.Chart.Name}}-create-user-{{.Release.Name}}"
+      labels:
+        heritage: {{.Release.Service | quote }}
+        release: {{.Release.Name | quote }}
+        chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: create-user
+        image: ellerbrock/alpine-bash-curl-ssl
+        command: ["/bin/bash", "-c" ]
+        args: 
+        - >
+            secret=`cat /var/run/secrets/hs256-key/key`;
+            jwt1=`echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64`;
+            jwt2=`echo -n '{"scope":["admin"],"user_name":"admin"}' | openssl enc -base64`;
+            jwt3=`echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n'`;
+            jwt4=`echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n'`;
+            jwt=`echo -n "${jwt3}.${jwt4}"`;
+            curl -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -X POST -d '{"username": "user", "password": "passw0rd", "firstName": "user", "lastName": "name", "email": "user@name.com"}' http://customer-service:8080/micro/customer
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /var/run/secrets/hs256-key
+          name: hs256-key
+      volumes:
+      - name: hs256-key
+        secret:
+          defaultMode: 420
+          secretName: "{{ .Values.hs256key.secretName }}"
