@@ -26,7 +26,7 @@ spec:
         image: ibmcase/bluemix-deployer
         command: [ "/bin/bash", "-c" ]
         args: ["source /scripts/bx_login.sh; bx service list | grep cloudantNoSQLDB | grep '^{{ .Values.cloudant.serviceName }} ' || bx service create cloudantNoSQLDB {{ .Values.cloudant.servicePlan}} {{ .Values.cloudant.serviceName }}"]
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: BX_SPACE
           valueFrom:

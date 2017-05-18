@@ -114,7 +114,7 @@ function install_customer {
 	--set configMap.bluemixSpace=${SPACE} \
 	--set configMap.kubeClusterName=${CLUSTER_NAME} \
 	--set secret.apiKey=${API_KEY} \
-	. --debug --wait
+	. --debug --wait --timeout 600
 
 	printf "\n\n${grn}Customer was successfully installed!${end}\n"
 	printf "\n\n${grn}Cleaning up...${end}\n"
