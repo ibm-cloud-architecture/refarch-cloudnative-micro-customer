@@ -1,22 +1,19 @@
-FROM openjdk:8
+FROM openjdk:8-alpine
 VOLUME /tmp
 ADD app.jar app.jar
-RUN bash -c 'touch /app.jar'
-
-# IBM vulnerability advisor policies
-RUN sed -i -e '/^PASS_MIN_DAYS/ s/0/1/' /etc/login.defs
-RUN sed -i -e '/^PASS_MAX_DAYS/ s/99999/90/' /etc/login.defs
-RUN sed -i -e '/^password.*pam_unix.so/ s/$/ minlen=8/' /etc/pam.d/common-password
+RUN sh -c 'touch /app.jar'
 
 # Install prereqs
-RUN apt-get update && apt-get install -y jq
+RUN apk --no-cache update \
+ && apk add jq wget bash ca-certificates \
+ && update-ca-certificates
 
 # Copy agent files
 COPY agents/ /agents/
 
 # Add the new relic agent
 RUN wget https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip -O /tmp/newrelic.zip \
-  && unzip -u -d /agents /tmp/newrelic.zip newrelic/newrelic.jar \
+  && unzip -d /agents /tmp/newrelic.zip newrelic/newrelic.jar \
   && rm /tmp/newrelic.zip
 
 COPY startup.sh startup.sh

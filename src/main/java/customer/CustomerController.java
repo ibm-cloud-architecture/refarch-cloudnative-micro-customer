@@ -58,8 +58,8 @@ public class CustomerController {
         logger.debug(cloudantProperties.toString());
         
         try {
-            logger.info("Connecting to cloudant at: " + "https://" + cloudantProperties.getHost() + ":" + cloudantProperties.getPort());
-            final CloudantClient cloudantClient = ClientBuilder.url(new URL("https://" + cloudantProperties.getHost() + ":" + cloudantProperties.getPort()))
+            logger.info("Connecting to cloudant at: " + cloudantProperties.getProtocol() + "://" + cloudantProperties.getHost() + ":" + cloudantProperties.getPort());
+            final CloudantClient cloudantClient = ClientBuilder.url(new URL(cloudantProperties.getProtocol() + "://" + cloudantProperties.getHost() + ":" + cloudantProperties.getPort()))
                     .username(cloudantProperties.getUsername())
                     .password(cloudantProperties.getPassword())
                     .build();
