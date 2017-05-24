@@ -33,7 +33,7 @@ spec:
             jwt3=`echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n'`;
             jwt4=`echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n'`;
             jwt=`echo -n "${jwt3}.${jwt4}"`;
-            curl -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -X POST -d '{"username": "user", "password": "passw0rd", "firstName": "user", "lastName": "name", "email": "user@name.com"}' http://customer-service:8080/micro/customer
+            curl --max-time 5 -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -X POST -d '{"username": "user", "password": "passw0rd", "firstName": "user", "lastName": "name", "email": "user@name.com"}' http://customer-service:8080/micro/customer
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /var/run/secrets/hs256-key

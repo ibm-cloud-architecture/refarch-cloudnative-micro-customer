@@ -45,8 +45,6 @@ spec:
             path: /
             port: {{ .Values.couchdb.service.internalPort }}
           initialDelaySeconds: 60
-        resources:
-{{ toYaml .Values.resources | indent 12 }}
       volumes:
         - name: couchdb-data
           hostPath:
