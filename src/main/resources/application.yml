@@ -16,6 +16,7 @@ spring:
      name: customer-microservice
      
      cloudant:
+        protocol: https
         username: 
         password: 
         host: 

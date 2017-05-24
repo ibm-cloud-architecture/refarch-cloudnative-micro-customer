@@ -1,0 +1,49 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: bluecompute-customer
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app: bluecompute
+    tier: backend
+    micro: customer
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: bluecompute
+        tier: backend
+        micro: customer
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    spec:
+      containers:
+      - name: bluecompute-customer
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+        - mountPath: /var/run/secrets/binding-refarch-cloudantdb
+          name: binding-refarch-cloudantdb
+        - mountPath: /var/run/secrets/hs256-key
+          name: hs256-key
+        ports:
+        - containerPort: {{ .Values.service.internalPort }}
+        livenessProbe:
+          httpGet:
+            path: /micro/check
+            port: {{ .Values.service.internalPort }}
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /micro/check
+            port: {{ .Values.service.internalPort }}
+          initialDelaySeconds: 60
+      volumes:
+      - name: binding-refarch-cloudantdb
+        secret:
+          defaultMode: 420
+          secretName: {{ .Values.couchdb.binding.name }}
+      - name: hs256-key
+        secret:
+          defaultMode: 420
+          secretName: "{{ .Values.hs256key.secretName }}"

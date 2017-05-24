@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: bluecompute-customer-couchdb
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: bluecompute
+        tier: data
+        micro: customer
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    spec:
+      containers:
+      - name: bluecompute-customer-couchdb
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+          - name: COUCHDB_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.couchdb.binding.name }}
+                key: user
+          - name: COUCHDB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.couchdb.binding.name }}
+                key: password
+        volumeMounts:
+          - mountPath: /opt/couchdb/data
+            name: couchdb-data
+            readOnly: false
+        ports:
+        - containerPort: {{ .Values.couchdb.service.internalPort }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.couchdb.service.internalPort }}
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.couchdb.service.internalPort }}
+          initialDelaySeconds: 60
+        resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: couchdb-data
+          hostPath:
+            path: /opt/couchdb/data

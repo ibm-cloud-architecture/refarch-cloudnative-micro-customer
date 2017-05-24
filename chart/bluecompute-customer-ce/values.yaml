@@ -1,0 +1,47 @@
+# Default values for micro-customer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+
+image:
+  repository: ibmcase/bluecompute-customer
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  name: customer-service
+  type: ClusterIP
+  externalPort: 8080
+  internalPort: 8080
+
+hs256key:
+  skipDelete: false
+  secretName: hs256-key
+
+couchdb:
+  user:
+  password:
+  service:
+    name: customerdb
+    type: ClusterIP
+    externalPort: 5984
+    internalPort: 5984
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  binding:
+    name: binding-customer-couchdb
+  secret:
+    name: customer-couchdb-credential
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

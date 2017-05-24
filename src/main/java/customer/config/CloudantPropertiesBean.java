@@ -6,13 +6,22 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix="spring.application.cloudant")
 public class CloudantPropertiesBean {
-	
+
+	private String protocol;
 	private String username;
 	private String password;
 	private String host;
 	private int port;
 	private String database;
 	
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
+	}
+
+	public String getProtocol() {
+		return protocol;
+	}
+
 	public String getUsername() {
 		return username;
 	}
