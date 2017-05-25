@@ -25,7 +25,7 @@ spec:
              "name": "bluecompute-customer-wait-for-customer-service",
              "image": "ellerbrock/alpine-bash-curl-ssl",
              "imagePullPolicy": "IfNotPresent",
-             "command": ["/bin/bash", "-c", "until curl --max-time 1 http://{{ .Values.service.name }}:{{ .Values.service.externalPort }}; do echo waiting for couchdb; sleep 1; done;"]
+             "command": ["/bin/bash", "-c", "until curl --max-time 1 http://{{ .Values.service.name }}:{{ .Values.service.externalPort }}; do echo waiting for customer-service; sleep 1; done;"]
           }
         ]'
     spec:
