@@ -3,6 +3,9 @@ kind: Service
 metadata:
   name: {{ .Values.couchdb.service.name }}
   labels:
+    app: bluecompute
+    tier: data
+    micro: customer
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
   type: {{ .Values.couchdb.service.type }}

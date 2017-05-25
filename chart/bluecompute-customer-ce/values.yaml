@@ -15,7 +15,7 @@ service:
   internalPort: 8080
 
 hs256key:
-  skipDelete: false
+  skipDelete: true
   secretName: hs256-key
 
 couchdb:
@@ -26,22 +26,7 @@ couchdb:
     type: ClusterIP
     externalPort: 5984
     internalPort: 5984
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
   binding:
     name: binding-customer-couchdb
   secret:
     name: customer-couchdb-credential
-
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi

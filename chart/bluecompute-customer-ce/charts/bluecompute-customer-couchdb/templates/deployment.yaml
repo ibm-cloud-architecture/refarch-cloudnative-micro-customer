@@ -3,6 +3,9 @@ kind: Deployment
 metadata:
   name: bluecompute-customer-couchdb
   labels:
+    app: bluecompute
+    tier: data
+    micro: customer
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
   replicas: {{ .Values.replicaCount }}
@@ -39,12 +42,13 @@ spec:
           httpGet:
             path: /
             port: {{ .Values.couchdb.service.internalPort }}
-          initialDelaySeconds: 60
+          initialDelaySeconds: 30
         readinessProbe:
           httpGet:
             path: /
             port: {{ .Values.couchdb.service.internalPort }}
-          initialDelaySeconds: 60
+          initialDelaySeconds: 10
+          failureThreshold: 10
       volumes:
         - name: couchdb-data
           hostPath:
