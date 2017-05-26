@@ -18,6 +18,12 @@ hs256key:
   skipDelete: true
   secretName: hs256-key
 
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    memory: 64Mi
+
 couchdb:
   user:
   password:
@@ -30,3 +36,9 @@ couchdb:
     name: binding-customer-couchdb
   secret:
     name: customer-couchdb-credential
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      memory: 64Mi
+

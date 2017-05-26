@@ -36,6 +36,8 @@ spec:
           - mountPath: /opt/couchdb/data
             name: couchdb-data
             readOnly: false
+        resources:
+{{ toYaml .Values.couchdb.resources | indent 12 }}
         ports:
         - containerPort: {{ .Values.couchdb.service.internalPort }}
         livenessProbe:

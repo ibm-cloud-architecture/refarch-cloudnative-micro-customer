@@ -16,3 +16,9 @@ couchdb:
     internalPort: 5984
   binding:
     name: binding-customer-couchdb
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      memory: 64Mi
+

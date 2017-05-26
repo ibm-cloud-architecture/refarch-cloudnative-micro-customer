@@ -37,6 +37,8 @@ spec:
           name: hs256-key
         ports:
         - containerPort: {{ .Values.service.internalPort }}
+        resources:
+{{ toYaml .Values.resources | indent 12 }}
       volumes:
       - name: binding-refarch-cloudantdb
         secret:
