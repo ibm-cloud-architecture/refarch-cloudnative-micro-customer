@@ -1,11 +1,12 @@
 FROM openjdk:8-alpine
 VOLUME /tmp
-ADD app.jar app.jar
-RUN sh -c 'touch /app.jar'
+
+EXPOSE 8080
+ENTRYPOINT ["./startup.sh"]
 
 # Install prereqs
 RUN apk --no-cache update \
- && apk add jq wget bash ca-certificates \
+ && apk add jq wget bash ca-certificates bc \
  && update-ca-certificates
 
 # Copy agent files
@@ -17,5 +18,5 @@ RUN wget https://download.newrelic.com/newrelic/java-agent/newrelic-agent/curren
   && rm /tmp/newrelic.zip
 
 COPY startup.sh startup.sh
-EXPOSE 8080
-ENTRYPOINT ["./startup.sh"]
+ADD app.jar app.jar
+
