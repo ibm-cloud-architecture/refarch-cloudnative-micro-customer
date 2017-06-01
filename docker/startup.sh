@@ -5,7 +5,7 @@ set -e
 max_heap=`echo 256 * 1024 * 1024 | bc`
 if [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
     mem_limit=`cat /sys/fs/cgroup/memory/memory.limit_in_bytes`
-    if [ ${mem_limit} -lt ${max_heap_default} ]; then
+    if [ ${mem_limit} -lt ${max_heap} ]; then
         max_heap=${mem_limit}
     fi
 fi
