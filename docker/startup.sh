@@ -2,7 +2,11 @@
 set -e
 
 # find the java heap size as 50% of container memory using sysfs
-max_heap=`cat /sys/fs/cgroup/memory/memory.limit_in_bytes | xargs -I{} echo "({} / 1024 / 1024) / 2" | bc`
+if [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+    max_heap=`cat /sys/fs/cgroup/memory/memory.limit_in_bytes | xargs -I{} echo "({} / 1024 / 1024) / 2" | bc`
+else
+    max_heap=256
+fi
 export JAVA_OPTS="${JAVA_OPTS} -Xmx${max_heap}m"
 
 # Set basic java options
