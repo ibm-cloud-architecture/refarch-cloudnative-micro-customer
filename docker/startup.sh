@@ -1,15 +1,17 @@
 #!/bin/bash
 set -e
+set -x
 
-# find the java heap size as 50% of container memory using sysfs, or 256m whichever is less
-max_heap=`echo 256 * 1024 * 1024 | bc`
-if [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+# find the java heap size as 50% of container memory using sysfs, or 512m whichever is less
+max_heap=`echo "512 * 1024 * 1024" | bc`
+cat /sys/fs/cgroup/memory/memory.limit_in_bytes 
+if [ -r "/sys/fs/cgroup/memory/memory.limit_in_bytes" ]; then
     mem_limit=`cat /sys/fs/cgroup/memory/memory.limit_in_bytes`
     if [ ${mem_limit} -lt ${max_heap} ]; then
         max_heap=${mem_limit}
     fi
 fi
-echo "(${max_heap} / 1024 / 1024) / 2" | bc`
+max_heap=`echo "(${max_heap} / 1024 / 1024) / 2" | bc`
 export JAVA_OPTS="${JAVA_OPTS} -Xmx${max_heap}m"
 
 # Set basic java options
