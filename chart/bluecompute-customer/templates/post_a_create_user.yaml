@@ -3,9 +3,12 @@ kind: Job
 metadata:
   name: "{{.Chart.Name}}-create-user-{{.Release.Name}}"
   labels:
+    app: bluecompute
+    micro: customer
+    tier: backend
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
-    chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
   annotations:
     # This is what defines this resource as a hook. Without this line, the
     # job is considered part of the release.
@@ -16,9 +19,12 @@ spec:
     metadata:
       name: "{{.Chart.Name}}-create-user-{{.Release.Name}}"
       labels:
+        app: bluecompute
+        micro: customer
+        tier: backend
         heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
-        chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
       restartPolicy: Never
       containers:

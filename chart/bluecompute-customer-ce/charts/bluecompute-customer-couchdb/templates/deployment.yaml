@@ -4,8 +4,10 @@ metadata:
   name: bluecompute-customer-couchdb
   labels:
     app: bluecompute
-    tier: data
     micro: customer
+    tier: data
+    heritage: {{.Release.Service | quote }}
+    release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
   replicas: {{ .Values.replicaCount }}
@@ -13,8 +15,10 @@ spec:
     metadata:
       labels:
         app: bluecompute
-        tier: data
         micro: customer
+        tier: data
+        heritage: {{.Release.Service | quote }}
+        release: {{.Release.Name | quote }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
       containers:

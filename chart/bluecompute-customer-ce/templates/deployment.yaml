@@ -3,18 +3,22 @@ kind: Deployment
 metadata:
   name: bluecompute-customer
   labels:
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     app: bluecompute
-    tier: backend
     micro: customer
+    tier: backend
+    heritage: {{.Release.Service | quote }}
+    release: {{.Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
       labels:
         app: bluecompute
-        tier: backend
         micro: customer
+        tier: backend
+        heritage: {{.Release.Service | quote }}
+        release: {{.Release.Name | quote }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
       annotations:
         pod.beta.kubernetes.io/init-containers: '[

@@ -18,6 +18,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: bluecompute
-    tier: data
     micro: customer
+    tier: data
+    heritage: {{.Release.Service | quote }}
+    release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"

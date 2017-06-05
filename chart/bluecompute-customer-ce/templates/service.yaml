@@ -4,8 +4,10 @@ metadata:
   name: customer-service
   labels:
     app: bluecompute
-    tier: backend
     micro: customer
+    tier: backend
+    heritage: {{.Release.Service | quote }}
+    release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
   type: {{ .Values.service.type }}
@@ -16,5 +18,8 @@ spec:
     name: {{ .Values.service.name }}
   selector:
     app: bluecompute
-    tier: backend
     micro: customer
+    tier: backend
+    heritage: {{.Release.Service | quote }}
+    release: {{.Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
