@@ -6,7 +6,6 @@ metadata:
     app: bluecompute
     micro: customer
     tier: backend
-    heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
@@ -20,6 +19,5 @@ spec:
     app: bluecompute
     micro: customer
     tier: backend
-    heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"

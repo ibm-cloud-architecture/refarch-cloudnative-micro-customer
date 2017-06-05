@@ -6,7 +6,6 @@ metadata:
     app: bluecompute
     micro: customer
     tier: backend
-    heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
@@ -17,9 +16,17 @@ spec:
         app: bluecompute
         micro: customer
         tier: backend
-        heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+      annotations:
+        pod.beta.kubernetes.io/init-containers: '[
+          {
+             "name": "bluecompute-customer-wait-for-couchdb",
+             "image": "ellerbrock/alpine-bash-curl-ssl",
+             "imagePullPolicy": "IfNotPresent",
+             "command": ["/bin/bash", "-c", "until curl --max-time 1 http://{{ .Values.couchdb.service.name }}:{{ .Values.couchdb.service.externalPort }}; do echo waiting for couchdb; /bin/sleep 1; done;"]
+          }
+        ]'
     spec:
       containers:
       - name: bluecompute-customer
@@ -32,21 +39,13 @@ spec:
           name: hs256-key
         ports:
         - containerPort: {{ .Values.service.internalPort }}
-        livenessProbe:
-          httpGet:
-            path: /micro/check
-            port: {{ .Values.service.internalPort }}
-          initialDelaySeconds: 60
-        readinessProbe:
-          httpGet:
-            path: /micro/check
-            port: {{ .Values.service.internalPort }}
-          initialDelaySeconds: 60
+        resources:
+{{ toYaml .Values.resources | indent 12 }}
       volumes:
       - name: binding-refarch-cloudantdb
         secret:
           defaultMode: 420
-          secretName: "binding-{{ .Values.cloudant.serviceName }}"
+          secretName: {{ .Values.couchdb.binding.name }}
       - name: hs256-key
         secret:
           defaultMode: 420
