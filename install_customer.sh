@@ -130,7 +130,7 @@ function initialize_helm {
 }
 
 function install_bluecompute_customer {
-	printf "\n\n${grn}Installing bluecompute-customer chart. This will take a few minutes...${end} ${coffee3}\n\n"
+	printf "\n\n${grn}Installing customer chart. This will take a few minutes...${end} ${coffee3}\n\n"
 	cd chart
 
 	time helm install --name customer --debug --wait --timeout 600 \
@@ -139,9 +139,9 @@ function install_bluecompute_customer {
 	--set configMap.bluemixRegistryNamespace=${BX_CR_NAMESPACE} \
 	--set configMap.kubeClusterName=${CLUSTER_NAME} \
 	--set secret.apiKey=${BX_API_KEY} \
-	bluecompute-customer
+	customer
 
-	printf "\n\n${grn}bluecompute-customer was successfully installed!${end}\n"
+	printf "\n\n${grn}customer was successfully installed!${end}\n"
 	printf "\n\n${grn}Cleaning up...${end}\n"
 	kubectl delete pods,jobs -l heritage=Tiller
 
@@ -167,5 +167,5 @@ echo "${cyn}export KUBECONFIG=${KUBECONFIG}${end}"
 printf "\nThen run this command to connect to Kubernetes Dashboard:\n"
 echo "${cyn}kubectl proxy${end}"
 
-printf "\nThen open a browser window and paste the following URL to see the Services created by bluecompute-customer Chart:\n"
+printf "\nThen open a browser window and paste the following URL to see the Services created by customer Chart:\n"
 echo "${cyn}http://127.0.0.1:8001/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard/#/service?namespace=default${end}"
