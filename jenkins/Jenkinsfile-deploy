@@ -21,7 +21,7 @@ podTemplate(
     ],
 ) {
     node ('pod') {
-        checkout_scm
+        checkout scm
         container('helm') {
             stage ('Install Chart') {
                 sh """
