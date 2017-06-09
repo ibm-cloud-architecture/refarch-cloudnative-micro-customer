@@ -21,52 +21,49 @@ podTemplate(
     ],
 ) {
     node ('pod') {
-            container('helm') {
-                stage ('Install Chart') {
-                    sh """
-                    #!/bin/bash
-                    BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
-                    BX_CR_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-registry-namespace`
-                    BX_ORG=`cat /var/run/configs/bluemix-target/bluemix-org`
-                    BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
-                    CLUSTER_NAME=`cat /var/run/configs/bluemix-target/kube-cluster-name`
-                    BX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
+        checkout_scm
+        container('helm') {
+            stage ('Install Chart') {
+                sh """
+                #!/bin/bash
+                BX_REGISTRY=`cat /var/run/configs/bluemix-target/bluemix-registry`
+                BX_CR_NAMESPACE=`cat /var/run/configs/bluemix-target/bluemix-registry-namespace`
+                BX_ORG=`cat /var/run/configs/bluemix-target/bluemix-org`
+                BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
+                CLUSTER_NAME=`cat /var/run/configs/bluemix-target/kube-cluster-name`
+                BX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
 
-                    # Init helm
-                    helm init
+                # Init helm
+                helm init
 
-                    # Install/Upgrade Chart
-                    cd chart/bluecompute-customer
+                # Install/Upgrade Chart
+                cd chart/bluecompute-customer
 
-                    # Replace values
-                    cat values.yaml | \
-                        yaml w - image.tag ${env.BUILD_NUMBER} | \
-                        yaml w - image.repository \${BX_REGISTRY}/\${BX_CR_NAMESPACE}/bluecompute-customer | \
-                        yaml w - hs256key.skipDelete true | \
-                        yaml w - configMap.skipDelete true | \
-                        yaml w - secret.skipDelete true | \
-                        yaml w - configMap.bluemixOrg \${BX_ORG} | \
-                        yaml w - configMap.bluemixSpace \${BX_SPACE} | \
-                        yaml w - configMap.bluemixRegistryNamespace \${BX_CR_NAMESPACE} | \
-                        yaml w - configMap.kubeClusterName \${CLUSTER_NAME} | \
-                        yaml w - secret.apiKey \${BX_API_KEY} > \
-                            values_new.yaml
 
-                    mv values_new.yaml values.yaml
+                release=`helm list | grep customer | awk '{print \$1}' | head -1`
+                helm_params="--set image.tag ${env.image_tag} \
+                      --set image.repository ${env.image_repository} \
+                      --set hs256key.skipDelete true \
+                      --set configMap.bluemixOrg \${BX_ORG} \
+                      --set configMap.bluemixSpace \${BX_SPACE} \
+                      --set configMap.kubeClusterName \${CLUSTER_NAME} \
+                      --set secret.apiKey \${BX_API_KEY}"
 
-                    release=`helm list | grep customer | awk '{print \$1}' | head -1`
+                if [[ -z "\${release// }" ]]; then
+                    echo "Installing bluecompute-customer chart for the first time"
+                    time helm install --name customer . \
+                      \${helm_params}
+                      --debug \
+                      --wait \
+                      --timeout 600
+                else
+                    echo "Upgrading bluecompute-customer chart release"
+                    time helm upgrade customer . \${helm_params} --debug --wait --timeout 600
+                fi
 
-                    if [[ -z "\${release// }" ]]; then
-                        echo "Installing bluecompute-customer chart for the first time"
-                        time helm install --name customer . --debug --wait --timeout 600
-                    else
-                        echo "Upgrading bluecompute-customer chart release"
-                        time helm upgrade customer . --debug --wait --timeout 600
-                    fi
-
-                    """
-                }
+                """
             }
+        }
         
 
     }
