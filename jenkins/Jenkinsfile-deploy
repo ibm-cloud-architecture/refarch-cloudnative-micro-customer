@@ -61,11 +61,12 @@ podTemplate(
                       --timeout 600
                 else
                     echo "Upgrading bluecompute-customer chart release"
-                    time helm upgrade customer . \
+                    time helm upgrade  \
                       \${helm_params} \
                       --debug \
                       --wait \
-                      --timeout 600
+                      --timeout 600 \
+                      customer .
                 fi
 
                 """
