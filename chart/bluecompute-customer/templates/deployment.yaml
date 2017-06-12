@@ -17,10 +17,10 @@ spec:
         micro: customer
         chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
-      {{- if eq .Values.image.pullSecret  "" -}}
-        imagePullSecrets:
-        - name {{ .Values.image.pullSecretName }}
-      {{- end -}}
+      {{- if .Values.image.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.image.pullSecretName }}
+      {{- end }}
       containers:
       - name: bluecompute-customer
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
