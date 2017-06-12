@@ -7,6 +7,8 @@ image:
   repository: ibmcase/bluecompute-customer
   tag: latest
   pullPolicy: IfNotPresent
+  pullSecret:
+  pullSecretName: customer-image-pull-secret
 
 service:
   name: customer-service

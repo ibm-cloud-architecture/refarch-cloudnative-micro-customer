@@ -39,15 +39,18 @@ podTemplate(
                 # Install/Upgrade Chart
                 cd chart/bluecompute-customer
 
-
                 release=`helm list | grep customer | awk '{print \$1}' | head -1`
-                helm_params="--set image.tag ${env.image_tag} \
-                      --set image.repository ${env.image_repository} \
-                      --set hs256key.skipDelete true \
-                      --set configMap.bluemixOrg \${BX_ORG} \
-                      --set configMap.bluemixSpace \${BX_SPACE} \
-                      --set configMap.kubeClusterName \${CLUSTER_NAME} \
-                      --set secret.apiKey \${BX_API_KEY}"
+                helm_params="--set image.tag=${env.image_tag} \
+                  --set image.repository=${env.image_repository} \
+                  --set hs256key.skipDelete=true \
+                  --set configMap.bluemixOrg=\${BX_ORG} \
+                  --set configMap.bluemixSpace=\${BX_SPACE} \
+                  --set configMap.kubeClusterName=\${CLUSTER_NAME} \
+                  --set secret.apiKey \${BX_API_KEY}"
+
+                if [[ ! -z "${env.image_pull_secret}" ]]; then
+                  helm_params="\${helm_params} --set image.pullSecret=${env.image_pull_secret}"
+                fi
 
                 if [[ -z "\${release// }" ]]; then
                     echo "Installing bluecompute-customer chart for the first time"
@@ -58,7 +61,11 @@ podTemplate(
                       --timeout 600
                 else
                     echo "Upgrading bluecompute-customer chart release"
-                    time helm upgrade customer . \${helm_params} --debug --wait --timeout 600
+                    time helm upgrade customer . \
+                      \${helm_params} \
+                      --debug \
+                      --wait \
+                      --timeout 600
                 fi
 
                 """
