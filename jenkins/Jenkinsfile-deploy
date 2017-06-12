@@ -46,7 +46,7 @@ podTemplate(
                   --set configMap.bluemixOrg=\${BX_ORG} \
                   --set configMap.bluemixSpace=\${BX_SPACE} \
                   --set configMap.kubeClusterName=\${CLUSTER_NAME} \
-                  --set secret.apiKey \${BX_API_KEY}"
+                  --set secret.apiKey=\${BX_API_KEY}"
 
                 if [[ ! -z "${env.image_pull_secret}" ]]; then
                   helm_params="\${helm_params} --set image.pullSecret=${env.image_pull_secret}"
