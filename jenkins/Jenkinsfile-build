@@ -88,15 +88,22 @@ podTemplate(
                     // TODO
                     def image_pullSecret = sh returnStdout: true, script: 'bx cr token-get -q 10f46340-2b89-5748-b0f2-1e0330b31b0e'
 
+                    def branches = [:]
+
                     clusters.tokenize(',').each { cluster ->
-                        build job: "deploy-customer-service-${cluster}",
-                            parameters: [
-                                string(name: 'image_pullSecret', value: image_pullSecret),
-                                string(name: 'image_pullSecretName', value: "customer-service-pull-secret"),
-                                string(name: 'image_repository', value: "${registry}/${namespace}/bluecompute-customer"),
-                                string(name: 'image_tag', value: String.value(BUILD_NUMBER))
-                            ]
+                        branches["${cluster}"] = {
+                            build job: "deploy-customer-service-${cluster}",
+                                parameters: [
+                                    string(name: 'cluster', value: "${cluster}"),
+                                    string(name: 'image_pullSecret', value: "${image_pullSecret}"),
+                                    string(name: 'image_pullSecretName', value: "customer-service-pull-secret"),
+                                    string(name: 'image_repository', value: "${registry}/${namespace}/bluecompute-customer"),
+                                    string(name: 'image_tag', value: "${BUILD_NUMBER}")
+                                ]
+                        }
                     }
+
+                    parallel branches
                 }
             }
         } catch (exception) {
