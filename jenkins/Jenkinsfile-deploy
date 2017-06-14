@@ -11,7 +11,7 @@ podTemplate(
     ],
     volumes: [
       secretVolume(
-          secretName: '${env.cluster}-config', 
+          secretName: '${cluster}-config', 
           mountPath: '/var/run/secrets/kube-config'
       ),
       secretVolume(
