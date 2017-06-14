@@ -1,5 +1,5 @@
 podTemplate(
-    label: 'pod',
+    label: 'build-pod',
     containers: [
         containerTemplate(
             name: 'java', 
@@ -30,7 +30,7 @@ podTemplate(
       )
     ],
 ) {
-    node ('pod') {
+    node ('build-pod') {
         git url: 'https://github.com/jkwong888/refarch-cloudnative-micro-customer.git', branch: 'master'
         try {
             container('java') {

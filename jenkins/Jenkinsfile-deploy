@@ -1,5 +1,5 @@
 podTemplate(
-    label: 'pod',
+    label: 'deploy-pod',
     containers: [
         containerTemplate(
             name: 'helm', 
@@ -24,7 +24,7 @@ podTemplate(
       )
     ],
 ) {
-    node ('pod') {
+    node ('deploy-pod') {
         git url: 'https://github.com/jkwong888/refarch-cloudnative-micro-customer.git', branch: 'master'
         container('helm') {
             stage ('Install Chart') {
