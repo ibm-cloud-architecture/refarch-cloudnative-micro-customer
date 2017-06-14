@@ -89,7 +89,7 @@ podTemplate(
                     def image_pullSecret = sh returnStdout: true, script: 'bx cr token-get -q 10f46340-2b89-5748-b0f2-1e0330b31b0e'
 
                     def branches = [:]
-
+                    
                     clusters.tokenize(',').each { cluster ->
                         branches["${cluster}"] = {
                             build job: "deploy-customer-service-${cluster}",
@@ -102,9 +102,7 @@ podTemplate(
                                 ]
                         }
                     }
-
-                    parallel branches
-                }
+                    parallel branches                }
             }
         } catch (exception) {
             container('docker') {
