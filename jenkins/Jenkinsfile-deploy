@@ -25,7 +25,7 @@ podTemplate(
     ],
 ) {
     node ('pod') {
-        checkout scm
+        git url: 'https://github.com/jkwong888/refarch-cloudnative-micro-customer.git', branch: 'master'
         container('helm') {
             stage ('Install Chart') {
                 sh """
@@ -82,7 +82,5 @@ podTemplate(
                 """
             }
         }
-        
-
     }
 }
