@@ -11,6 +11,10 @@ podTemplate(
     ],
     volumes: [
       secretVolume(
+          secretName: '${env.cluster}-config', 
+          mountPath: '/var/run/secrets/kube-config'
+      ),
+      secretVolume(
           secretName: 'bluemix-api-key', 
           mountPath: '/var/run/secrets/bluemix-api-key'
       ),
@@ -33,6 +37,8 @@ podTemplate(
                 CLUSTER_NAME=`cat /var/run/configs/bluemix-target/kube-cluster-name`
                 BX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
 
+                export KUBECONFIG=`ls -1 /var/run/secrets/kube-config/kube-config-*.yaml`
+
                 # Init helm
                 helm init
 
@@ -48,8 +54,12 @@ podTemplate(
                   --set configMap.kubeClusterName=\${CLUSTER_NAME} \
                   --set secret.apiKey=\${BX_API_KEY}"
 
-                if [[ ! -z "${env.image_pull_secret}" ]]; then
-                  helm_params="\${helm_params} --set image.pullSecret=${env.image_pull_secret}"
+                if [[ ! -z "${env.image_pullSecret}" ]]; then
+                  helm_params="\${helm_params} --set image.pullSecret=${env.image_pullSecret}"
+                fi
+
+                if [[ ! -z "${env.image_pullSecretName}" ]]; then
+                  helm_params="\${helm_params} --set image.pullSecretName=${env.image_pullSecretName}"
                 fi
 
                 if [[ -z "\${release// }" ]]; then
