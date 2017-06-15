@@ -53,12 +53,12 @@ podTemplate(
                     #!/bin/bash
 
                     cd docker
-                    docker build -t ${env.registry}/${env.namespace}/bluecompute-customer:${env.BUILD_NUMBER} .
+                    docker build -t ${registry}/${namespace}/bluecompute-customer:${env.BUILD_NUMBER} .
                     """
                 }
                 stage ('Push Docker Image to Registry') {
                     def api_endpoint = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-api-endpoint'
-                    def bx_space = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry-namespace'
+                    def namespace = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry-namespace'
 
                     sh """
                     #!/bin/bash
