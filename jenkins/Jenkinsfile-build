@@ -31,7 +31,7 @@ podTemplate(
     ],
 ) {
     node ('build-customer-pod') {
-        git url: 'https://github.com/jkwong888/refarch-cloudnative-micro-customer.git', branch: 'master'
+        git url: '__GIT_URL__', branch: '__GIT_BRANCH__'
         try {
             container('java') {
                 stage('Build Gradle Project') {
@@ -80,6 +80,8 @@ podTemplate(
                 stage ('trigger deployment') {
                     // TODO
                     def image_pullSecret = sh returnStdout: true, script: 'bx cr token-get -q 10f46340-2b89-5748-b0f2-1e0330b31b0e'
+                    def registry = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry'
+                    def namespace = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry-namespace'
 
                     def branches = [:]
                     

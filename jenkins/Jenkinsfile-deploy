@@ -25,7 +25,7 @@ podTemplate(
     ],
 ) {
     node ('deploy-customer-service-__CLUSTER__-pod') {
-        git url: 'https://github.com/jkwong888/refarch-cloudnative-micro-customer.git', branch: 'master'
+        git url: '__GIT_URL__', branch: '__GIT_BRANCH__'
         container('helm') {
             stage ('Install Chart') {
                 sh """
