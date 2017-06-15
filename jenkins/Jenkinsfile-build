@@ -76,15 +76,6 @@ podTemplate(
                     def registry = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry'
                     def namespace = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry-namespace'
 
-                    sh """
-                    export BLUEMIX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
-                    BX_SPACE=`cat /var/run/configs/bluemix-target/bluemix-space`
-                    BX_API_ENDPOINT=`cat /var/run/configs/bluemix-target/bluemix-api-endpoint`
-
-                    bx login -a \${BX_API_ENDPOINT} -s \${BX_SPACE}
-                    bx cr login
-
-                    """
                     // TODO
                     def image_pullSecret = sh returnStdout: true, script: 'bx cr token-get -q 10f46340-2b89-5748-b0f2-1e0330b31b0e'
 
