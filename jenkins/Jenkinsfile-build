@@ -58,7 +58,7 @@ podTemplate(
                 }
                 stage ('Push Docker Image to Registry') {
                     def api_endpoint = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-api-endpoint'
-                    def namespace = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry-namespace'
+                    def bx_space = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-space'
 
                     sh """
                     #!/bin/bash
