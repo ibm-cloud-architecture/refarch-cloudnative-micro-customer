@@ -1,5 +1,5 @@
 podTemplate(
-    label: 'build-customer-service-pod',
+    label: 'customer-pod',
     containers: [
         containerTemplate(
             name: 'java', 
