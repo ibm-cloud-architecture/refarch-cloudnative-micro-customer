@@ -1,5 +1,5 @@
 podTemplate(
-    label: 'deploy-pod',
+    label: 'deploy-customer-service-__CLUSTER__-pod',
     containers: [
         containerTemplate(
             name: 'helm', 
