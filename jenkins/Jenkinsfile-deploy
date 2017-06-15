@@ -37,7 +37,7 @@ podTemplate(
                 CLUSTER_NAME=`cat /var/run/configs/bluemix-target/kube-cluster-name`
                 BX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
 
-                export KUBECONFIG=`ls -1 /var/run/secrets/kube-config/kube-config-*.yaml`
+                export KUBECONFIG=`ls -1 /var/run/secrets/kube-config/kube-config-*.yml`
 
                 # Init helm
                 helm init
