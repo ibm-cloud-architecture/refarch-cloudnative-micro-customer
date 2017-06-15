@@ -57,12 +57,18 @@ podTemplate(
                     """
                 }
                 stage ('Push Docker Image to Registry') {
+                    def registry = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry'
+                    def namespace = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-registry-namespace'
                     def api_endpoint = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-api-endpoint'
                     def bx_space = sh returnStdout: true, script: 'cat /var/run/configs/bluemix-target/bluemix-space'
+                    def api_key = sh returnStdout: true, script: 'cat /var/run/secrets/bluemix-api-key/api-key'
+
+                    environment {
+                        BLUEMIX_API_KEY = api_key
+                    }
 
                     sh """
                     #!/bin/bash
-                    export BLUEMIX_API_KEY=`cat /var/run/secrets/bluemix-api-key/api-key`
 
                     # Bluemix Login
                     bx target || bx login -a ${api_endpoint} -s ${bx_space}
