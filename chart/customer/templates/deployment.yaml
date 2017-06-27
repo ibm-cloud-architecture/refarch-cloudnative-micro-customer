@@ -3,18 +3,20 @@ kind: Deployment
 metadata:
   name: bluecompute-customer
   labels:
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     app: bluecompute
-    tier: backend
     micro: customer
+    tier: backend
+    release: {{.Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
       labels:
         app: bluecompute
-        tier: backend
         micro: customer
+        tier: backend
+        release: {{.Release.Name | quote }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
       {{- if .Values.image.pullSecret }}
@@ -51,3 +53,7 @@ spec:
         secret:
           defaultMode: 420
           secretName: "{{ .Values.hs256key.secretName }}"
+      {{if eq .Values.image.usePullSecret true}}
+      imagePullSecrets:
+        - name: "{{ .Values.image.pullSecretName }}"
+      {{end}}

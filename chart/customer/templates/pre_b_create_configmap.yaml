@@ -1,12 +1,14 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{.Chart.Name}}-create-configmap-{{.Release.Name}}"
+  name: "{{.Chart.Name}}-create-configmap-{{.Release.Name}}-{{ randAlphaNum 5 | lower }}"
   labels:
     app: bluecompute
+    micro: customer
+    tier: backend
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
-    chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
   annotations:
     # This is what defines this resource as a hook. Without this line, the
     # job is considered part of the release.
@@ -15,12 +17,14 @@ metadata:
 spec:
   template:
     metadata:
-      name: "{{.Chart.Name}}-create-configmap-{{.Release.Name}}"
+      name: "{{.Chart.Name}}-create-configmap-{{.Release.Name}}-{{ randAlphaNum 5 | lower }}"
       labels:
         app: bluecompute
+        micro: customer
+        tier: backend
         heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
-        chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
       restartPolicy: Never
       containers:

@@ -1,4 +1,4 @@
 apiVersion: v1
 description: BlueCompute Customer Microservice
-name: bluecompute-customer-ce
+name: customer
 version: 0.1.0

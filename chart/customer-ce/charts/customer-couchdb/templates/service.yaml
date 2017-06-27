@@ -4,8 +4,9 @@ metadata:
   name: {{ .Values.couchdb.service.name }}
   labels:
     app: bluecompute
-    tier: data
     micro: customer
+    tier: data
+    release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
   type: {{ .Values.couchdb.service.type }}
@@ -16,6 +17,7 @@ spec:
     name: {{ .Values.couchdb.service.name }}
   selector:
     app: bluecompute
-    tier: data
     micro: customer
+    tier: data
+    release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"

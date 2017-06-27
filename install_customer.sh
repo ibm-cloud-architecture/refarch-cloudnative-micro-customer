@@ -19,30 +19,36 @@ BX_CR_NAMESPACE=""
 BX_ORG=""
 
 function check_tiller {
-	kubectl --namespace=kube-system get pods | grep tiller | grep Runnin
+	kubectl --namespace=kube-system get pods | grep tiller | grep Runnin | grep 1/1
+}
+
+function print_usage {
+	printf "\n\n${yel}Usage:${end}\n"
+	printf "\t${cyn}./install_bluecompute.sh <cluster-name> <bluemix-space-name> <bluemix-api-key>${end}\n\n"
 }
 
 function bluemix_login {
 	# Bluemix Login
-	printf "${grn}Login into Bluemix${end}\n"
-	if [[ -z "${BX_API_KEY// }" && -z "${BX_SPACE// }" ]]; then
-		echo "${yel}API Key & SPACE NOT provided.${end}"
-		bx login -a ${BX_API_ENDPOINT}
+	if [[ -z "${CLUSTER_NAME// }" ]]; then
+		print_usage
+		echo "${red}Please provide Cluster Name. Exiting..${end}"
+		exit 1
 
 	elif [[ -z "${BX_SPACE// }" ]]; then
-		echo "${yel}API Key provided but SPACE was NOT provided.${end}"
-		export BLUEMIX_API_KEY=${BX_API_KEY}
-		bx login -a ${BX_API_ENDPOINT}
+		print_usage
+		echo "${red}Please provide Bluemix Space. Exiting..${end}"
+		exit 1
 
 	elif [[ -z "${BX_API_KEY// }" ]]; then
-		echo "${yel}API Key NOT provided but SPACE was provided.${end}"
-		bx login -a ${BX_API_ENDPOINT} -s ${BX_SPACE}
-
-	else
-		echo "${yel}API Key and SPACE provided.${end}"
-		export BLUEMIX_API_KEY=${BX_API_KEY}
-		bx login -a ${BX_API_ENDPOINT} -s ${BX_SPACE}
+		print_usage
+		echo "${red}Please provide Bluemix API Key. Exiting..${end}"
+		exit 1
 	fi
+
+	printf "${grn}Login into Bluemix${end}\n"
+
+	export BLUEMIX_API_KEY=${BX_API_KEY}
+	bx login -a ${BX_API_ENDPOINT} -s ${BX_SPACE}
 
 	status=$?
 
@@ -124,7 +130,7 @@ function initialize_helm {
 }
 
 function install_bluecompute_customer {
-	printf "\n\n${grn}Installing bluecompute-customer chart. This will take a few minutes...${end} ${coffee3}\n\n"
+	printf "\n\n${grn}Installing customer chart. This will take a few minutes...${end} ${coffee3}\n\n"
 	cd chart
 
 	time helm install --name customer --debug --wait --timeout 600 \
@@ -133,9 +139,9 @@ function install_bluecompute_customer {
 	--set configMap.bluemixRegistryNamespace=${BX_CR_NAMESPACE} \
 	--set configMap.kubeClusterName=${CLUSTER_NAME} \
 	--set secret.apiKey=${BX_API_KEY} \
-	bluecompute-customer
+	customer
 
-	printf "\n\n${grn}bluecompute-customer was successfully installed!${end}\n"
+	printf "\n\n${grn}customer was successfully installed!${end}\n"
 	printf "\n\n${grn}Cleaning up...${end}\n"
 	kubectl delete pods,jobs -l heritage=Tiller
 
@@ -161,5 +167,5 @@ echo "${cyn}export KUBECONFIG=${KUBECONFIG}${end}"
 printf "\nThen run this command to connect to Kubernetes Dashboard:\n"
 echo "${cyn}kubectl proxy${end}"
 
-printf "\nThen open a browser window and paste the following URL to see the Services created by bluecompute-customer Chart:\n"
+printf "\nThen open a browser window and paste the following URL to see the Services created by customer Chart:\n"
 echo "${cyn}http://127.0.0.1:8001/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard/#/service?namespace=default${end}"

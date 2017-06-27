@@ -6,7 +6,7 @@ BX_PATH=$(command -v bx)
 
 if [[ $? -ne 0 ]]; then
 	printf "\n\n${grn}Installing Bluemix CLI (bx)...${end}\n"
-	LATEST=$(curl -s clis.ng.bluemix.net/info | grep latestVersion | cut -d: -f2 | sed -e 's/"//g' -e 's/,//')
+	LATEST=$(curl -s https://clis.ng.bluemix.net/info | grep latestVersion | cut -d: -f2 | sed -e 's/"//g' -e 's/,//')
 
 	if [[ $OSTYPE =~ .*darwin.* ]]; then
 		curl -o Bluemix_CLI.pkg "http://public.dhe.ibm.com/cloud/bluemix/cli/bluemix-cli/Bluemix_CLI_${LATEST}.pkg"
@@ -14,7 +14,7 @@ if [[ $? -ne 0 ]]; then
 		rm Bluemix_CLI.pkg
 
 	elif [[ $OSTYPE =~ .*linux.* ]]; then
-	  	curl -o /tmp/Bluemix_CLI.tar.gz "http://public.dhe.ibm.com/cloud/bluemix/cli/bluemix-cli/Bluemix_CLI_${LATEST}_amd64.tar.gz"
+	  	curl -o Bluemix_CLI.tar.gz "http://public.dhe.ibm.com/cloud/bluemix/cli/bluemix-cli/Bluemix_CLI_${LATEST}_amd64.tar.gz"
 		tar zxvf Bluemix_CLI.tar.gz
 		Bluemix_CLI/install_bluemix_cli
 		rm -f /tmp/Bluemix_CLI.tar.gz
@@ -63,7 +63,7 @@ if [[ $? -ne 0 ]]; then
 
 	curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
 	chmod 700 get_helm.sh
-	./get_helm.sh
+	./get_helm.sh -v v2.4.2
 
 	rm get_helm.sh
 fi

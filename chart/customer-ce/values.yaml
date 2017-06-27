@@ -17,6 +17,7 @@ service:
 hs256key:
   skipDelete: true
   secretName: hs256-key
+  secret:
 
 resources:
   limits:
