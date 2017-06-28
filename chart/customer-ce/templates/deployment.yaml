@@ -30,7 +30,7 @@ spec:
               "name": "couchdb",
               "valueFrom": {
                 "secretKeyRef": {
-                  "name": "{{ .Values.couchdb.binding.name }}",
+                  "name": "{{ (index .Values "ibmcase-couchdb").binding.name }}",
                   "key": "binding"
                 }
               }
@@ -55,7 +55,7 @@ spec:
       - name: binding-refarch-cloudantdb
         secret:
           defaultMode: 420
-          secretName: {{ .Values.couchdb.binding.name }}
+          secretName: {{ index .Values "ibmcase-couchdb" "binding" "name" }}
       - name: hs256-key
         secret:
           defaultMode: 420
