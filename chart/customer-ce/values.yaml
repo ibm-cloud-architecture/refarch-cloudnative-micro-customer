@@ -16,7 +16,7 @@ service:
 
 hs256key:
   skipDelete: true
-  secretName: hs256-key
+  secretName: customer-hs256-key
   secret:
 
 resources:
@@ -42,4 +42,9 @@ couchdb:
       memory: 128Mi
     requests:
       memory: 64Mi
+  existingPVCName:
+  labels:
+    app: bluecompute
+    micro: customer
+    tier: data
 

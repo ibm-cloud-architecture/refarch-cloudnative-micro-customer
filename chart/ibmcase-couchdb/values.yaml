@@ -21,4 +21,5 @@ couchdb:
       memory: 128Mi
     requests:
       memory: 64Mi
-
+  existingPVCName:
+  labels:

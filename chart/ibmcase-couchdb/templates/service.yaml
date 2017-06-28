@@ -3,9 +3,7 @@ kind: Service
 metadata:
   name: {{ .Values.couchdb.service.name }}
   labels:
-    app: bluecompute
-    micro: customer
-    tier: data
+{{ toYaml .Values.couchdb.labels | indent 4 }}
     release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
@@ -16,8 +14,6 @@ spec:
     protocol: TCP
     name: {{ .Values.couchdb.service.name }}
   selector:
-    app: bluecompute
-    micro: customer
-    tier: data
+{{ toYaml .Values.couchdb.labels | indent 4 }}
     release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"

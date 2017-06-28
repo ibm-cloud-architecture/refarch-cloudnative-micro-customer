@@ -19,6 +19,10 @@ spec:
         release: {{.Release.Name | quote }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
+      {{- if .Values.image.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.image.pullSecretName }}
+      {{- end }}
       containers:
       - name: bluecompute-customer
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

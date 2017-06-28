@@ -1,11 +1,9 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: bluecompute-customer-couchdb
+  name: {{ .Chart.Name }}-couchdb
   labels:
-    app: bluecompute
-    micro: customer
-    tier: data
+{{ toYaml .Values.couchdb.labels | indent 4 }}
     release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
@@ -13,9 +11,7 @@ spec:
   template:
     metadata:
       labels:
-        app: bluecompute
-        micro: customer
-        tier: data
+{{ toYaml .Values.couchdb.labels | indent 8 }}
         release: {{.Release.Name | quote }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
@@ -55,5 +51,10 @@ spec:
           failureThreshold: 10
       volumes:
         - name: couchdb-data
+{{ if .Values.couchdb.existingPVCName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.couchdb.existingPVCName }}
+{{ else }}
           hostPath:
             path: /opt/couchdb/data
+{{ end }}            
