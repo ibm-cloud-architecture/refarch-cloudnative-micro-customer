@@ -21,10 +21,20 @@ spec:
       annotations:
         pod.beta.kubernetes.io/init-containers: '[
           {
-             "name": "bluecompute-customer-wait-for-couchdb",
-             "image": "ellerbrock/alpine-bash-curl-ssl",
-             "imagePullPolicy": "IfNotPresent",
-             "command": ["/bin/bash", "-c", "until curl --max-time 1 http://{{ .Values.couchdb.service.name }}:{{ .Values.couchdb.service.externalPort }}; do echo waiting for couchdb; /bin/sleep 1; done;"]
+            "name": "test-couchdb",
+            "image": "ibmcase/mysql-loader:latest",
+            "imagePullPolicy": "IfNotPresent",
+            "command": ["/bin/bash", "-c"],
+            "args": ["couchdb_uri=`echo ${couchdb} | jq .url -r`; until curl --max-time 1 ${couchdb_uri}; do echo waiting for couchdb; /bin/sleep 1; done;"],
+            "env": [{ 
+              "name": "couchdb",
+              "valueFrom": {
+                "secretKeyRef": {
+                  "name": "{{ .Values.couchdb.binding.name }}",
+                  "key": "binding"
+                }
+              }
+            }]
           }
         ]'
     spec:
