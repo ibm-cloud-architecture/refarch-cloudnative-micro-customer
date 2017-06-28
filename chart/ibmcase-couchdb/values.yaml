@@ -6,20 +6,25 @@ image:
   repository: klaemo/couchdb
   tag: latest
   pullPolicy: IfNotPresent
-couchdb:
-  user:
-  password:
-  service:
-    name: customerdb
-    type: ClusterIP
-    externalPort: 5984
-    internalPort: 5984
-  binding:
-    name: binding-customer-couchdb
-  resources:
-    limits:
-      memory: 128Mi
-    requests:
-      memory: 64Mi
-  existingPVCName:
-  labels:
+
+user:
+password:
+
+service:
+  name: 
+  type: ClusterIP
+  externalPort: 5984
+  internalPort: 5984
+
+binding:
+  name: binding-customer-couchdb
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    memory: 64Mi
+
+existingPVCName:
+
+labels:

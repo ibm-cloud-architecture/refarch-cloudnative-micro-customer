@@ -4,20 +4,20 @@ type: Opaque
 data:
   {{- $couchdb_user := randAlphaNum 8 }}
   {{- $couchdb_password := randAlphaNum 16 }}
-  {{- if .Values.couchdb.user }}
-  {{- $couchdb_user := .Values.couchdb.user }}
+  {{- if .Values.user }}
+  {{- $couchdb_user := .Values.user }}
   {{ end }}
-  {{- if .Values.couchdb.password }}
-  {{- $couchdb_password := .Values.couchdb.password }}
+  {{- if .Values.password }}
+  {{- $couchdb_password := .Values.password }}
   {{- end }}
   user: {{ $couchdb_user | b64enc | quote}}
   password: {{ $couchdb_password | b64enc | quote }}
-  binding: {{ cat `{"username":"` $couchdb_user `","password":"` $couchdb_password `","host":"` .Values.couchdb.service.name `","port":` .Values.couchdb.service.externalPort `,"url":"http://` $couchdb_user `:` $couchdb_password `@` .Values.couchdb.service.name `:` .Values.couchdb.service.externalPort `"}` | nospace | b64enc }}
+  binding: {{ cat `{"username":"` $couchdb_user `","password":"` $couchdb_password `","host":"` .Values.service.name `","port":` .Values.service.externalPort `,"url":"http://` $couchdb_user `:` $couchdb_password `@` .Values.service.name `:` .Values.service.externalPort `"}` | nospace | b64enc }}
 metadata:
-  name: {{ .Values.couchdb.binding.name }}
+  name: {{ .Values.binding.name }}
   namespace: {{ .Release.Namespace }}
   labels:
-{{ toYaml .Values.couchdb.labels | indent 4 }}
+{{ toYaml .Values.labels | indent 4 }}
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"

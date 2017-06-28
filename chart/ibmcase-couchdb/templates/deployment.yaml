@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ .Chart.Name }}-couchdb
   labels:
-{{ toYaml .Values.couchdb.labels | indent 4 }}
+{{ toYaml .Values.labels | indent 4 }}
     release: {{.Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
 spec:
@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       labels:
-{{ toYaml .Values.couchdb.labels | indent 8 }}
+{{ toYaml .Values.labels | indent 8 }}
         release: {{.Release.Name | quote }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
@@ -23,37 +23,37 @@ spec:
           - name: COUCHDB_USER
             valueFrom:
               secretKeyRef:
-                name: {{ .Values.couchdb.binding.name }}
+                name: {{ .Values.binding.name }}
                 key: user
           - name: COUCHDB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: {{ .Values.couchdb.binding.name }}
+                name: {{ .Values.binding.name }}
                 key: password
         volumeMounts:
           - mountPath: /opt/couchdb/data
             name: couchdb-data
             readOnly: false
         resources:
-{{ toYaml .Values.couchdb.resources | indent 12 }}
+{{ toYaml .Values.resources | indent 12 }}
         ports:
-        - containerPort: {{ .Values.couchdb.service.internalPort }}
+        - containerPort: {{ .Values.service.internalPort }}
         livenessProbe:
           httpGet:
             path: /
-            port: {{ .Values.couchdb.service.internalPort }}
+            port: {{ .Values.service.internalPort }}
           initialDelaySeconds: 30
         readinessProbe:
           httpGet:
             path: /
-            port: {{ .Values.couchdb.service.internalPort }}
+            port: {{ .Values.service.internalPort }}
           initialDelaySeconds: 10
           failureThreshold: 10
       volumes:
         - name: couchdb-data
-{{ if .Values.couchdb.existingPVCName }}
+{{ if .Values.existingPVCName }}
           persistentVolumeClaim:
-            claimName: {{ .Values.couchdb.existingPVCName }}
+            claimName: {{ .Values.existingPVCName }}
 {{ else }}
           hostPath:
             path: /opt/couchdb/data
