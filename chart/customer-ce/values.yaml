@@ -16,7 +16,7 @@ service:
 
 hs256key:
   skipDelete: true
-  secretName: customer-hs256-key
+  secretName: hs256-key
   secret:
 
 resources:
@@ -29,14 +29,12 @@ ibmcase-couchdb:
   user:
   password:
   service:
-    name: customerdb
+    name: customer-couchdb
     type: ClusterIP
     externalPort: 5984
     internalPort: 5984
   binding:
     name: binding-customer-couchdb
-  secret:
-    name: customer-couchdb-credential
   resources:
     limits:
       memory: 128Mi
@@ -47,4 +45,6 @@ ibmcase-couchdb:
     app: bluecompute
     micro: customer
     tier: data
+  nodename: customerdb
+  
 
