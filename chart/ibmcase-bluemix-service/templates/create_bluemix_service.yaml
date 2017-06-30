@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{.Release.Name}}-create-bluemix-service-{{ randAlphaNum 5 | lower }}"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    heritage: {{.Release.Service | quote }}
+    release: {{.Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "33"
+spec:
+  template:
+    metadata:
+      name: "{{.Release.Name}}-create-bluemix-service-{{ randAlphaNum 5 | lower }}"
+      labels:
+        heritage: {{.Release.Service | quote }}
+        release: {{.Release.Name | quote }}
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: create-service
+        image: ibmcase/bluemix-deployer
+        command: [ "/bin/bash", "-c" ]
+        args: 
+        - >
+          source /scripts/bx_login.sh; 
+          {{ range .Values.bluemix.service }}
+          bx service list | grep {{ .type }} | grep '^{{ .name }} ' || bx service create {{ .type }} {{ .plan }} {{ .name }};
+          {{ end }}
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: BX_ORG
+          value: {{ .Values.bluemix.target.org }}
+        - name: BX_SPACE
+          value: {{ .Values.bluemix.target.space }}
+        - name: BX_API_ENDPOINT
+          value: {{ .Values.bluemix.target.endpoint }}
+        - name: BLUEMIX_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-bluemix-api-key
+              key: api-key
