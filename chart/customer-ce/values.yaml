@@ -25,6 +25,11 @@ resources:
   requests:
     memory: 64Mi
 
+useBluemix: false
+
+ibmcase-bluemix-service:
+
+
 ibmcase-couchdb:
   user:
   password:

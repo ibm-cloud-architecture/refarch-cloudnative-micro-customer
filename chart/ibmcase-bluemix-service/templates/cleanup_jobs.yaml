@@ -1,28 +1,27 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{.Release.Name}}-cleanup-jobs-{{ randAlphaNum 5 | lower }}"
+  name: {{.Release.Name}}-cleanup-jobs-{{ .Values.bluemix.service.name | lower | replace " " "-" }}-{{ randAlphaNum 5 | lower }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: bluecompute
-    micro: auth
-    tier: backend
+    bluemixService: {{ .Values.bluemix.service.name | lower | replace " " "-" }}
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   annotations:
     # This is what defines this resource as a hook. Without this line, the
     # job is considered part of the release.
-    "helm.sh/hook": post-install,post-upgrade,post-delete
+    "helm.sh/hook": pre-install,post-install,post-upgrade,post-delete
     "helm.sh/hook-weight": "999"
 spec:
   template:
     metadata:
-      name: "{{.Release.Name}}-cleanup-jobs-{{ randAlphaNum 5 | lower }}"
+      name: {{.Release.Name}}-cleanup-jobs-{{ .Values.bluemix.service.name | lower | replace " " "-" }}
       labels:
+        bluemixService: {{ .Values.bluemix.service.name | lower | replace " " "-" }}
         heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
-        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+        chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     spec:
       restartPolicy: OnFailure
       containers:
@@ -33,5 +32,6 @@ spec:
         args: 
         - >
             set -x;
-            kubectl delete jobs -l chart={{.Chart.Name}}-{{.Chart.Version}},release={{.Release.Name}} --cascade;
+            echo kubectl delete jobs -l bluemixService={{ .Values.bluemix.service.name | lower | replace " " "-" }},chart={{.Chart.Name}}-{{.Chart.Version}},release={{.Release.Name}} --cascade;
+            kubectl delete jobs -l bluemixService={{ .Values.bluemix.service.name | lower | replace " " "-" }},chart={{.Chart.Name}}-{{.Chart.Version}},release={{.Release.Name}} --cascade;
 

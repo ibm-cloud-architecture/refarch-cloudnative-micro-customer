@@ -1,12 +1,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{.Release.Name}}-bind-bluemix-service-{{ randAlphaNum 5 | lower }}"
+  name: {{.Release.Name}}-bind-bluemix-service-{{ .Values.bluemix.service.name | lower | replace " " "-" }}-{{ randAlphaNum 5 | lower }}
   namespace: {{ .Release.Namespace }}
   labels:
+    bluemixService: {{ .Values.bluemix.service.name | lower | replace " " "-" }}
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   annotations:
     # This is what defines this resource as a hook. Without this line, the
     # job is considered part of the release.
@@ -15,11 +16,11 @@ metadata:
 spec:
   template:
     metadata:
-      name: "{{.Release.Name}}-bind-bluemix-service-{{ randAlphaNum 5 | lower }}"
+      name: {{.Release.Name}}-bind-bluemix-service-{{ .Values.bluemix.service.name | lower | replace " " "-" }}
       labels:
         heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
-        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+        chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     spec:
       restartPolicy: Never
       containers:
@@ -30,11 +31,7 @@ spec:
         - >
           source /scripts/bx_login.sh; 
           bx cs init; 
-          {{ $clusterName := .Values.bluemix.clusterName }}
-          {{ $namespace := .Release.Namespace }}
-          {{ range .Values.bluemix.service }}
-          bx cs cluster-service-bind {{ $clusterName }} {{ $namespace }} {{ .name }}
-          {{ end }}
+          bx cs cluster-service-bind {{ .Values.bluemix.clusterName }} {{ .Release.Namespace }} "{{ .Values.bluemix.service.name }}"
         imagePullPolicy: IfNotPresent
         env:
         - name: BX_ORG
@@ -46,5 +43,5 @@ spec:
         - name: BLUEMIX_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-bluemix-api-key
+              name: {{ .Release.Name }}-{{ .Values.bluemix.service.name | lower | replace " " "-" }}-bluemix-api-key
               key: api-key

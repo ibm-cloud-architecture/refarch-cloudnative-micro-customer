@@ -12,7 +12,7 @@ bluemix:
   clusterName:
   
   service:
-  - name:
+    name:
     type:
     plan:
 
