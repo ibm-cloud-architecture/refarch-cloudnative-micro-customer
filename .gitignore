@@ -6,3 +6,9 @@
 /.classpath
 /docker/app.jar
 .*.swp
+
+chart/customer/charts
+chart/customer/requirements.lock
+
+chart/customer-ce/charts
+chart/customer-ce/requirements.lock
