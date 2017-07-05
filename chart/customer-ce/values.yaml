@@ -14,6 +14,10 @@ service:
   externalPort: 8080
   internalPort: 8080
 
+global:
+  hs256key:
+    secret:
+
 hs256key:
   skipDelete: true
   secretName: hs256-key
@@ -25,12 +29,24 @@ resources:
   requests:
     memory: 64Mi
 
-useBluemix: false
+bluemix-cloudantdb:
+  enabled: false
+  apiKey:
 
-ibmcase-bluemix-service:
+  target:
+    endpoint: api.ng.bluemix.net
+    org:
+    space:
 
-
+  clusterName:
+  
+  service:
+    name: customer-cloudantdb
+    type: cloudantNoSQLDB
+    plan: Lite
+  
 ibmcase-couchdb:
+  enabled: true
   user:
   password:
   service:

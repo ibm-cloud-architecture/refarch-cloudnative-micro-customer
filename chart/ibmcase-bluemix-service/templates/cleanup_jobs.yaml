@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{.Release.Name}}-cleanup-jobs-{{ .Values.bluemix.service.name | lower | replace " " "-" }}-{{ randAlphaNum 5 | lower }}
+  name: {{ (cat .Release.Name "-cleanup-jobs-" ( .Values.service.name | lower | replace " " "-") "-" ( randAlphaNum 5 | lower )) | nospace | trunc 63 }} 
   namespace: {{ .Release.Namespace }}
   labels:
-    bluemixService: {{ .Values.bluemix.service.name | lower | replace " " "-" }}
+    bluemixService: {{ .Values.service.name | lower | replace " " "-" }}
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -16,9 +16,9 @@ metadata:
 spec:
   template:
     metadata:
-      name: {{.Release.Name}}-cleanup-jobs-{{ .Values.bluemix.service.name | lower | replace " " "-" }}
+      name: {{.Release.Name}}-cleanup-jobs-{{ .Values.service.name | lower | replace " " "-" }}
       labels:
-        bluemixService: {{ .Values.bluemix.service.name | lower | replace " " "-" }}
+        bluemixService: {{ .Values.service.name | lower | replace " " "-" }}
         heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
         chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -32,6 +32,6 @@ spec:
         args: 
         - >
             set -x;
-            echo kubectl delete jobs -l bluemixService={{ .Values.bluemix.service.name | lower | replace " " "-" }},chart={{.Chart.Name}}-{{.Chart.Version}},release={{.Release.Name}} --cascade;
-            kubectl delete jobs -l bluemixService={{ .Values.bluemix.service.name | lower | replace " " "-" }},chart={{.Chart.Name}}-{{.Chart.Version}},release={{.Release.Name}} --cascade;
+            echo kubectl delete jobs -l bluemixService={{ .Values.service.name | lower | replace " " "-" }},chart={{.Chart.Name}}-{{.Chart.Version}},release={{.Release.Name}} --cascade;
+            kubectl delete jobs -l bluemixService={{ .Values.service.name | lower | replace " " "-" }},chart={{.Chart.Name}}-{{.Chart.Version}},release={{.Release.Name}} --cascade;
 

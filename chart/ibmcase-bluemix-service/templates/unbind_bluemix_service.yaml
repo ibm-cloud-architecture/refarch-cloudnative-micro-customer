@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{.Release.Name }}-unbind-bluemix-service-{{ .Values.bluemix.service.name | lower | replace " " "-" }}-{{ randAlphaNum 5 | lower }}
+  name: {{ (cat .Release.Name "-unbind-bluemix-service-" ( .Values.service.name | lower | replace " " "-") "-" ( randAlphaNum 5 | lower )) | nospace | trunc 63 }} 
   namespace: {{ .Release.Namespace }}
   labels:
-    bluemixService: {{ .Values.bluemix.service.name | lower | replace " " "-" }}
+    bluemixService: {{ .Values.service.name | lower | replace " " "-" }}
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -16,9 +16,9 @@ metadata:
 spec:
   template:
     metadata:
-      name: {{.Release.Name}}-unbind-bluemix-service-{{ .Values.bluemix.service.name | lower | replace " " "-" }}
+      name: {{.Release.Name}}-unbind-bluemix-service-{{ .Values.service.name | lower | replace " " "-" }}
       labels:
-        bluemixService: {{ .Values.bluemix.service.name | lower | replace " " "-" }}
+        bluemixService: {{ .Values.service.name | lower | replace " " "-" }}
         heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
         chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -32,17 +32,17 @@ spec:
         - >
           source /scripts/bx_login.sh; 
           bx cs init; 
-          bx cs cluster-service-unbind {{ .Values.bluemix.clusterName }} {{ .Release.Namespace }} {{ .Values.bluemix.service.name }}
+          bx cs cluster-service-unbind {{ .Values.clusterName }} {{ .Release.Namespace }} {{ .Values.service.name }}
         imagePullPolicy: IfNotPresent
         env:
         - name: BX_ORG
-          value: {{ .Values.bluemix.target.org }}
+          value: {{ .Values.target.org }}
         - name: BX_SPACE
-          value: {{ .Values.bluemix.target.space }}
+          value: {{ .Values.target.space }}
         - name: BX_API_ENDPOINT
-          value: {{ .Values.bluemix.target.endpoint }}
+          value: {{ .Values.target.endpoint }}
         - name: BLUEMIX_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-{{ .Values.bluemix.service.name | lower | replace " " "-" }}-bluemix-api-key
+              name: {{ .Release.Name }}-{{ .Values.service.name | lower | replace " " "-" }}-bluemix-api-key
               key: api-key

@@ -30,7 +30,11 @@ spec:
               "name": "couchdb",
               "valueFrom": {
                 "secretKeyRef": {
+{{ if (index .Values "bluemix-cloudantdb").enabled }}
+                  "name": "binding-{{ (index .Values "bluemix-cloudantdb").service.name | lower | replace " " "-" }}",
+{{ else }}
                   "name": "{{ (index .Values "ibmcase-couchdb").binding.name }}",
+{{ end }}
                   "key": "binding"
                 }
               }
@@ -55,7 +59,11 @@ spec:
       - name: binding-refarch-cloudantdb
         secret:
           defaultMode: 420
+{{ if (index .Values "bluemix-cloudantdb").enabled }}
+          secretName: binding-{{ index .Values "bluemix-cloudantdb" "service" "name" | lower | replace " " "-" }}
+{{ else }}
           secretName: {{ index .Values "ibmcase-couchdb" "binding" "name" }}
+{{ end }}
       - name: hs256-key
         secret:
           defaultMode: 420
