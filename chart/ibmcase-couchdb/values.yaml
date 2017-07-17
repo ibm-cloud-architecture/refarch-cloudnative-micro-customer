@@ -28,3 +28,4 @@ resources:
 existingPVCName:
 
 labels:
+  datastore: couchdb

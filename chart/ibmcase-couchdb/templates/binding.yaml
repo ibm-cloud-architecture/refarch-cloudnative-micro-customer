@@ -12,7 +12,7 @@ data:
   {{- end }}
   user: {{ $couchdb_user | b64enc | quote}}
   password: {{ $couchdb_password | b64enc | quote }}
-  binding: {{ cat `{"username":"` $couchdb_user `","password":"` $couchdb_password `","host":"` .Values.service.name `","port":` .Values.service.externalPort `,"url":"http://` $couchdb_user `:` $couchdb_password `@` .Values.service.name `:` .Values.service.externalPort `"}` | nospace | b64enc }}
+  binding: {{ cat `{"username":"` $couchdb_user `","password":"` $couchdb_password `","host":"` .Values.service.name `","port":` .Values.service.externalPort `,"url":"http://` $couchdb_user `:` $couchdb_password `@` .Values.service.name `:` .Values.service.externalPort `"}` | nospace | b64enc | quote | b64enc }}
 metadata:
   name: {{ .Values.binding.name }}
   namespace: {{ .Release.Namespace }}
@@ -20,4 +20,4 @@ metadata:
 {{ toYaml .Values.labels | indent 4 }}
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}

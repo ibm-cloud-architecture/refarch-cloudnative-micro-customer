@@ -8,11 +8,6 @@ metadata:
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-  annotations:
-    # This is what defines this resource as a hook. Without this line, the
-    # job is considered part of the release.
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": "34"
 spec:
   template:
     metadata:
@@ -31,17 +26,19 @@ spec:
         - >
           source /scripts/bx_login.sh; 
           bx cs init; 
-          bx cs cluster-service-bind {{ .Values.clusterName }} {{ .Release.Namespace }} "{{ .Values.service.name }}"
-        imagePullPolicy: IfNotPresent
+          bx service list | grep '{{ .Values.service.type }}' | grep '^{{ .Values.service.name }} ' || bx service create {{ .Values.service.type }} {{ .Values.service.plan }} {{ .Values.service.name }};
+          bx cs cluster-services {{ template "bluemixClusterName" . }} -n {{ .Release.Namespace }} -s | grep '{{ .Values.service.name }}' && bx cs cluster-service-unbind {{ template "bluemixClusterName" . }} {{ .Release.Namespace }} "{{ .Values.service.name }}";
+          bx cs cluster-service-bind {{ template "bluemixClusterName" . }} {{ .Release.Namespace }} "{{ .Values.service.name }}"
+        imagePullPolicy: Always
         env:
         - name: BX_ORG
-          value: {{ .Values.target.org }}
+          value: {{ template "bluemixOrg" . }}
         - name: BX_SPACE
-          value: {{ .Values.target.space }}
+          value: {{ template "bluemixSpace" . }}
         - name: BX_API_ENDPOINT
-          value: {{ .Values.target.endpoint }}
+          value: {{ template "bluemixEndpoint" . }}
         - name: BLUEMIX_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-{{ .Values.service.name | lower | replace " " "-" }}-bluemix-api-key
+              name: {{ template "bluemixApiKeySecretName" . }}
               key: api-key

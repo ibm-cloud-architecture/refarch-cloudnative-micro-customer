@@ -35,11 +35,11 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
         - name: BX_ORG
-          value: {{ .Values.target.org }}
+          value: {{ template "bluemixOrg" . }}
         - name: BX_SPACE
-          value: {{ .Values.target.space }}
+          value: {{ template "bluemixSpace" . }}
         - name: BX_API_ENDPOINT
-          value: {{ .Values.target.endpoint }}
+          value: {{ template "bluemixEndpoint" . }}
         - name: BLUEMIX_API_KEY
           valueFrom:
             secretKeyRef:
