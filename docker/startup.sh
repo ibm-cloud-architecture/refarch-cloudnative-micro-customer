@@ -30,11 +30,11 @@ if [ -z "${couchdb}" ]; then
     exit 1
 fi
 
-cloudant_username=`echo ${couchdb} | base64 -d | jq -r '.username'`
-cloudant_password=`echo ${couchdb} | base64 -d | jq -r '.password'`
-cloudant_host=`echo ${couchdb} | base64 -d | jq -r  '.host'`
-cloudant_port=`echo ${couchdb} | base64 -d | jq -r '.port'`
-cloudant_proto=`echo ${couchdb} | base64 -d | jq -r '.url' | sed -e 's|://.*||'`
+cloudant_username=`echo ${couchdb} | jq -r '.username'`
+cloudant_password=`echo ${couchdb} | jq -r '.password'`
+cloudant_host=`echo ${couchdb} | jq -r  '.host'`
+cloudant_port=`echo ${couchdb} | jq -r '.port'`
+cloudant_proto=`echo ${couchdb} |jq -r '.url' | sed -e 's|://.*||'`
 
 JAVA_OPTS="${JAVA_OPTS} -Dspring.application.cloudant.username=${cloudant_username} -Dspring.application.cloudant.password=${cloudant_password} -Dspring.application.cloudant.host=${cloudant_host} -Dspring.application.cloudant.port=${cloudant_port} -Dspring.application.cloudant.protocol=${cloudant_proto}"
 JAVA_OPTS="${JAVA_OPTS} -Djwt.sharedSecret=${hs256_key}"

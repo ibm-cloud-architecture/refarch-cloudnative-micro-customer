@@ -25,7 +25,7 @@ spec:
             "image": "ibmcase/mysql-loader:latest",
             "imagePullPolicy": "IfNotPresent",
             "command": ["/bin/bash", "-c"],
-            "args": ["couchdb_uri=`echo ${couchdb} | base64 -d | jq .url -r`; until curl --max-time 1 ${couchdb_uri}; do echo waiting for couchdb; /bin/sleep 1; done;"],
+            "args": ["couchdb_uri=`echo ${couchdb} | jq .url -r`; until curl --max-time 1 ${couchdb_uri}; do echo waiting for couchdb; /bin/sleep 1; done;"],
             "env": [{ 
               "name": "couchdb",
               "valueFrom": {
