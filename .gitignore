@@ -4,8 +4,9 @@
 
 /.settings
 /.classpath
-/docker/app.jar
+docker/app.jar
 .*.swp
+.idea
 
 chart/customer/charts
 chart/customer/requirements.lock
