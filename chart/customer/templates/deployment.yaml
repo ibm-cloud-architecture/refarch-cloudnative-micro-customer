@@ -1,13 +1,13 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: bluecompute-customer
+  name: {{ .Release.Name }}-{{ .Chart.Name }}
   labels:
     app: bluecompute
     micro: customer
     tier: backend
     release: {{.Release.Name | quote }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 spec:
   replicas: {{ .Values.replicaCount }}
   template:
@@ -17,43 +17,43 @@ spec:
         micro: customer
         tier: backend
         release: {{.Release.Name | quote }}
-        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+        chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+      annotations:
+        pod.beta.kubernetes.io/init-containers: '[
+          {
+            "name": "test-couchdb",
+            "image": "ibmcase/mysql-loader:latest",
+            "imagePullPolicy": "IfNotPresent",
+            "command": ["/bin/bash", "-c"],
+            "args": ["couchdb_uri=`echo ${couchdb} | jq .url -r`; until curl --max-time 1 ${couchdb_uri}; do echo waiting for couchdb; /bin/sleep 1; done;"],
+            "env": [{ 
+              "name": "couchdb",
+              "valueFrom": {
+                "secretKeyRef": {
+                  "name": "{{ template "couchdbBinding" . }}",
+                  "key": "binding"
+                }
+              }
+            }]
+          }
+        ]'
     spec:
-      {{- if .Values.image.pullSecret }}
-      imagePullSecrets:
-      - name: {{ .Values.image.pullSecretName }}
-      {{- end }}
       containers:
-      - name: bluecompute-customer
+      - name: customer
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        volumeMounts:
-        - mountPath: /var/run/secrets/binding-refarch-cloudantdb
-          name: binding-refarch-cloudantdb
-        - mountPath: /var/run/secrets/hs256-key
-          name: hs256-key
+        env:
+        - name: HS256_KEY
+          valueFrom: 
+            secretKeyRef:
+                name: {{ template "hs256SecretName" . }}
+                key:  key
+        - name: couchdb
+          valueFrom: 
+            secretKeyRef:
+                name: {{ template "couchdbBinding" . }} 
+                key: binding
         ports:
         - containerPort: {{ .Values.service.internalPort }}
-        livenessProbe:
-          httpGet:
-            path: /micro/check
-            port: {{ .Values.service.internalPort }}
-          initialDelaySeconds: 60
-        readinessProbe:
-          httpGet:
-            path: /micro/check
-            port: {{ .Values.service.internalPort }}
-          initialDelaySeconds: 60
-      volumes:
-      - name: binding-refarch-cloudantdb
-        secret:
-          defaultMode: 420
-          secretName: "binding-{{ .Values.cloudant.serviceName }}"
-      - name: hs256-key
-        secret:
-          defaultMode: 420
-          secretName: "{{ .Values.hs256key.secretName }}"
-      {{if eq .Values.image.usePullSecret true}}
-      imagePullSecrets:
-        - name: "{{ .Values.image.pullSecretName }}"
-      {{end}}
+        resources:
+{{ toYaml .Values.resources | indent 12 }}

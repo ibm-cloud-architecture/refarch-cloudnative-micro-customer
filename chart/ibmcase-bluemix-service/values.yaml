@@ -1,18 +1,30 @@
-# Default values for ibmcase-bluemix-service.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-bluemix:
-  apiKey:
+# bluemix API key
+apiKey:
 
-  target:
-    endpoint: api.ng.bluemix.net
-    org:
-    space:
+# bluemix target
+target:
+  endpoint: api.ng.bluemix.net
+  org:
+  space:
 
-  clusterName:
-  
-  service:
-  - name:
-    type:
-    plan:
+# name of armada cluster to bind the service to
+clusterName:
 
+# type and plan of bluemix service to create, will be named service.name
+service:
+  name:
+  type:
+  plan:
+
+global:
+  bluemix:
+     # global defined bluemix API key
+    apiKey:
+    
+    # global defined bluemix target
+    target:
+      endpoint:
+      org:
+      space:
+    
+   

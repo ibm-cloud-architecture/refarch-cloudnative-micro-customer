@@ -28,6 +28,4 @@ resources:
 existingPVCName:
 
 labels:
-  app: bluecompute
-  micro: customer
-  tier: data
+  datastore: couchdb

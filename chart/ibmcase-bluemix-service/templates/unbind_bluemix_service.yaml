@@ -1,18 +1,24 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ (cat .Release.Name "-bind-bluemix-service-" ( .Values.service.name | lower | replace " " "-") "-" ( randAlphaNum 5 | lower )) | nospace | trunc 63 }} 
+  name: {{ (cat .Release.Name "-unbind-bluemix-service-" ( .Values.service.name | lower | replace " " "-") "-" ( randAlphaNum 5 | lower )) | nospace | trunc 63 }} 
   namespace: {{ .Release.Namespace }}
   labels:
     bluemixService: {{ .Values.service.name | lower | replace " " "-" }}
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "34"
 spec:
   template:
     metadata:
-      name: {{.Release.Name}}-bind-bluemix-service-{{ .Values.service.name | lower | replace " " "-" }}
+      name: {{.Release.Name}}-unbind-bluemix-service-{{ .Values.service.name | lower | replace " " "-" }}
       labels:
+        bluemixService: {{ .Values.service.name | lower | replace " " "-" }}
         heritage: {{.Release.Service | quote }}
         release: {{.Release.Name | quote }}
         chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -26,10 +32,8 @@ spec:
         - >
           source /scripts/bx_login.sh; 
           bx cs init; 
-          bx service list | grep '{{ .Values.service.type }}' | grep '^{{ .Values.service.name }} ' || bx service create {{ .Values.service.type }} {{ .Values.service.plan }} {{ .Values.service.name }};
-          bx cs cluster-services {{ template "bluemixClusterName" . }} -n {{ .Release.Namespace }} -s | grep '{{ .Values.service.name }}' && bx cs cluster-service-unbind {{ template "bluemixClusterName" . }} {{ .Release.Namespace }} "{{ .Values.service.name }}";
-          bx cs cluster-service-bind {{ template "bluemixClusterName" . }} {{ .Release.Namespace }} "{{ .Values.service.name }}"
-        imagePullPolicy: Always
+          bx cs cluster-services {{ template "bluemixClusterName" . }} -n {{ .Release.Namespace }} -s | grep '{{ .Values.service.name }}' && bx cs cluster-service-unbind {{ template "bluemixClusterName" . }} {{ .Release.Namespace }} "{{ .Values.service.name }}"
+        imagePullPolicy: IfNotPresent
         env:
         - name: BX_ORG
           value: {{ template "bluemixOrg" . }}
@@ -40,5 +44,5 @@ spec:
         - name: BLUEMIX_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ template "bluemixApiKeySecretName" . }}
+              name: {{ template "bluemixApiKeySecretName" . }} 
               key: api-key
