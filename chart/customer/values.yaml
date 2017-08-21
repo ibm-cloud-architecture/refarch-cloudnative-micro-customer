@@ -9,7 +9,7 @@ image:
   pullPolicy: IfNotPresent
 
 service:
-  name: customer-service
+  name: customer
   type: ClusterIP
   externalPort: 8080
   internalPort: 8080
