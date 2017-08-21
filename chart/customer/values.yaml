@@ -6,7 +6,7 @@ replicaCount: 1
 image:
   repository: ibmcase/bluecompute-customer
   tag: dev
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 service:
   name: customer
