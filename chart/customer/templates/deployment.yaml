@@ -16,8 +16,6 @@ spec:
         app: bluecompute
         micro: customer
         tier: backend
-        release: {{.Release.Name | quote }}
-        chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
       annotations:
         pod.beta.kubernetes.io/init-containers: '[
           {
