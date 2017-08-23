@@ -27,5 +27,10 @@ resources:
 
 existingPVCName:
 
+global:
+  persistenceEnabled: false
+
 labels:
   datastore: couchdb
+
+nodename: 

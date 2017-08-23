@@ -14,3 +14,18 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{- define "couchdbDataVolume" -}}
+        - name: couchdb-data
+{{- if .Values.global.persistenceEnabled }}
+          persistentVolumeClaim:
+    {{- if .Values.existingPVCName }}
+            claimName: {{ .Values.existingPVCName }}
+    {{- else }}
+            claimName: {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Values.nodename }}-data
+    {{- end -}}
+{{ else }}
+          hostPath:
+            path: /var/lib/couchdb-{{ .Values.nodename }}
+{{ end }}
+{{- end -}}
