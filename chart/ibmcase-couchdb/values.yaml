@@ -25,10 +25,19 @@ resources:
   requests:
     memory: 64Mi
 
-existingPVCName:
+persistence:
+  enabled: false
+  existingName:
+  volume:
+    storageClass:
+    size: 
 
 global:
-  persistenceEnabled: false
+  persistence: 
+    enabled: false
+    volume: 
+      storageClass:
+      size: 
 
 labels:
   datastore: couchdb
