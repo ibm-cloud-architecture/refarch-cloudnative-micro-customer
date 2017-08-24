@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-{{ .Values.nodename }}-couchdb
+  namespace: {{ .Release.Namespace }}
   labels:
 {{ toYaml .Values.labels | indent 4 }}
     release: {{.Release.Name | quote }}
@@ -12,11 +13,9 @@ spec:
     metadata:
       labels:
 {{ toYaml .Values.labels | indent 8 }}
-        release: {{.Release.Name | quote }}
-        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     spec:
       containers:
-      - name: bluecompute-customer-couchdb
+      - name: couchdb
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
@@ -52,11 +51,5 @@ spec:
           initialDelaySeconds: 10
           failureThreshold: 10
       volumes:
-        - name: couchdb-data
-{{ if .Values.existingPVCName }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.existingPVCName }}
-{{ else }}
-          hostPath:
-            path: /opt/couchdb-{{ .Release.Name }}/data
-{{ end }}            
+        {{ template "couchdbDataVolume" . }}
+
