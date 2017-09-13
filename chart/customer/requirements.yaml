@@ -1,14 +1,12 @@
 dependencies:
   - name: ibmcase-couchdb
-    #repository: https://fabiogomezdiaz.github.io/refarch-cloudnative-kubernetes/charts
-    repository: http://localhost:8879
+    repository: https://raw.githubusercontent.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/dev/docs/charts
     version: 0.1.0
     condition: ibmcase-couchdb.enabled
     tags:
     - localdb
   - name: ibmcase-bluemix-service
-    #repository: https://fabiogomezdiaz.github.io/refarch-cloudnative-kubernetes/charts
-    repository: http://localhost:8879
+    repository: https://raw.githubusercontent.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/dev/docs/charts
     version: 0.1.0
     alias: bluemix-cloudantdb
     condition: bluemix-cloudantdb.enabled
