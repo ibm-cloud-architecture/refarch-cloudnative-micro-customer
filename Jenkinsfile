@@ -57,7 +57,7 @@ podTemplate(
                 set +e
                 NAMESPACE=`cat /var/run/configs/registry-config/namespace`
                 REGISTRY=`cat /var/run/configs/registry-config/registry`
-                DEPLOYMENT=`kubectl get deployments -l app=bluecompute,micro=customer -o name`
+                DEPLOYMENT=`kubectl get deployments -l app=bluecompute,tier=backend,micro=customer -o name`
 
                 kubectl get \${DEPLOYMENT}
 
