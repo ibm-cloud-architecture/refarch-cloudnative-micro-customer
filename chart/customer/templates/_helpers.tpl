@@ -16,13 +16,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{- define "couchdbBinding" -}}
-  {{- if ((index .Values "bluemix-cloudantdb").enabled) -}}
-    binding-{{ index .Values "bluemix-cloudantdb" "service" "name" | lower | replace " " "-" }}
-  {{- else if (.Values.tags.bluemix) -}}
-    binding-{{ index .Values "bluemix-cloudantdb" "service" "name" | lower | replace " " "-" }}
-  {{- else -}}
-    {{ index .Values "ibmcase-couchdb" "binding" "name" }}
-  {{- end -}}
+  {{ .Values.couchdb.binding.name }}
 {{- end -}}
 
 {{- define "hs256SecretName" -}}
@@ -31,4 +25,16 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
   {{- else -}}
     {{- .Release.Name }}-{{ .Chart.Name }}-{{ .Values.hs256key.secretName -}}
   {{- end }}
+{{- end -}}
+
+{{- define "customerDockerImage" -}}
+  {{- .Values.image.repository }}
+{{- end -}}
+
+{{- define "dataLoaderDockerImage" -}}
+  {{- .Values.dataloader.image.repository }}
+{{- end -}}
+
+{{- define "bashCurlSSLDockerImage" -}}
+  {{- .Values.bash.image.repository }}
 {{- end -}}

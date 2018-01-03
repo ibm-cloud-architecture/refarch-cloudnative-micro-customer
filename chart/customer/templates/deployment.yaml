@@ -20,11 +20,11 @@ spec:
         pod.beta.kubernetes.io/init-containers: '[
           {
             "name": "test-couchdb",
-            "image": "ibmcase/mysql-loader:latest",
+            "image": "{{ template dataLoaderDockerImage . }}:{{ .Values.dataloader.image.tag }}",
             "imagePullPolicy": "IfNotPresent",
             "command": ["/bin/bash", "-c"],
             "args": ["couchdb_uri=`echo ${couchdb} | jq .url -r`; until curl --max-time 1 ${couchdb_uri}; do echo waiting for couchdb; /bin/sleep 1; done;"],
-            "env": [{ 
+            "env": [{
               "name": "couchdb",
               "valueFrom": {
                 "secretKeyRef": {
@@ -42,14 +42,14 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: HS256_KEY
-          valueFrom: 
+          valueFrom:
             secretKeyRef:
                 name: {{ template "hs256SecretName" . }}
                 key:  key
         - name: couchdb
-          valueFrom: 
+          valueFrom:
             secretKeyRef:
-                name: {{ template "couchdbBinding" . }} 
+                name: {{ template "couchdbBinding" . }}
                 key: binding
         ports:
         - containerPort: {{ .Values.service.internalPort }}

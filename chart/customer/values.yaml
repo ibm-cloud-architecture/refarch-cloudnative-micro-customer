@@ -21,12 +21,12 @@ global:
 
   bluemix:
     apiKey:
-  
+
     target:
       endpoint: api.ng.bluemix.net
       org:
       space:
-  
+
     clusterName:
 
 tags:
@@ -44,41 +44,16 @@ resources:
   requests:
     memory: 64Mi
 
-bluemix-cloudantdb:
-  apiKey:
+dataloader:
+  image:
+    repository: ibmcase/bluecompute-dataloader
+    tag: latest
 
-  target:
-    endpoint: api.ng.bluemix.net
-    org:
-    space:
+bash:
+  image:
+    repository: ibmcase/bluecompute-bash-curl-ssl
+    tag: latest
 
-  clusterName:
-  
-  service:
-    name: customer-cloudantdb
-    type: cloudantNoSQLDB
-    plan: Lite
-  
-ibmcase-couchdb:
-  user:
-  password:
-  service:
-    name: customer-couchdb
-    type: ClusterIP
-    externalPort: 5984
-    internalPort: 5984
+couchdb:
   binding:
     name: binding-customer-couchdb
-  resources:
-    limits:
-      memory: 128Mi
-    requests:
-      memory: 64Mi
-  existingPVCName:
-  labels:
-    app: bluecompute
-    micro: customer
-    tier: data
-  nodename: customerdb
-  
-
