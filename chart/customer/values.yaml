@@ -5,7 +5,7 @@ replicaCount: 1
 
 image:
   repository: ibmcase/bluecompute-customer
-  tag: dev
+  tag: latest
   pullPolicy: Always
 
 service:
