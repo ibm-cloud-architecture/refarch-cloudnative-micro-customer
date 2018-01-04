@@ -22,7 +22,7 @@ spec:
         pod.beta.kubernetes.io/init-containers: '[
           {
              "name": "bluecompute-customer-wait-for-customer-service",
-             "image": "{{ template bashCurlSSLDockerImage . }}:{{ .Values.bash.image.tag }}",
+             "image": "{{ .Values.bash.image.repository }}:{{ .Values.bash.image.tag }}",
              "imagePullPolicy": "IfNotPresent",
              "command": ["/bin/bash", "-c", "until curl --max-time 1 http://{{ .Release.Name }}-{{ .Values.service.name }}:{{ .Values.service.externalPort }}; do echo waiting for customer-service; sleep 1; done;"]
           }
@@ -31,7 +31,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: create-user
-        image: {{ template bashCurlSSLDockerImage . }}:{{ .Values.bash.image.tag }}
+        image: {{ .Values.bash.image.repository }}:{{ .Values.bash.image.tag }}
         command: ["/bin/bash", "-c" ]
         args:
         - >

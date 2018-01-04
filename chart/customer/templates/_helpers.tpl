@@ -26,15 +26,3 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
     {{- .Release.Name }}-{{ .Chart.Name }}-{{ .Values.hs256key.secretName -}}
   {{- end }}
 {{- end -}}
-
-{{- define "customerDockerImage" -}}
-  {{- .Values.image.repository }}
-{{- end -}}
-
-{{- define "dataLoaderDockerImage" -}}
-  {{- .Values.dataloader.image.repository }}
-{{- end -}}
-
-{{- define "bashCurlSSLDockerImage" -}}
-  {{- .Values.bash.image.repository }}
-{{- end -}}
