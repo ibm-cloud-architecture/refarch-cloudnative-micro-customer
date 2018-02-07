@@ -2,6 +2,7 @@ package application.rest;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,11 +12,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Response;
+import com.google.gson.Gson;
 
 import config.CloudantPropertiesBean;
 import model.Customer;
@@ -93,6 +96,7 @@ public class CustomerService {
     
     @GET
     public String getCustomers() {
+    	String custDetails=null;
         try {
         	final String customerId = getCustomerId();
         	if (customerId == null) {
@@ -102,8 +106,9 @@ public class CustomerService {
         	
         	System.out.println("caller: " + customerId);
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
-            
-            return cust.toString();
+			Gson gson = new Gson();
+        	custDetails = gson.toJson(cust);
+   		    return custDetails;
         } catch (Exception e) {
             System.err.println(e.getMessage() + e);
             throw e;
@@ -113,7 +118,7 @@ public class CustomerService {
     
     private String getCustomerId() {
     	// to be replaced with the customer from security context
-    	return "";
+    	return "f56e93dd281842dd92a328019b74493a";
     }
     
     /**
@@ -156,6 +161,33 @@ public class CustomerService {
 
         } catch (Exception ex) {
             return "Error creating customer: " + ex.toString();
+        }
+        
+    }
+    
+    @Path("/search")
+    @GET
+    public String searchCustomers(@QueryParam("username") String username) {
+    	
+    	String custDetails=null;
+        try {
+        	
+        	if (username == null) {
+        		return "Missing username";
+        	}
+        	
+        	final List<Customer> customers = getCloudantDatabase().findByIndex(
+        			"{ \"selector\": { \"username\": \"" + username + "\" } }", 
+        			Customer.class);
+        	
+        	//  query index
+        	Gson gson = new Gson();
+        	custDetails = gson.toJson(customers);
+   		    return custDetails;
+            
+        } catch (Exception e) {
+            System.err.println(e.getMessage()  + e);
+            return e.getLocalizedMessage();
         }
         
     }
