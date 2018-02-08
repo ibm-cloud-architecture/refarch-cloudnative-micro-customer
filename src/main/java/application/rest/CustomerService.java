@@ -129,7 +129,7 @@ public class CustomerService {
     
     private String getCustomerId() {
     	// to be replaced with the customer from security context
-    	return "f56e93dd281842dd92a328019b74493a";
+    	return "92d11795f32147d382e6adbc6b31fdbb";
     }
     
     /**
