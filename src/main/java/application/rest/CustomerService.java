@@ -16,6 +16,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -23,7 +26,6 @@ import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.google.gson.Gson;
 
-import config.CloudantPropertiesBean;
 import model.Customer;
 import utils.CloudantDatabase;
 
@@ -32,21 +34,27 @@ public class CustomerService {
 	
 	private Database cloudant;
 	
-	private CloudantPropertiesBean cloudantProperties;
-	
 	CloudantDatabase cd = new CloudantDatabase();
 	
+	Config config = ConfigProvider.getConfig();
+
+    private String protocol = config.getValue("protocol", String.class);
+    private String host = config.getValue("host", String.class);
+    private String port = config.getValue("port", String.class);
+    private String user = config.getValue("user", String.class);
+    private String password = config.getValue("password", String.class);
+    private String database = config.getValue("database", String.class);
 	
     private void initialize() throws MalformedURLException {
         
         try {
-            System.out.println("Connecting to cloudant at: http://cloudant-developer:8080/");
-            final CloudantClient cloudantClient = ClientBuilder.url(new URL("https://e97790e0-b27a-42e9-873e-47c28c3777d3-bluemix.cloudant.com:443/"))
-                    .username("e97790e0-b27a-42e9-873e-47c28c3777d3-bluemix")
-                    .password("d723a4d133cddb8e3e9427042bcfdf363a2fbb1c04c924756b6cb62c3c627294")
+            System.out.println("Connecting to cloudant at: " + protocol + "://" + host + ":" + port);
+            final CloudantClient cloudantClient = ClientBuilder.url(new URL(protocol + "://" + host + ":" + port))
+                    .username(user)
+                    .password(password)
                     .build();
             
-            cloudant = cloudantClient.database("customers", true);
+            cloudant = cloudantClient.database(database, true);
             
             
             // create the design document if it doesn't exist

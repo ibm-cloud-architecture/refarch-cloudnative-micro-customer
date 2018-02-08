@@ -5,37 +5,34 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 
-import config.CloudantPropertiesBean;
-
 public class CloudantDatabase {
 	
 private Database cloudant;
-	
-    private static Logger logger =  LoggerFactory.getLogger(CloudantDatabase.class);
+    
+    Config config = ConfigProvider.getConfig();
 
-	private CloudantPropertiesBean cloudantProperties;
+    private String protocol = config.getValue("protocol", String.class);
+    private String host = config.getValue("host", String.class);
+    private String port = config.getValue("port", String.class);
+    private String database = config.getValue("database", String.class);
 	
 	private void setDatabase() throws MalformedURLException {
-        logger.debug(cloudantProperties.toString());
         
         try {
-            logger.info("Connecting to cloudant at: " + cloudantProperties.getProtocol() + "://" + cloudantProperties.getHost() + ":" + cloudantProperties.getPort());
-            /*final CloudantClient cloudantClient = ClientBuilder.url(new URL(cloudantProperties.getProtocol() + "://" + cloudantProperties.getHost() + ":" + cloudantProperties.getPort()))
-                    .username(cloudantProperties.getUsername())
-                    .password(cloudantProperties.getPassword())
-                    .build();*/
+              
+        	System.out.println("Connecting to cloudant at: " + protocol + "://" + host + ":" + port);
                     
-              final CloudantClient cloudantClient = ClientBuilder.url(new URL("https://e97790e0-b27a-42e9-873e-47c28c3777d3-bluemix:d723a4d133cddb8e3e9427042bcfdf363a2fbb1c04c924756b6cb62c3c627294@e97790e0-b27a-42e9-873e-47c28c3777d3-bluemix.cloudant.com"))
+            final CloudantClient cloudantClient = ClientBuilder.url(new URL(protocol + "://" + host + ":" + port))
                             .build();
             
-            cloudant = cloudantClient.database(cloudantProperties.getDatabase(), true);
+            cloudant = cloudantClient.database(database, true);
             
             
             // create the design document if it doesn't exist
@@ -54,7 +51,7 @@ private Database cloudant;
             }
             
         } catch (MalformedURLException e) {
-            logger.error(e.getMessage(), e);
+            System.err.println(e.getMessage() + e);
             throw e;
         }
         
