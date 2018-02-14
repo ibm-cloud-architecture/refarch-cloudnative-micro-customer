@@ -2,6 +2,7 @@ package application.rest;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,9 +16,18 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
+
+import com.ibm.websphere.security.jwt.InvalidConsumerException;
+import com.ibm.websphere.security.jwt.InvalidTokenException;
+import com.ibm.websphere.security.jwt.JwtBuilder;
+import com.ibm.websphere.security.jwt.JwtConsumer;
+import com.ibm.websphere.security.jwt.JwtToken;
+import com.ibm.websphere.security.openidconnect.PropagationHelper;
+import com.ibm.websphere.security.openidconnect.token.IdToken;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
@@ -104,11 +114,47 @@ public class CustomerService {
     	}
     }
     
+    @GET
+    @Path("/customer")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getCustomerByUsername(String username) {
+    {
+   
+    String custDetails=null;
+    try {
+    	final String customerId = "111";
+    	/*if (customerId == null) {
+    		// if no user passed in, this is a bad request
+    		return "Invalid Bearer Token: Missing customer ID";
+    	}*/
+    	
+    	System.out.println("caller: " + customerId);
+			final Customer cust = new Customer() ;
+			cust.setCustomerId("111");
+			cust.set_rev("rev string");
+			cust.setEmail("xxx@mail.com");
+			cust.setFirstName("sss");
+			cust.setLastName("hhh");
+			cust.setUsername("foo");
+			cust.setPassword("bar");
+			
+			Gson gson = new Gson();
+    	    custDetails = gson.toJson(cust);
+		    return custDetails;
+    } catch (Exception e) {
+        System.err.println(e.getMessage() + e);
+        throw e;
+    }
+    }
+    }
+    
     
     @GET
+    @Produces("application/json")
     public String getCustomers() {
     	String custDetails=null;
         try {
+        	
         	final String customerId = getCustomerId();
         	if (customerId == null) {
         		// if no user passed in, this is a bad request
@@ -117,7 +163,7 @@ public class CustomerService {
         	
         	System.out.println("caller: " + customerId);
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
-			Gson gson = new Gson();
+        	Gson gson = new Gson();
         	custDetails = gson.toJson(cust);
    		    return custDetails;
         } catch (Exception e) {
@@ -306,6 +352,14 @@ public class CustomerService {
             return "Error deleting customer: " + ex.toString();
         }
         return "Customer Deleted";
+    }
+    
+    private IdToken getJwt(){
+        // ask liberty for the id token from the oauth/oidc exchange protecting
+        // this invocation.
+        //IdToken id_token = PropagationHelper.getIdToken();
+    	IdToken id_token = PropagationHelper.getIdToken();
+    	return id_token;
     }
     
 }

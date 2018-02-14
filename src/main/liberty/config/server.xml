@@ -2,10 +2,31 @@
 
   <featureManager>
       <feature>microprofile-1.2</feature>
+      <feature>jaxrs-2.0</feature>
+      <feature>openidConnectClient-1.0</feature>
   </featureManager>
 
   <httpEndpoint httpPort="${default.http.port}" httpsPort="${default.https.port}"
       id="defaultHttpEndpoint" host="*" />
 
+
+
+  <!-- Automatically expand WAR files and EAR files -->
+  <applicationManager autoExpand="true"/>
+
+  <webApplication name="customer" location="${app.location}"/>
+           
+  <openidConnectClient id="bluecomputeweb" 		
+    clientId="bluecomputeweb" 		
+    clientSecret="tArohFTdH7zP6n0zMgoVd9s9HJ4QrsHNmESXklSwHnhTibH2w8NLl8FA82y7FQfNNyb6zk8QDduTgttY910MSKnS9Rnaas2kNQiaxKS5OoZc9Vi1PMwnXThQBGHGiGEVgs8npMJ7icUNVbHiBFF6TlHosy1MUM3PoIy6fnSgzPvK6Zao5lEgnovNfhAiQpNfhDjiS7KcZg6o68JtmB5oESQDKh2E22lGgiyDu077TS6xi6eGjDo85wNsalPeUeWL"
+    authorizationEndpointUrl="http://localhost:8000/oauth/authorize" 		
+    tokenEndpointUrl="http://localhost:8000/oauth/token"
+    userIdentifier="user_name"
+    disableIssChecking="true"
+    signatureAlgorithm="HS256"
+    inboundPropagation="supported"> 	
+ </openidConnectClient>
+ 
+ <keyStore id="defaultKeyStore" password="yourPassword" />
 
 </server>
