@@ -29,6 +29,8 @@ import com.ibm.websphere.security.jwt.JwtToken;
 import com.ibm.websphere.security.openidconnect.PropagationHelper;
 import com.ibm.websphere.security.openidconnect.token.IdToken;
 
+import config.JwtConfig;
+
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -114,48 +116,49 @@ public class CustomerService {
     	}
     }
     
+    @Path("/search")
+    @Produces("application/json")
     @GET
-    @Path("/customer")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String getCustomerByUsername(String username) {
-    {
-   
-    String custDetails=null;
-    try {
-    	final String customerId = "111";
-    	/*if (customerId == null) {
-    		// if no user passed in, this is a bad request
-    		return "Invalid Bearer Token: Missing customer ID";
-    	}*/
-    	
-    	System.out.println("caller: " + customerId);
-			final Customer cust = new Customer() ;
-			cust.setCustomerId("111");
-			cust.set_rev("rev string");
-			cust.setEmail("xxx@mail.com");
-			cust.setFirstName("sss");
-			cust.setLastName("hhh");
-			cust.setUsername("foo");
-			cust.setPassword("bar");
-			
-			Gson gson = new Gson();
-    	    custDetails = gson.toJson(cust);
-		    return custDetails;
-    } catch (Exception e) {
-        System.err.println(e.getMessage() + e);
-        throw e;
+    public List<Customer> getCustomerByUsername(@QueryParam("username") String username) {
+    	JwtConfig jwt = getJwt();
+    	if(jwt.getScope().contains("admin")){
+        try {
+        	
+        	if (username == null) {
+        		return null;
+        		//return "Missing username";
+        	}
+        	
+        	final List<Customer> customers = getCloudantDatabase().findByIndex(
+        			"{ \"selector\": { \"username\": \"" + username + "\" } }", 
+        			Customer.class);
+        	
+        	//  query index
+        	//Gson gson = new Gson();
+        	//custDetails = gson.toJson(customers);
+   		    return customers;
+            
+        } catch (Exception e) {
+            System.err.println(e.getMessage()  + e);
+            //return e.getLocalizedMessage();
+            return null;
+        }
+    	}
+    	else{
+    		return null;
+    	}
+        
     }
-    }
-    }
-    
     
     @GET
     @Produces("application/json")
     public String getCustomers() {
+    	JwtConfig jwt = getJwt();
+    	if(jwt.getScope().contains("blue")){
     	String custDetails=null;
         try {
         	
-        	final String customerId = getCustomerId();
+        	final String customerId = jwt.getUser_name();
         	if (customerId == null) {
         		// if no user passed in, this is a bad request
         		return "Invalid Bearer Token: Missing customer ID";
@@ -170,12 +173,48 @@ public class CustomerService {
             System.err.println(e.getMessage() + e);
             throw e;
         }
-        
+    	}
+    	else{
+    		return "401";
+    	}
     }
     
-    private String getCustomerId() {
-    	// to be replaced with the customer from security context
-    	return "92d11795f32147d382e6adbc6b31fdbb";
+    /**
+     * @return customer by id
+     */
+    @Path("/{id}")
+    @GET
+    public String getById(@PathParam("id") String id) {
+    	JwtConfig jwt = getJwt();
+    	if(jwt.getScope().contains("blue")){
+    	String custDetails=null;
+        try {
+        	final String customerId = jwt.getUser_name();
+        	if (customerId == null) {
+        		// if no user passed in, this is a bad request
+        		return "Invalid Bearer Token: Missing customer ID";
+        	}
+        	
+        	System.out.println("caller: " + customerId);
+        	
+        	if (!customerId.equals(id)) {
+        		// if i'm getting a customer ID that doesn't match my own ID, then return 401
+        		return "401 status";
+        		//return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        	}
+        	
+			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
+			
+			Gson gson = new Gson();
+        	custDetails = gson.toJson(cust);
+   		    return custDetails;
+        } catch (NoDocumentException e) {
+            return "Customer with ID " + id + " not found";
+        }
+    	}
+    	else{
+    		return "Invalid access 401";
+    	}
     }
     
     /**
@@ -187,6 +226,8 @@ public class CustomerService {
     @Consumes("application/json")
     @Produces("application/json")
     public String create(Customer payload) {
+    	JwtConfig jwt = getJwt();
+    	if(jwt.getScope().contains("admin")){
         try {
         	// TODO: no one should have access to do this, it's not exposed to APIC
             final Database cloudant = getCloudantDatabase();
@@ -220,66 +261,11 @@ public class CustomerService {
         } catch (Exception ex) {
             return "Error creating customer: " + ex.toString();
         }
+    	}
+    	else{
+    		return "invalid access 401";
+    	}
         
-    }
-    
-    @Path("/search")
-    @GET
-    public String searchCustomers(@QueryParam("username") String username) {
-    	
-    	String custDetails=null;
-        try {
-        	
-        	if (username == null) {
-        		return "Missing username";
-        	}
-        	
-        	final List<Customer> customers = getCloudantDatabase().findByIndex(
-        			"{ \"selector\": { \"username\": \"" + username + "\" } }", 
-        			Customer.class);
-        	
-        	//  query index
-        	Gson gson = new Gson();
-        	custDetails = gson.toJson(customers);
-   		    return custDetails;
-            
-        } catch (Exception e) {
-            System.err.println(e.getMessage()  + e);
-            return e.getLocalizedMessage();
-        }
-        
-    }
-    
-    /**
-     * @return customer by id
-     */
-    @Path("{id}")
-    @GET
-    public String getById(@PathParam("id") String id) {
-    	String custDetails=null;
-        try {
-        	final String customerId = getCustomerId();
-        	if (customerId == null) {
-        		// if no user passed in, this is a bad request
-        		return "Invalid Bearer Token: Missing customer ID";
-        	}
-        	
-        	System.out.println("caller: " + customerId);
-        	
-        	if (!customerId.equals(id)) {
-        		// if i'm getting a customer ID that doesn't match my own ID, then return 401
-        		return "401 status";
-        		//return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        	}
-        	
-			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
-			
-			Gson gson = new Gson();
-        	custDetails = gson.toJson(cust);
-   		    return custDetails;
-        } catch (NoDocumentException e) {
-            return "Customer with ID " + id + " not found";
-        }
     }
     
     /**
@@ -291,9 +277,10 @@ public class CustomerService {
     @PUT
     @Consumes("application/json")
     public String update(@PathParam("id") String id, Customer payload) {
-
+    	JwtConfig jwt = getJwt();
+    	if(jwt.getScope().contains("blue")){
         try {
-        	final String customerId = getCustomerId();
+        	final String customerId = jwt.getUser_name();
         	if (customerId == null) {
         		// if no user passed in, this is a bad request
         		return "Invalid Bearer Token: Missing customer ID";
@@ -326,6 +313,10 @@ public class CustomerService {
         }
         
         return "Customer Updated Successfully";
+    	}
+    	else{
+    		return "invalid access 401";
+    	}
     }
 
     /**
@@ -337,7 +328,8 @@ public class CustomerService {
     @DELETE
     public String delete(@PathParam("id") String id) {
 		// TODO: no one should have access to do this, it's not exposed to APIC
-    	
+    	JwtConfig jwt = getJwt();
+    	if(jwt.getScope().contains("blue")){
         try {
             final Database cloudant = getCloudantDatabase();
             final Customer cust = getCloudantDatabase().find(Customer.class, id);
@@ -352,14 +344,21 @@ public class CustomerService {
             return "Error deleting customer: " + ex.toString();
         }
         return "Customer Deleted";
+    	}
+    	else{
+    		return "invalid access 401";
+    	}
     }
     
-    private IdToken getJwt(){
+    private JwtConfig getJwt(){
         // ask liberty for the id token from the oauth/oidc exchange protecting
         // this invocation.
         //IdToken id_token = PropagationHelper.getIdToken();
     	IdToken id_token = PropagationHelper.getIdToken();
-    	return id_token;
+    	String claims = id_token.getAllClaimsAsJson();
+        Gson g = new Gson();
+        JwtConfig jwt = g.fromJson(claims, JwtConfig.class);
+    	return jwt;
     }
     
 }
