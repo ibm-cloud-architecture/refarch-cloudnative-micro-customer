@@ -2,7 +2,6 @@ package application.rest;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,16 +15,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
-import com.ibm.websphere.security.jwt.InvalidConsumerException;
-import com.ibm.websphere.security.jwt.InvalidTokenException;
-import com.ibm.websphere.security.jwt.JwtBuilder;
-import com.ibm.websphere.security.jwt.JwtConsumer;
-import com.ibm.websphere.security.jwt.JwtToken;
 import com.ibm.websphere.security.openidconnect.PropagationHelper;
 import com.ibm.websphere.security.openidconnect.token.IdToken;
 
@@ -67,7 +64,6 @@ public class CustomerService {
                     .build();
             
             cloudant = cloudantClient.database(database, true);
-            
             
             // create the design document if it doesn't exist
             if (!cloudant.contains("_design/username_searchIndex")) {
@@ -119,63 +115,55 @@ public class CustomerService {
     @Path("/search")
     @Produces("application/json")
     @GET
-    public List<Customer> getCustomerByUsername(@QueryParam("username") String username) {
+    public javax.ws.rs.core.Response getCustomerByUsername(@QueryParam("username") String username) {
     	JwtConfig jwt = getJwt();
     	if(jwt.getScope().contains("admin")){
         try {
         	
         	if (username == null) {
-        		return null;
-        		//return "Missing username";
+        		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.BAD_REQUEST).entity("Missing username").build();
         	}
         	
         	final List<Customer> customers = getCloudantDatabase().findByIndex(
         			"{ \"selector\": { \"username\": \"" + username + "\" } }", 
         			Customer.class);
         	
-        	//  query index
-        	//Gson gson = new Gson();
-        	//custDetails = gson.toJson(customers);
-   		    return customers;
+        	GenericEntity<List<Customer>> list = new GenericEntity<List<Customer>>(customers) {
+            };
+            return javax.ws.rs.core.Response.ok(list).build();
             
         } catch (Exception e) {
             System.err.println(e.getMessage()  + e);
-            //return e.getLocalizedMessage();
-            return null;
+            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).entity(e.getLocalizedMessage()).build();
         }
     	}
     	else{
-    		return null;
+    		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.UNAUTHORIZED).build();
     	}
-        
     }
     
     @GET
     @Produces("application/json")
-    public String getCustomers() {
+    public javax.ws.rs.core.Response getCustomers() {
     	JwtConfig jwt = getJwt();
     	if(jwt.getScope().contains("blue")){
-    	String custDetails=null;
         try {
         	
         	final String customerId = jwt.getUser_name();
         	if (customerId == null) {
-        		// if no user passed in, this is a bad request
-        		return "Invalid Bearer Token: Missing customer ID";
+        		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.BAD_REQUEST).entity("Invalid Bearer Token: Missing customer ID").build();
         	}
         	
         	System.out.println("caller: " + customerId);
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
-        	Gson gson = new Gson();
-        	custDetails = gson.toJson(cust);
-   		    return custDetails;
+        	return javax.ws.rs.core.Response.ok(cust).build();
         } catch (Exception e) {
             System.err.println(e.getMessage() + e);
             throw e;
         }
     	}
     	else{
-    		return "401";
+    		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.UNAUTHORIZED).build();
     	}
     }
     
@@ -184,36 +172,31 @@ public class CustomerService {
      */
     @Path("/{id}")
     @GET
-    public String getById(@PathParam("id") String id) {
+    public javax.ws.rs.core.Response getById(@PathParam("id") String id) {
     	JwtConfig jwt = getJwt();
     	if(jwt.getScope().contains("blue")){
-    	String custDetails=null;
         try {
         	final String customerId = jwt.getUser_name();
+        	
         	if (customerId == null) {
         		// if no user passed in, this is a bad request
-        		return "Invalid Bearer Token: Missing customer ID";
+        		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.BAD_REQUEST).entity("Invalid Bearer Token: Missing customer ID").build();
         	}
         	
-        	System.out.println("caller: " + customerId);
-        	
         	if (!customerId.equals(id)) {
-        		// if i'm getting a customer ID that doesn't match my own ID, then return 401
-        		return "401 status";
-        		//return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.UNAUTHORIZED).build();
         	}
         	
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
 			
-			Gson gson = new Gson();
-        	custDetails = gson.toJson(cust);
-   		    return custDetails;
-        } catch (NoDocumentException e) {
-            return "Customer with ID " + id + " not found";
+        	return javax.ws.rs.core.Response.ok(cust).build();
+        } 
+        catch (NoDocumentException e) {
+        	return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).entity("Customer with ID " + id + " not found").build();
         }
     	}
     	else{
-    		return "Invalid access 401";
+    		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.UNAUTHORIZED).build();
     	}
     }
     
@@ -225,7 +208,7 @@ public class CustomerService {
     @POST
     @Consumes("application/json")
     @Produces("application/json")
-    public String create(Customer payload) {
+    public javax.ws.rs.core.Response create(Customer payload,  @Context UriInfo uriInfo) {
     	JwtConfig jwt = getJwt();
     	if(jwt.getScope().contains("admin")){
         try {
@@ -233,7 +216,7 @@ public class CustomerService {
             final Database cloudant = getCloudantDatabase();
             
             if (payload.getCustomerId() != null && cloudant.contains(payload.getCustomerId())) {
-                return "Id " + payload.getCustomerId() + " already exists";
+            	return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.BAD_REQUEST).entity("Id " + payload.getCustomerId() + " already exists").build();
             }
             
 			final List<Customer> customers = getCloudantDatabase().findByIndex(
@@ -241,29 +224,29 @@ public class CustomerService {
 				Customer.class);
  
 			if (!customers.isEmpty()) {
-                return "Customer with name " + payload.getUsername() + " already exists";
+                return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.BAD_REQUEST).entity("Customer with name " + payload.getUsername() + " already exists").build();
 			}
 			
 			// TODO: hash password
             //cust.setPassword(payload.getPassword());
- 
-            
+  
             final Response resp = cloudant.save(payload);
             
             if (resp.getError() == null) {
-				// HTTP 201 CREATED
-            	// To be done - build the URI with location
-				return "Generated ID" + resp.getId();
-            } else {
-            	return resp.getError();
+            	UriBuilder builder = uriInfo.getAbsolutePathBuilder();
+                builder.path(resp.getId());
+                return javax.ws.rs.core.Response.created(builder.build()).build();
+            } 
+            else {
+            	return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).build();
             }
 
         } catch (Exception ex) {
-            return "Error creating customer: " + ex.toString();
+        	return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).entity("Error creating customer: " + ex.toString()).build();
         }
     	}
     	else{
-    		return "invalid access 401";
+    		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.UNAUTHORIZED).build();
     	}
         
     }
@@ -276,20 +259,20 @@ public class CustomerService {
     @Path("{id}")
     @PUT
     @Consumes("application/json")
-    public String update(@PathParam("id") String id, Customer payload) {
+    public javax.ws.rs.core.Response update(@PathParam("id") String id, Customer payload) {
     	JwtConfig jwt = getJwt();
     	if(jwt.getScope().contains("blue")){
         try {
         	final String customerId = jwt.getUser_name();
         	if (customerId == null) {
         		// if no user passed in, this is a bad request
-        		return "Invalid Bearer Token: Missing customer ID";
+        		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.BAD_REQUEST).entity("Invalid Bearer Token: Missing customer ID").build();
         	}
         	
         	System.out.println("caller: " + customerId);
 			if (!customerId.equals("id")) {
         		// if i'm getting a customer ID that doesn't match my own ID, then return 401
-        		return "401";
+				return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.UNAUTHORIZED).build();
         	}
 
             final Database cloudant = getCloudantDatabase();
@@ -306,16 +289,15 @@ public class CustomerService {
             cloudant.save(payload);
         } catch (NoDocumentException e) {
             System.err.println("Customer not found: " + id);
-            return "Customer with ID " + id + " not found";
+            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).entity("Customer with ID " + id + " not found").build();
         } catch (Exception ex) {
             System.err.println("Error updating customer: " + ex);
-            return "Error updating customer: " + ex.toString();
+            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).entity("Error updating customer: " + ex.toString()).build();
         }
-        
-        return "Customer Updated Successfully";
+        return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.OK).build();
     	}
     	else{
-    		return "invalid access 401";
+    		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.UNAUTHORIZED).build();
     	}
     }
 
@@ -326,7 +308,7 @@ public class CustomerService {
     // This API is currently not called as it is not a function of the BlueCompute application
     @Path("{id}")
     @DELETE
-    public String delete(@PathParam("id") String id) {
+    public javax.ws.rs.core.Response delete(@PathParam("id") String id) {
 		// TODO: no one should have access to do this, it's not exposed to APIC
     	JwtConfig jwt = getJwt();
     	if(jwt.getScope().contains("blue")){
@@ -338,24 +320,21 @@ public class CustomerService {
             cloudant.remove(cust);
         } catch (NoDocumentException e) {
             System.err.println("Customer not found: " + id);
-            return "Customer with ID " + id + " not found";
+            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).entity("Customer with ID " + id + " not found").build();
         } catch (Exception ex) {
             System.err.println("Error deleting customer: " + ex);
-            return "Error deleting customer: " + ex.toString();
+            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).entity("Error deleting customer: " + ex.toString()).build();
         }
-        return "Customer Deleted";
+        return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.OK).build();
     	}
     	else{
-    		return "invalid access 401";
+    		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.UNAUTHORIZED).build();
     	}
     }
     
     private JwtConfig getJwt(){
-        // ask liberty for the id token from the oauth/oidc exchange protecting
-        // this invocation.
-        //IdToken id_token = PropagationHelper.getIdToken();
-    	IdToken id_token = PropagationHelper.getIdToken();
-    	String claims = id_token.getAllClaimsAsJson();
+    	IdToken token = PropagationHelper.getIdToken();
+    	String claims = token.getAllClaimsAsJson();
         Gson g = new Gson();
         JwtConfig jwt = g.fromJson(claims, JwtConfig.class);
     	return jwt;
