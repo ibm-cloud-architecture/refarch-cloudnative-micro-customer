@@ -15,8 +15,5 @@
 /local.properties
 .*.swp
 .DS_Store
-/src/main/liberty/config/server.env
 
-src/main/liberty/config/server.env
-src/main/resources/localdev-config.json
 /.apt_generated/
