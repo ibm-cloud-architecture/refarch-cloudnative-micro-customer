@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Chart.Name }}-service"
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: http
+    port: {{ .Values.service.servicePort }}
+  - name: https
+    port: {{ .Values.service.servicePortHttps }}
+  selector:
+    app: bluecompute
+    micro: customer
+    service: server
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "{{ .Chart.Name }}-deployment"
+  labels:
+    app: bluecompute
+    micro: customer
+    service: server
+    tier: backend
+    chart: '{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}'
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: bluecompute
+        micro: customer
+        service: server
+        tier: backend
+
+    spec:
+      containers:
+
+      # Liberty Server Container
+      - name: customer
+        image: customer:v1.0.0
+        imagePullPolicy: IfNotPresent
+        port: 9443
+        readinessProbe:
+          httpGet:
+            path: /customer/rest/health
+            port: 9080
+          initialDelaySeconds: 30
+        livenessProbe:
+          httpGet:
+            path: /customer/rest/customer/
+            port: 9080
+          initialDelaySeconds: 1500
+          timeoutSeconds: 500
+        env:
+          - name: PORT
+            value: "{{ .Values.service.servicePort }}"
+          - name: APPLICATION_NAME
+            value: "{{ .Release.Name }}"
+          - name: jwt.id
+            value: {{ .Values.jwt.id }}
+          - name: jwksUri
+            value: {{ .Values.jwt.uri }}
+          - name: jwksIssuer
+            value: {{ .Values.jwt.issuer}}
+        resources:
+          requests:
+            cpu: "{{ .Values.image.resources.requests.cpu }}"
+            memory: "{{ .Values.image.resources.requests.memory }}"

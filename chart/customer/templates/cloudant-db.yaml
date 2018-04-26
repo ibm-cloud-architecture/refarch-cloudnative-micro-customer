@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.cloudantservicename }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.cloudant.port }}
+  selector:
+    micro: customer
+    service: cloudant-db
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cloudant-pv-claim
+  labels:
+    app: bluecompute
+    tier: backend
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cloudant-deployment
+  labels:
+    app: bluecompute
+    micro: customer
+    service: cloudant-db
+    tier: backend
+    chart: '{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}'
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: bluecompute
+        micro: customer
+        service: cloudant-db
+        tier: backend
+
+    spec:
+      containers:
+
+      # Container for Cloudant
+      - name: cloudant
+        image: ibmcom/cloudant-developer
+        imagePullPolicy: IfNotPresent
+        port: {{ .Values.cloudant.port }}
+        env:
+          - name: CLOUDANT_ROOT_PASSWORD
+            value: {{ .Values.cloudant.password }}
+        volumeMounts:
+        - name: cloudant-pv
+          mountPath: /var/lib/cloudant
+      volumes:
+      - name: cloudant-pv
+        persistentVolumeClaim:
+          claimName: cloudant-pv-claim
