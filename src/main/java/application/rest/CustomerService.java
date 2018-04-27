@@ -152,12 +152,13 @@ public class CustomerService {
         		return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.BAD_REQUEST).entity("Invalid Bearer Token: Missing customer ID").build();
         	}
         	
-        	System.out.println("caller: " + customerId);
+        	System.out.println("caller: " + customerId + "  " + jwt.getSubject());
             final List<Customer> customers = getCloudantDatabase().findByIndex(
 				"{ \"selector\": { \"username\": \"" + jwt.getSubject() + "\" } }",
 				Customer.class);
 
             final Customer cust = customers.get(0);
+            System.out.println(cust.getEmail());
         	return javax.ws.rs.core.Response.ok(cust).build();
         } catch (Exception e) {
             System.err.println(e.getMessage() + e);
