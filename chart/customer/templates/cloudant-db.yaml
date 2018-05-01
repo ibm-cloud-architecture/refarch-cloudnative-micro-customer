@@ -61,7 +61,6 @@ spec:
         - name: cloudant-pv
           mountPath: /var/lib/cloudant
       volumes:
-      - /my/own/datadir:/data/db
       - name: cloudant-pv
         persistentVolumeClaim:
           claimName: cloudant-pv-claim
