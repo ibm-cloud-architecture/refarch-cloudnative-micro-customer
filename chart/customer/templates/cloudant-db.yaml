@@ -45,22 +45,31 @@ spec:
         micro: customer
         service: cloudant-db
         tier: backend
-
+    annotations:
+        pod.beta.kubernetes.io/init-containers: '[
+          {
+            "name": "cloudant",
+            "image": "cloudant",
+            "volume": "cloudant",
+            "command": ["/bin/bash", "-c"],
+            "args": ["python /tmp/populate.py"]
+          }
+        ]'
     spec:
       containers:
 
       # Container for Cloudant
       - name: cloudant
-        image: ibmcom/cloudant-developer
+        image: cloudant
         imagePullPolicy: IfNotPresent
-        command: ['/bin/bash', '-c', 'python populate.py']
         env:
           - name: CLOUDANT_ROOT_PASSWORD
             value: {{ .Values.cloudant.password }}
         volumeMounts:
-        - name: cloudant-pv
+        - name: cloudant
           mountPath: /var/lib/cloudant
       volumes:
-      - name: cloudant-pv
+      - name: cloudant
         persistentVolumeClaim:
           claimName: cloudant-pv-claim
+---

@@ -2,12 +2,12 @@ from cloudant.client import Cloudant
 from cloudant.error import CloudantException
 from cloudant.result import Result, ResultByKey
 
-client = Cloudant("admin", "pass", url="http://localhost:8081", connect=True)
+client = Cloudant("admin", "pass", url="http://localhost:80", connect=True)
 client.connect()
 
-databaseName = "customers"
+databaseName = "customer"
 
-database = client[databaseName]
+database = client.create_database(databaseName)
 
 # Create a JSON document that represents
 # all the data in the row.

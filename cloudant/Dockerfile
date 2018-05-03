@@ -1,5 +1,5 @@
 FROM ibmcom/cloudant-developer
-
+VOLUME ["cloudant"]
 ADD populate.py requirements.txt /tmp/
 
 RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
