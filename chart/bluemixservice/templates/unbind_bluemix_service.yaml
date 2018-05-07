@@ -33,7 +33,7 @@ spec:
           source /scripts/bx_login.sh; 
           bx cs init; 
           bx cs cluster-services {{ template "bluemixClusterName" . }} -n {{ .Release.Namespace }} -s | grep '{{ .Values.service.name }}' && bx cs cluster-service-unbind {{ template "bluemixClusterName" . }} {{ .Release.Namespace }} "{{ .Values.service.name }}"
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: BX_ORG
           value: {{ template "bluemixOrg" . }}
