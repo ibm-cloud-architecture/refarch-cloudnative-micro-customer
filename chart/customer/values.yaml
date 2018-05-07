@@ -3,7 +3,7 @@
 replicaCount: 1
 revisionHistoryLimit: 1
 image:
-  repository: customer
+  repository: registry.csplab.cloudns.cx/microprofile/customer-mp
   tag: v1.0.0
   pullPolicy: IfNotPresent
   resources:
@@ -38,3 +38,16 @@ cloudant:
   host: localhost
   port: 80
   database: customers
+
+## Persist data to a persistent volume
+persistence:
+  enabled: true
+  ## database data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  storageClass: "glusterfs"
+  accessMode: ReadWriteOnce
