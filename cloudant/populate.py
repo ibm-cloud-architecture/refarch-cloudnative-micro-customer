@@ -2,9 +2,9 @@ from cloudant.client import Cloudant
 from cloudant.error import CloudantException
 from cloudant.result import Result, ResultByKey
 
-client = Cloudant("admin", "pass", url = "http://172.17.0.2:80", connect=True)
+client = Cloudant("admin", "pass", url = "http://cloudant-service:80", connect=True)
 client.connect()
-databaseName = "customer"
+databaseName = "customers"
 
 database = client.create_database(databaseName)
 

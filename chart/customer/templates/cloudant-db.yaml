@@ -8,7 +8,7 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.cloudant.port }}
-      nodePort: 31222
+      nodePort: {{ .Values.cloudant.nodeport }}
   selector:
     micro: customer
     service: cloudant-db
@@ -64,7 +64,7 @@ spec:
         image: ibmcom/cloudant-developer
         imagePullPolicy: IfNotPresent
         ports:
-            - containerPort: 80
+            - containerPort: {{ .Values.cloudant.port }}
         env:
           - name: CLOUDANT_ROOT_PASSWORD
             value: {{ .Values.cloudant.password }}
@@ -74,7 +74,7 @@ spec:
       volumes:
       - name: cloudant-pv
         persistentVolumeClaim:
-claimName: cloudant-pv-claim
+          claimName: cloudant-pv-claim
 ---
 apiVersion: batch/v1
 kind: Job

@@ -3,7 +3,7 @@
 replicaCount: 1
 revisionHistoryLimit: 1
 image:
-  repository: registry.csplab.cloudns.cx/microprofile/customer-mp
+  repository: ibmcase/customer-mp
   tag: v1.0.0
   pullPolicy: IfNotPresent
   resources:
@@ -37,6 +37,7 @@ cloudant:
   protocol: http
   host: localhost
   port: 80
+  nodeport: 31222
   database: customers
 
 ## Persist data to a persistent volume
@@ -49,5 +50,5 @@ persistence:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   ##
-  storageClass: "glusterfs"
+  #storageClass: "glusterfs"
   accessMode: ReadWriteOnce
