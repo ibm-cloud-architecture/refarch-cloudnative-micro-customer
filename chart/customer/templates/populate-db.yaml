@@ -1,0 +1,13 @@
+# apiVersion: batch/v1
+# kind: Job
+# metadata:
+#   name: populate
+# spec:
+#   template:
+#     spec:
+#       containers:
+#       - name: populate-db
+#         image: populate
+#         imagePullPolicy: IfNotPresent
+#         command: ["/bin/sh", "-c", "python3 /tmp/populate.py"]
+#       restartPolicy: Never

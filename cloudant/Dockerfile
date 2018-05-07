@@ -1,7 +1,3 @@
-FROM ibmcom/cloudant-developer
-VOLUME ["cloudant"]
+FROM python:3
 ADD populate.py requirements.txt /tmp/
-
-RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
-RUN python get-pip.py
-RUN pip install -r requirements.txt
+RUN pip3 install -r tmp/requirements.txt
