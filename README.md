@@ -14,17 +14,14 @@ This repository contains the **MicroProfile** implementation of the **Customer S
 2. [How it works](#how-it-works)
 3. [API Endpoints](#api-endpoints)
 4. [Implementation](#implementation)
-    1. [Liberty app accelerator](#liberty-app-accelerator)
-    2. [Microprofile](#microprofile)
+    1. [Microprofile](#microprofile)
 5. [Features and App details](#features)
 6. [Building the app](#building-the-app)
-7. [Running the app and stopping it](#running-the-app-and-stopping-it)
+7. [Setting up Cloudant](#setting-up-cloudant)
+8. [Running the app and stopping it](#running-the-app-and-stopping-it)
     1. [Pre-requisites](#pre-requisites)
-    2. [Locally in JVM](#locally-in-jvm)
-    3. [Locally in Containers](#locally-in-containers)
-    4. [Locally in Minikube](#locally-in-minikube)
-    5. [Remotely in ICP](#remotely-in-icp)
-8. [DevOps Strategy](#devops-strategy)
+    2. [Locally in Minikube](#locally-in-minikube)
+    3. [Remotely in ICP](#remotely-in-icp)
 9. [References](#references)
 
 ### Introduction
@@ -35,7 +32,7 @@ This project is built to demonstrate how to build Customer Microservices applica
 - OAuth protect the microservice REST API using JWT token signed with a HS256 shared secret.
 - Persist Customer data in an [IBM Cloudant](https://www.ibm.com/cloud/cloudant) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
 - Devops - TBD
-- Deployment options for local, Docker Container-based runtimes, Minikube environment and ICP/BMX.
+- Deployment options for Minikube environment and ICP.
 
 ### How it works
 
@@ -96,27 +93,7 @@ DELETE /micro/customer/{id}
 ```
 - Delete a customer record. The caller of this API must pass a valid OAuth token with the scope `blue`. If the `id` matches the customer ID passed in the `user_name` claim in the JWT, the customer object is deleted; otherwise `HTTP 401` is returned. This API is currently not called as it is not a function of the BlueCompute application.
 
-You can use cURL or Chrome POSTMAN to send get/post/put/delete requests to the application.
-
 ### Implementation
-
-#### [Liberty app accelerator](https://liberty-app-accelerator.wasdev.developer.ibm.com/start/)
-
-For Liberty, there is nice tool called [Liberty Accelerator](https://liberty-app-accelerator.wasdev.developer.ibm.com/start/) that generates a simple project based upon your configuration. Using this, you can build and deploy to Liberty either using the Maven or Gradle build.
-
-<p align="center">
-    <img src="https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/static/imgs/LibertyAcc_Home.png">
-</p>
-
-Just check the options of your choice and click Generate project. You can either Download it as a zip or you can create git project.
-
-<p align="center">
-    <img src="https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/static/imgs/LibertyAcc_PrjGen.png">
-</p>
-
-Once you are done with this, you will have a sample microprofile based application that you can deploy on Liberty.
-
-Using Liberty Accelerator is your choice. You can also create the entire project manually, but using Liberty Accelerator will make things easier.
 
 #### [MicroProfile](https://microprofile.io/)
 
@@ -171,6 +148,8 @@ The config values are sorted according to their ordinal. We can override the low
 
 In our sample application, we obtained the configuration programatically.
 
+5. MicroProfile JWT Authentication 1.0 - Used Microprofile JWT Authentication for token based authentication. It uses OpenIDConnect based JSON Web Tokens (JWT) for role based access control of rest endpoints. This allows the system to verify, authorize and authenticate the user based the security token.
+
 ### Building the app
 
 To build the application, we used maven build. Maven is a project management tool that is based on the Project Object Model (POM). Typically, people use Maven for project builds, dependencies, and documentation. Maven simplifies the project build. In this task, you use Maven to build the project.
@@ -207,116 +186,298 @@ To build the application, we used maven build. Maven is a project management too
 [INFO] ------------------------------------------------------------------------
 ```
 
+### Setting up Cloudant
+
+The charts for Cloudant are included in the helm charts for Customer Service. Launching the helm charts for Customer Service also launches Cloudant.
+
+Once the Customer service is deployed as [here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/tree/microprofile#running-the-app-and-stopping-it), you can see the below.
+
+`kubectl get deployments`
+
+```
+NAME                                        DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+cloudant-deployment                         1         1         1            1           2m
+
+```
+
+`kubectl get services`
+
+```
+NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                          AGE
+cloudant-service           NodePort    10.100.9.81      <none>        80:31222/TCP                     3m
+```
+
+
 ### Running the app and stopping it
 
-### Pre-requisites
+#### Pre-requisites
 
-As Customer service needs an Oauth token, make sure the auth service is up and running before running the Customer.
+To run the Customer microservice, please complete the [Building the app](#building-the-app) section before proceeding to any of the following steps.
 
-1. Locally in JVM
+Also make sure [Auth](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile) service is running and Keystore is set.
 
-To run the Customer microservice locally in JVM, please complete the [Building the app](#building-the-app) section.
+1. Locally in Minikube
 
-**Set Up Cloudant Database**
+To run the Customer application locally on your laptop on a Kubernetes-based environment such as Minikube (which is meant to be a small development environment) we first need to get few tools installed:
 
-1. Login to your Bluemix console  
-2. Open browser to create Cloudant Service using this link [https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db](https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db)  
-3. Name your Cloudant service name like `refarch-cloudantdb`  
-4. For testing, you can select the "Lite" plan, then click "Create"  
-5. Once the service has been created, note the service credentials under `Service Credentials`.  In particular, the Customer microservice requires the `url` property.
+- [Kubectl](https://kubernetes.io/docs/user-guide/kubectl-overview/) (Kubernetes CLI) - Follow the instructions [here](https://kubernetes.io/docs/tasks/tools/install-kubectl/) to install it on your platform.
+- [Helm](https://github.com/kubernetes/helm) (Kubernetes package manager) - Follow the instructions [here](https://github.com/kubernetes/helm/blob/master/docs/install.md) to install it on your platform.
 
-```
-export protocol=http
-export host=<Host>
-export port=<Port>
+Finally, we must create a Kubernetes Cluster. As already said before, we are going to use Minikube:
 
-export user=<User>
-export password=<Password>
+- [Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/) - Create a single node virtual cluster on your workstation. Follow the instructions [here](https://kubernetes.io/docs/tasks/tools/install-minikube/) to get Minikube installed on your workstation.
 
-expose database=customers
-```
+We not only recommend to complete the three Minikube installation steps on the link above but also read the [Running Kubernetes Locally via Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/) page for getting more familiar with Minikube. We can learn there interesting things such as reusing our Docker daemon, getting the Minikube's ip or opening the Minikube's dashboard for GUI interaction with out Kubernetes Cluster.
 
-**Set Up Cloudant on Docker locally**
+2. Remotely in ICP
 
-1. Pull the official docker image
+[IBM Cloud Private Cluster](https://www.ibm.com/cloud/private)
 
-`docker pull ibmcom/cloudant-developer`
+Create a Kubernetes cluster in an on-premise datacenter. The community edition (IBM Cloud private-ce) is free of charge.
+Follow the instructions [here](https://www.ibm.com/support/knowledgecenter/en/SSBS6K_2.1.0.2/installing/install_containers_CE.html) to install IBM Cloud private-ce.
 
-2. Run the container.
+[Helm](https://github.com/kubernetes/helm) (Kubernetes package manager)
 
-`docker run \
-       --detach \
-       --volume cloudant:/srv \
-       --name cloudant \
-       --publish 8081:80 \
-       ibmcom/cloudant-developer`
+Follow the instructions [here](https://github.com/kubernetes/helm/blob/master/docs/install.md) to install it on your platform.
+If using IBM Cloud Private version 2.1.0.2 or newer, we recommend you follow these [instructions](https://www.ibm.com/support/knowledgecenter/SSBS6K_2.1.0.2/app_center/create_helm_cli.html) to install helm.
 
-In this case, your jdbcURL will be 
+### Locally in Minikube
+
+#### Setting up your environment
+
+1. Start your minikube. Run the below command.
+
+`minikube start`
+
+You will see output similar to this.
 
 ```
-export protocol=http
-export host=localhost
-export port=8081
-
-export user=admin
-export password=pass
-
-expose database=customers
+Setting up certs...
+Connecting to cluster...
+Setting up kubeconfig...
+Starting cluster components...
+Kubectl is now configured to use the cluster.
 ```
+2. To install Tiller which is a server side component of Helm, initialize helm. Run the below command.
 
-### Locally in JVM
+`helm init`
 
-1. Set the environment variables before you start your application. The host and port depends on the service you use. You can run the Cloudant locally on your system using the Cloudant docker container or use the [IBM Cloudant](https://www.ibm.com/cloud/compose/mysql) available in [IBM Cloud](https://www.ibm.com/cloud/).
+If it is successful, you will see the below output.
 
 ```
-export protocol=http
-export host=<HOST>
-export port=<PORT>
+$HELM_HOME has been configured at /Users/user@ibm.com/.helm.
 
-export user=<USER>
-export password=<PASSWORD>
+Tiller (the helm server side component) has been installed into your Kubernetes Cluster.
+Happy Helming!
+```
+3. Check if your tiller is available. Run the below command.
 
-expose database=<DATABASE_NAME>
+`kubectl get deployment tiller-deploy --namespace kube-system`
 
-   ``` 
- 2. Start your server.
-
-   `mvn liberty:start-server -DtestServerHttpPort=9083`
-
-   You will see the below.
-   
- ```
- [INFO] CWWKM2001I: Invoke command is [/Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/target/liberty/wlp/bin/server, start, defaultServer].
-[INFO] objc[14799]: Class JavaLaunchHelper is implemented in both /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home/jre/bin/java (0x1018654c0) and /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home/jre/lib/libinstrument.dylib (0x10195f4e0). One of the two will be used. Which one is undefined.
-[INFO] Starting server defaultServer.
-[INFO] Server defaultServer started with process ID 14798.
-[INFO] Waiting up to 30 seconds for server confirmation:  CWWKF0011I to be found in /Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/target/liberty/wlp/usr/servers/defaultServer/logs/messages.log
-[INFO] CWWKM2010I: Searching for CWWKF0011I in /Users/Hemankita.Perabathini@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/target/liberty/wlp/usr/servers/defaultServer/logs/messages.log. This search will timeout after 30 seconds.
-[INFO] CWWKM2015I: Match number: 1 is [26/2/18 16:54:19:707 EST] 00000019 com.ibm.ws.kernel.feature.internal.FeatureManager            A CWWKF0011I: The server defaultServer is ready to run a smarter planet..
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 22.423 s
-[INFO] Finished at: 2018-02-26T16:54:19-05:00
-[INFO] Final Memory: 13M/309M
-[INFO] ------------------------------------------------------------------------
- ```
- 3. If you are done accessing the application, you can stop your server using the following command.
-
-   `mvn liberty:stop-server -DtestServerHttpPort=9083`
-
-Once you do this, you see the below messages.
+If it available, you can see the availability as below.
 
 ```
-[INFO] CWWKM2001I: Invoke command is [/Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/target/liberty/wlp/bin/server, stop, defaultServer].
-[INFO] objc[14840]: Class JavaLaunchHelper is implemented in both /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home/jre/bin/java (0x1015024c0) and /Library/Java/JavaVirtualMachines/jdk1.8.0_131.jdk/Contents/Home/jre/lib/libinstrument.dylib (0x1035bc4e0). One of the two will be used. Which one is undefined.
-[INFO] Stopping server defaultServer.
-[INFO] Server defaultServer stopped.
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 2.125 s
-[INFO] Finished at: 2018-02-26T16:55:23-05:00
-[INFO] Final Memory: 13M/309M
-[INFO] ------------------------------------------------------------------------
+NAME            DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+tiller-deploy   1         1         1            1           1m
 ```
+
+4. Verify your helm before proceeding like below.
+
+`helm version`
+
+You will see the below output.
+
+```
+Client: &version.Version{SemVer:"v2.4.2", GitCommit:"82d8e9498d96535cc6787a6a9194a76161d29b4c", GitTreeState:"clean"}
+Server: &version.Version{SemVer:"v2.5.0", GitCommit:"012cb0ac1a1b2f888144ef5a67b8dab6c2d45be6", GitTreeState:"clean"}
+```
+
+#### Running the application on Minikube
+
+1. Build the docker image.
+
+Before building the docker image, set the docker environment.
+
+- Run the below command.
+
+`minikube docker-env`
+
+You will see the output similar to this.
+
+```
+export DOCKER_TLS_VERIFY="1"
+export DOCKER_HOST="tcp://192.168.99.100:2376"
+export DOCKER_CERT_PATH="/Users/user@ibm.com/.minikube/certs"
+export DOCKER_API_VERSION="1.23"
+# Run this command to configure your shell:
+# eval $(minikube docker-env)
+```
+- For configuring your shell, run the below command.
+
+`eval $(minikube docker-env)`
+
+- Now run the docker build.
+
+`docker build -t customer:v1.0.0 .`
+
+If it is a success, you will see the below output.
+
+```
+Successfully built 79c2f74d7hj
+Successfully tagged customer:v1.0.0
+```
+2. Run the helm chart as below.
+
+Before running the helm chart in minikube, access [values.yaml](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/microprofile/chart/customer/values.yaml) and replace the repository with the below.
+
+`repository: customer`
+
+Then run the helm chart 
+
+`helm install --name=customer chart/customer`
+
+You will see message like below.
+
+```
+==> v1beta1/Deployment
+NAME                                        DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+customer-deployment                         1         1         1            0           1s
+```
+Please wait till your deployment is ready. To verify run the below command and you should see the availability.
+
+`kubectl get deployments`
+
+You will see something like below.
+
+```
+==> v1beta1/Deployment
+NAME                                        DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+customer-deployment                         1         1         1            1           2m
+```
+
+### Remotely in ICP
+
+[IBM Cloud Private](https://www.ibm.com/cloud/private)
+
+IBM Private Cloud has all the advantages of public cloud but is dedicated to single organization. You can have your own security requirements and customize the environment as well. Basically it has tight security and gives you more control along with scalability and easy to deploy options. You can run it externally or behind the firewall of your organization.
+
+Basically this is an on-premise platform.
+
+Includes docker container manager
+Kubernetes based container orchestrator
+Graphical user interface
+You can find the detailed installation instructions for IBM Cloud Private [here](https://www.ibm.com/support/knowledgecenter/en/SSBS6K_2.1.0.2/installing/install_containers_CE.html)
+
+#### Pushing the image to Private Registry
+
+1. Now run the docker build.
+
+`docker build -t customer:v1.0.0 .`
+
+If it is a success, you will see the below output.
+
+```
+Successfully built 79c2f74d7hj
+Successfully tagged customer:v1.0.0
+```
+
+2. Tag the image to your private registry.
+
+`docker tag customer:v1.0.0 <Your ICP registry>/customer:v1.0.0`
+
+3. Push the image to your private registry.
+
+`docker push <Your ICP registry>/customer:v1.0.0`
+
+You should see something like below.
+
+```
+v1.0.0: digest: sha256:bb0df0cd06e4b97cbe89d23393253b33a5319ac3c08ddffbc5b386d162a27dd4 size: 3873
+```
+#### Running the application on ICP
+
+1. Your [IBM Cloud Private Cluster](https://www.ibm.com/cloud/private) should be up and running.
+
+2. Log in to the IBM Cloud Private. 
+
+<p align="center">
+    <img src="https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/static/imgs/icp_dashboard.png">
+</p>
+
+3. Go to `admin > Configure Client`.
+
+<p align="center">
+    <img src="https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/static/imgs/client_config.png">
+</p>
+
+4. Grab the kubectl configuration commands.
+
+<p align="center">
+    <img src="https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/static/imgs/kube_cmds.png">
+</p>
+
+5. Run those commands in your terminal.
+
+6. If successful, you should see something like below.
+
+```
+Switched to context "xxx-cluster.icp-context".
+```
+7. Run the below command.
+
+`helm init --client-only`
+
+You will see the below
+
+```
+$HELM_HOME has been configured at /Users/user@ibm.com/.helm.
+Not installing Tiller due to 'client-only' flag having been set
+Happy Helming!
+```
+
+8. Verify the helm version
+
+`helm version --tls`
+
+You will see something like below.
+
+```
+Client: &version.Version{SemVer:"v2.7.2+icp", GitCommit:"d41a5c2da480efc555ddca57d3972bcad3351801", GitTreeState:"dirty"}
+Server: &version.Version{SemVer:"v2.7.2+icp", GitCommit:"d41a5c2da480efc555ddca57d3972bcad3351801", GitTreeState:"dirty"}
+```
+9. Before running the helm chart in minikube, access [values.yaml](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-inventory/blob/microprofile/inventory/chart/inventory/values.yaml) and replace the repository with the your IBM Cloud Private .
+
+`repository: <Your IBM Cloud Private Docker registry>`
+
+Then run the helm chart 
+
+`helm install --name=orders chart/customer --tls`
+
+You will see message like below.
+
+```
+==> v1beta1/Deployment
+NAME                                        DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+customer-deployment                         1         1         1            0           1s
+```
+Please wait till your deployment is ready. To verify run the below command and you should see the availability.
+
+`kubectl get deployments`
+
+You will see something like below.
+
+```
+==> v1beta1/Deployment
+NAME                                        DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+customer-deployment                         1         1         1            1           1m     
+```
+**NOTE**: If you are using a version of ICP older than 2.1.0.2, you don't need to add the --tls at the end of the helm command.
+
+### References
+
+1. [Developer Tools CLI](https://console.bluemix.net/docs/cloudnative/dev_cli.html#developercli)
+2. [IBM Cloud Private](https://www.ibm.com/support/knowledgecenter/en/SSBS6K_2.1.0/kc_welcome_containers.html)
+3. [IBM Cloud Private Installation](https://github.com/ibm-cloud-architecture/refarch-privatecloud)
+4. [IBM Cloud Private version 2.1.0.2 Helm instructions](https://www.ibm.com/support/knowledgecenter/SSBS6K_2.1.0.2/app_center/create_helm_cli.html)
+5. [Microprofile](https://microprofile.io/)
+
