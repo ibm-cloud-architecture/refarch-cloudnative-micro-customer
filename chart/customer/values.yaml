@@ -15,7 +15,7 @@ service:
   internalPort: 8080
 
 ingress:
-  enabled: true
+  enabled: false
   hostname: customer.bluecompute.com
   path: /micro/customer
 
