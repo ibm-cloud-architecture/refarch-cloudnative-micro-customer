@@ -31,7 +31,6 @@ This project is built to demonstrate how to build Customer Microservices applica
 - Based on [MicroProfile](https://microprofile.io/).
 - OAuth protect the microservice REST API using JWT token signed with a HS256 shared secret.
 - Persist Customer data in an [IBM Cloudant](https://www.ibm.com/cloud/cloudant) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
-- Devops - TBD
 - Deployment options for Minikube environment and ICP.
 
 ### How it works
@@ -46,13 +45,13 @@ https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes. Though
 ### API Endpoints
 
 ```
-GET     /customer/rest/customer 
+GET     /customer/rest/customer
 ```
 
 - Returns all customers. The caller of this API must pass a valid OAuth token with the scope `blue`. The OAuth token is a JWT signed and is verified using a HS256 shared key. A JSON object array is returned consisting of only users that match the customer ID embedded in the JWT claim `user_name`, either length 0 or 1.
 
 ```
-GET     /customer/rest/customer/{id} 
+GET     /customer/rest/customer/{id}
 ```
 
 - Return customer by ID. The caller of this API must pass a valid OAuth token with the scope `blue`. The OAuth token is a JWT signed and is verified using a HS256 shared key. If the `id` matches the customer ID passed in the `user_name` claim in the JWT, it is returned as a JSON object in the response; otherwise `HTTP 401` is returned.
@@ -89,7 +88,7 @@ PUT /micro/customer/{id}
 - Update a customer record. The caller of this API must pass a valid OAuth token with the scope `blue`. The full Customer object must be passed in the request body. If the `id` matches the customer ID passed in the `user_name` claim in the JWT, the customer object is updated; otherwise `HTTP 401` is returned. This API is currently not called as it is not a function of the BlueCompute application.
 
 ```
-DELETE /micro/customer/{id} 
+DELETE /micro/customer/{id}
 ```
 - Delete a customer record. The caller of this API must pass a valid OAuth token with the scope `blue`. If the `id` matches the customer ID passed in the `user_name` claim in the JWT, the customer object is deleted; otherwise `HTTP 401` is returned. This API is currently not called as it is not a function of the BlueCompute application.
 
@@ -173,7 +172,7 @@ To build the application, we used maven build. Maven is a project management too
 ```
 [INFO] --- maven-failsafe-plugin:2.18.1:verify (verify-results) @ customer ---
 [INFO] Failsafe report directory: /Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/target/test-reports/it
-[INFO] 
+[INFO]
 [INFO] --- maven-install-plugin:2.4:install (default-install) @ customer ---
 [INFO] Installing /Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/target/customer-1.0-SNAPSHOT.war to /Users/user@ibm.com/.m2/repository/projects/customer/1.0-SNAPSHOT/customer-1.0-SNAPSHOT.war
 [INFO] Installing /Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/pom.xml to /Users/user@ibm.com/.m2/repository/projects/customer/1.0-SNAPSHOT/customer-1.0-SNAPSHOT.pom
@@ -227,7 +226,7 @@ Finally, we must create a Kubernetes Cluster. As already said before, we are goi
 
 - [Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/) - Create a single node virtual cluster on your workstation. Follow the instructions [here](https://kubernetes.io/docs/tasks/tools/install-minikube/) to get Minikube installed on your workstation.
 
-We not only recommend to complete the three Minikube installation steps on the link above but also read the [Running Kubernetes Locally via Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/) page for getting more familiar with Minikube. We can learn there interesting things such as reusing our Docker daemon, getting the Minikube's ip or opening the Minikube's dashboard for GUI interaction with out Kubernetes Cluster.
+We not only recommend to complete the three Minikube installation steps on the link above but also read the [Running Kubernetes Locally via Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/) page for getting more familiar with Minikube.
 
 2. Remotely in ICP
 
@@ -320,19 +319,29 @@ export DOCKER_API_VERSION="1.23"
 
 `docker build -t customer:v1.0.0 .`
 
-If it is a success, you will see the below output.
+If it is a success, you will see the output below.
 
 ```
 Successfully built 79c2f74d7hj
 Successfully tagged customer:v1.0.0
 ```
+
+- You also need to build the `populate` image to populate the database with the default users.
+
+`cd cloudant`
+
+`docker build -t populate .`
+
+If it is a success, you will see the output below.
+
+```
+Successfully built cbbdbc69a3dd
+Successfully tagged populate:latest
+```
+Go back a directory up.
+`cd ..`
+
 2. Run the helm chart as below.
-
-Before running the helm chart in minikube, access [values.yaml](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/microprofile/chart/customer/values.yaml) and replace the repository with the below.
-
-`repository: customer`
-
-Then run the helm chart 
 
 `helm install --name=customer chart/customer`
 
@@ -398,7 +407,7 @@ v1.0.0: digest: sha256:bb0df0cd06e4b97cbe89d23393253b33a5319ac3c08ddffbc5b386d16
 
 1. Your [IBM Cloud Private Cluster](https://www.ibm.com/cloud/private) should be up and running.
 
-2. Log in to the IBM Cloud Private. 
+2. Log in to the IBM Cloud Private.
 
 <p align="center">
     <img src="https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/static/imgs/icp_dashboard.png">
@@ -449,7 +458,7 @@ Server: &version.Version{SemVer:"v2.7.2+icp", GitCommit:"d41a5c2da480efc555ddca5
 
 `repository: <Your IBM Cloud Private Docker registry>`
 
-Then run the helm chart 
+Then run the helm chart
 
 `helm install --name=orders chart/customer --tls`
 
@@ -480,4 +489,3 @@ customer-deployment                         1         1         1            1  
 3. [IBM Cloud Private Installation](https://github.com/ibm-cloud-architecture/refarch-privatecloud)
 4. [IBM Cloud Private version 2.1.0.2 Helm instructions](https://www.ibm.com/support/knowledgecenter/SSBS6K_2.1.0.2/app_center/create_helm_cli.html)
 5. [Microprofile](https://microprofile.io/)
-
