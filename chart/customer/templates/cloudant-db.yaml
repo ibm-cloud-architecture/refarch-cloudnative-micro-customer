@@ -85,6 +85,8 @@ spec:
     spec:
       containers:
       - name: populate-db
+        #image: registry.csplab.cloudns.cx/microprofile/populate
+        #image: ibmcase/populate
         image: populate
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh", "-c", "python3 /tmp/populate.py"]
