@@ -16,7 +16,7 @@ image:
 service:
   name: customer
   cloudantservicename: cloudant-service
-  type: NodePort
+  type: ClusterIP
   servicePort: 9080
   servicePortHttps: 9443
 
@@ -38,9 +38,13 @@ cloudant:
   password: pass
   protocol: http
   host: localhost
+  type: NodePort
   port: 80
   nodeport: 31222
   database: customers
+  #image: registry.csplab.cloudns.cx/microprofile/populate
+  #image: ibmcase/populate
+  image: populate
 
 ## Persist data to a persistent volume
 persistence:

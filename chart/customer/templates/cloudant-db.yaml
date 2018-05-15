@@ -4,14 +4,16 @@ metadata:
   name: {{ .Values.service.cloudantservicename }}
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    implementation: microprofile
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.cloudant.type }}
   ports:
     - port: {{ .Values.cloudant.port }}
       nodePort: {{ .Values.cloudant.nodeport }}
   selector:
     micro: customer
     service: cloudant-db
+    implementation: microprofile
 ---
 {{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
 apiVersion: v1
@@ -21,6 +23,7 @@ metadata:
   labels:
     app: bluecompute
     tier: backend
+    implementation: microprofile
 spec:
   accessModes:
     - ReadWriteOnce
@@ -45,6 +48,7 @@ metadata:
     micro: customer
     service: cloudant-db
     tier: backend
+    implementation: microprofile
     chart: '{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}'
 spec:
   replicas: {{ .Values.replicaCount }}
@@ -55,6 +59,7 @@ spec:
         micro: customer
         service: cloudant-db
         tier: backend
+        implementation: microprofile
 
     spec:
       containers:
@@ -85,9 +90,7 @@ spec:
     spec:
       containers:
       - name: populate-db
-        #image: registry.csplab.cloudns.cx/microprofile/populate
-        #image: ibmcase/populate
-        image: populate
+        image: "{{ .Values.cloudant.image }}"
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh", "-c", "python3 /tmp/populate.py"]
       restartPolicy: Never
