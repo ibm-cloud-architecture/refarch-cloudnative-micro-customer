@@ -2,6 +2,10 @@
 {{/*
 Expand the name of the chart.
 */}}
+{{- define "customerServiceName" -}}
+  {{- .Release.Name }}-{{ .Values.service.name -}}
+{{- end -}}
+
 {{- define "name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
@@ -15,8 +19,8 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "couchdbBinding" -}}
-  {{ .Values.couchdb.binding.name }}
+{{- define "customerCouchDBBinding" -}}
+  {{ .Values.customercouchdb.binding.name }}
 {{- end -}}
 
 {{- define "hs256SecretName" -}}

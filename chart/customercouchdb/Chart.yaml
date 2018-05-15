@@ -1,5 +1,5 @@
 apiVersion: v1
 description: CouchDB
-name: ibmcase-couchdb
-version: 0.2.0
+name: customercouchdb
+version: 0.3.0
 icon: http://couchdb.apache.org/image/couch@2x.png

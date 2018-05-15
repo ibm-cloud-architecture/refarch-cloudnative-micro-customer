@@ -28,7 +28,7 @@ spec:
               "name": "couchdb",
               "valueFrom": {
                 "secretKeyRef": {
-                  "name": "{{ template "couchdbBinding" . }}",
+                  "name": "{{ template "customerCouchDBBinding" . }}",
                   "key": "binding"
                 }
               }
@@ -49,7 +49,7 @@ spec:
         - name: couchdb
           valueFrom:
             secretKeyRef:
-                name: {{ template "couchdbBinding" . }}
+                name: {{ template "customerCouchDBBinding" . }}
                 key: binding
         ports:
         - containerPort: {{ .Values.service.internalPort }}
