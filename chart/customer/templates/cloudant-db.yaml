@@ -15,7 +15,7 @@ spec:
     service: cloudant-db
     implementation: microprofile
 ---
-{{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
+{{- if .Values.persistence.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -73,13 +73,13 @@ spec:
         env:
           - name: CLOUDANT_ROOT_PASSWORD
             value: {{ .Values.cloudant.password }}
-        volumeMounts:
-        - name: cloudant-pv
-          mountPath: /var/lib/cloudant
-      volumes:
-      - name: cloudant-pv
-        persistentVolumeClaim:
-          claimName: cloudant-pv-claim
+        #volumeMounts:
+        #- name: cloudant-pv
+          #mountPath: /var/lib/cloudant
+      #volumes:
+      #- name: cloudant-pv
+        #persistentVolumeClaim:
+          #claimName: cloudant-pv-claim
 ---
 apiVersion: batch/v1
 kind: Job
