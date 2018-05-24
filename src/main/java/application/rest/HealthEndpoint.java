@@ -7,17 +7,12 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("health")
+@Path("/resthealth")
 public class HealthEndpoint {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response healthcheck() {
-      /*
-      if (!healthy) {
-        return Response.status(503).entity("{\"status\":\"DOWN\"}").build();
-      }
-      */
       return Response.ok("{\"status\":\"UP\"}").build();
     }
 

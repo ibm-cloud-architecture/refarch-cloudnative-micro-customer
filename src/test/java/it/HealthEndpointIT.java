@@ -13,9 +13,9 @@ public class HealthEndpointIT {
 
     private String port = System.getProperty("liberty.test.port");
     private String warContext = System.getProperty("war.context");
-    private String endpoint = "/rest/health";
+    private String endpoint = "/rest/customer/check";
     private String url = "http://localhost:" + port + "/" + warContext + endpoint;
-
+    
     @Test
     public void testEndpoint() throws Exception {
         System.out.println("Testing endpoint " + url);
