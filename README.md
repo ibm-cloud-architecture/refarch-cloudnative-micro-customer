@@ -317,13 +317,13 @@ export DOCKER_API_VERSION="1.23"
 
 - Now run the docker build.
 
-`docker build -t customer:v1.0.0 .`
+`docker build -t customer-mp:v1.0.0 .`
 
 If it is a success, you will see the output below.
 
 ```
 Successfully built 79c2f74d7hj
-Successfully tagged customer:v1.0.0
+Successfully tagged customer-mp:v1.0.0
 ```
 
 - You also need to build the `populate` image to populate the database with the default users.
@@ -381,22 +381,22 @@ You can find the detailed installation instructions for IBM Cloud Private [here]
 
 1. Now run the docker build.
 
-`docker build -t customer:v1.0.0 .`
+`docker build -t customer-mp:v1.0.0 .`
 
 If it is a success, you will see the below output.
 
 ```
 Successfully built 79c2f74d7hj
-Successfully tagged customer:v1.0.0
+Successfully tagged customer-mp:v1.0.0
 ```
 
 2. Tag the image to your private registry.
 
-`docker tag customer:v1.0.0 <Your ICP registry>/customer:v1.0.0`
+`docker tag customer-mp:v1.0.0 <Your ICP registry>/customer-mp:v1.0.0`
 
 3. Push the image to your private registry.
 
-`docker push <Your ICP registry>/customer:v1.0.0`
+`docker push <Your ICP registry>/customer-mp:v1.0.0`
 
 You should see something like below.
 
