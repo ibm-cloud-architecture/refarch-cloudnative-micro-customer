@@ -28,9 +28,20 @@ jsonDocument2 = {
   "imageUrl": "image"
 }
 
+designDocument = {
+  "_id": "_design/username_searchIndex",
+  "key": "_design/username_searchIndex",
+  "_rev": "3-4db1e691296d562be509c3344d74a76f",
+  "indexes": {
+    "usernames": {
+        "index": "function(doc){index(\"usernames\", doc.username); }"
+        }
+    }
+}
+
 session = client.session()
 
 database.create_document(jsonDocument)
 database.create_document(jsonDocument2)
-
+database.create_document(designDocument)
 client.disconnect()
