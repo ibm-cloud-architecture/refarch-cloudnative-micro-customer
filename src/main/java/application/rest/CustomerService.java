@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.temporal.ChronoUnit;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -45,6 +46,12 @@ import javax.inject.Inject;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Fallback;
+import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.faulttolerance.exceptions.*;
+
 @Path("/customer")
 @RequestScoped
 @Produces("application/json")
@@ -72,17 +79,28 @@ public class CustomerService {
     	}
     }
     
+    @Timeout(value = 2, unit = ChronoUnit.SECONDS)
+    @Retry(maxRetries = 2, maxDuration= 2000)
+    @Fallback(fallbackMethod = "fallbackService")
     @Produces("application/json")
     @GET
-    public javax.ws.rs.core.Response getCustomerByUsername(){
+    public javax.ws.rs.core.Response getCustomerByUsername() throws Exception{
         try {
             String username = "usernames:" + jwt.getSubject();
             return defaultCloudantClient.getCustomerByUsername(username, "true");
         }
         catch (Exception e){
             e.printStackTrace();
-            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).entity(e.getLocalizedMessage()).build();
+            System.out.println(javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).entity(e.getLocalizedMessage()).build());
+            throw new Exception(e.toString());
         }
     }
     
+    @Produces("application/json")
+    @GET
+    public javax.ws.rs.core.Response fallbackService() {
+        System.out.println();
+        return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).entity("Cloudant Service is down.").build();
+    }
+
 }
