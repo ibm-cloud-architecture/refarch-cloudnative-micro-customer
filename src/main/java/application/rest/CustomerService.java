@@ -80,7 +80,7 @@ public class CustomerService {
     }
     
     @Timeout(value = 2, unit = ChronoUnit.SECONDS)
-    @Retry(maxRetries = 2, maxDuration= 2000)
+    @Retry(maxRetries = 2, maxDuration= 10000)
     @Fallback(fallbackMethod = "fallbackService")
     @Produces("application/json")
     @GET
