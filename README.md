@@ -153,6 +153,12 @@ In our sample application, we obtained the configuration programatically.
 
 In our sample application, we injected this `/health` endpoint in our liveness probes.
 
+7. Microprofile Fault Tolerance - Helps to build faulttolerant microservices. In some situations, there may be some impact on the system and it may fail due to several reasons. To avoid such failures, we can design fault tolerant microservices using this feature.
+
+In our sample application, we used @Timeout, @Retry and @Fallback.
+
+8.MicroProfile Rest Client - This feature helps us to define typesafe rest clients. These are defined as Java interfaces. The available RESTful apis in our sample application are invoked in a type safe manner.
+
 ### Building the app
 
 To build the application, we used maven build. Maven is a project management tool that is based on the Project Object Model (POM). Typically, people use Maven for project builds, dependencies, and documentation. Maven simplifies the project build. In this task, you use Maven to build the project.
