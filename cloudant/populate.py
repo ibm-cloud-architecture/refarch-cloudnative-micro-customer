@@ -1,8 +1,13 @@
 from cloudant.client import Cloudant
 from cloudant.error import CloudantException
 from cloudant.result import Result, ResultByKey
+from urllib.parse import urlparse
+import sys
 
-client = Cloudant("admin", "pass", url = "http://cloudant-service:80", connect=True)
+host = str(sys.argv[1])
+port = str(sys.argv[2])
+
+client = Cloudant("admin", "pass", url = "http://" + host + ":" + port, connect=True)
 client.connect()
 databaseName = "customers"
 
