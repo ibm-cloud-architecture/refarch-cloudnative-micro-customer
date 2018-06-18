@@ -29,6 +29,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import javax.enterprise.context.RequestScoped;
 
 import config.JwtConfig;
+import model.Customer;
 
 import application.rest.client.CloudantClientService;
 
@@ -52,9 +53,29 @@ import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.faulttolerance.exceptions.*;
 
+import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.info.Info;
+import org.eclipse.microprofile.openapi.annotations.info.Contact;
+import org.eclipse.microprofile.openapi.annotations.info.License;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+
 @Path("/customer")
 @RequestScoped
 @Produces("application/json")
+@OpenAPIDefinition(
+    info = @Info(
+        title = "Customer Service",
+        version = "0.0",
+        description = "getCustomer API",
+        contact = @Contact(url = "https://github.com/ibm-cloud-architecture", name = "IBM CASE"),
+        license = @License(name = "License", url = "https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/master/LICENSE")
+        )
+    )
 public class CustomerService {
 	
     @Inject
@@ -64,26 +85,28 @@ public class CustomerService {
     @RestClient
     private CloudantClientService defaultCloudantClient;
     
-    /**
-     * check
-     */
-    @GET
-    @Path("/check")
-    @Produces("application/json")
-    public String check() {
-    	try {
-            return  "Customer Service is up and running.";
-    	} catch (Exception e) {
-    		System.err.println(e.getMessage());
-            return e.getMessage();
-    	}
-    }
-    
+
     @Timeout(value = 2, unit = ChronoUnit.SECONDS)
     @Retry(maxRetries = 2, maxDuration= 10000)
     @Fallback(fallbackMethod = "fallbackService")
-    @Produces("application/json")
+    //@Produces("application/json")
     @GET
+    @APIResponses(value = {
+        @APIResponse(
+            responseCode = "404",
+            description = "The cloudant database cannot be fround. ",
+            content = @Content(
+                        mediaType = "text/plain")),
+        @APIResponse(
+            responseCode = "200",
+            description = "The Customer Data has been retrieved successfully.",
+            content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Customer.class)))})
+    @Operation(
+        summary = "Get customer by jwt username.",
+        description = "Retrieves the customer informtation for the jwt subject."
+    )
     public javax.ws.rs.core.Response getCustomerByUsername() throws Exception{
         try {
             String username = "usernames:" + jwt.getSubject();
