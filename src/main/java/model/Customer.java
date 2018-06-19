@@ -1,5 +1,8 @@
 package model;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+@Schema(name="Customer", description="POJO that represents the items of the customer")
 public class Customer {
 	
     private String _id;

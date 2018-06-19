@@ -26,13 +26,4 @@ public interface CloudantClientService {
     @Produces("application/json")
     public javax.ws.rs.core.Response getCustomerByUsername(@QueryParam("query") String query, @QueryParam("include_docs") String include_docs) throws UnknownCustomerException;
     
-    /*
-    GET /_all_docs
-    */
-    /*
-    @GET
-    @Path("/_all_docs")
-    @Produces("application/json")
-    public javax.ws.rs.core.Response getCustomers();*/
-    
 }
