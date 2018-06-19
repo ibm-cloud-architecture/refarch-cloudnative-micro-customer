@@ -16,9 +16,10 @@ image:
 service:
   name: customer
   cloudantservicename: cloudant-service
-  type: ClusterIP
+  type: NodePort
   servicePort: 9080
   servicePortHttps: 9443
+  auth: auth
 
 services:
 base:
