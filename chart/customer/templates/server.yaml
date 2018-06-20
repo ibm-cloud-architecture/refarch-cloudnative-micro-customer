@@ -69,6 +69,12 @@ spec:
             value: "{{ .Values.service.servicePort }}"
           - name: APPLICATION_NAME
             value: "{{ .Release.Name }}"
+          - name: jwtid
+            value: {{ .Values.jwt.id }}
+          - name: jwksUri
+            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
+          - name: jwksIssuer
+            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP"
         resources:
           requests:
             cpu: "{{ .Values.image.resources.requests.cpu }}"
