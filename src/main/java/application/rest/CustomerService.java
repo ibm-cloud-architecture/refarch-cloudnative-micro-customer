@@ -30,7 +30,6 @@ import javax.enterprise.context.RequestScoped;
 
 import config.JwtConfig;
 import model.Customer;
-
 import application.rest.client.CloudantClientService;
 
 import java.net.MalformedURLException;
@@ -84,6 +83,9 @@ public class CustomerService {
     @Inject
     @RestClient
     private CloudantClientService defaultCloudantClient;
+
+    @Inject
+    MetricRegistry registry;
     
 
     @Timeout(value = 2, unit = ChronoUnit.SECONDS)
