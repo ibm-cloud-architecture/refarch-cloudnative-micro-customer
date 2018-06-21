@@ -83,9 +83,6 @@ public class CustomerService {
     @Inject
     @RestClient
     private CloudantClientService defaultCloudantClient;
-
-    @Inject
-    MetricRegistry registry;
     
 
     @Timeout(value = 2, unit = ChronoUnit.SECONDS)
