@@ -17,3 +17,11 @@
 .DS_Store
 
 /.apt_generated/
+
+/target
+/.m2
+
+/src/main/liberty/config/server.env
+
+src/main/liberty/config/server.env
+/bin/

@@ -42,7 +42,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: cloudant-deployment
+  name: "{{ .Release.Name }}-cloudant"
   labels:
     app: bluecompute
     micro: customer
@@ -84,7 +84,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: populate
+  name: "{{ .Release.Name }}-populate"
 spec:
   template:
     spec:
