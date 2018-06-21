@@ -114,8 +114,7 @@ public class CustomerService {
             reusable=true)
     @Metered(name="CustomerMeter",
             displayName="Customer Call Frequency",
-            description="Rate of the calls made to CloudantDB",
-            reusable=true)
+            description="Rate of the calls made to CloudantDB")
     public javax.ws.rs.core.Response getCustomerByUsername() throws Exception{
         try {
             String username = "usernames:" + jwt.getSubject();
