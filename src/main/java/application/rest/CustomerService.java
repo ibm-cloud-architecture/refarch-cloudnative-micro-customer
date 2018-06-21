@@ -1,13 +1,23 @@
 package application.rest;
 
+import config.JwtConfig;
+import model.Customer;
+import application.rest.client.CloudantClientService;
+
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.time.temporal.ChronoUnit;
 
 import javax.inject.Inject;
+import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -21,37 +31,19 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ProcessingException;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-
-import javax.enterprise.context.RequestScoped;
-
-import config.JwtConfig;
-import model.Customer;
-import application.rest.client.CloudantClientService;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import java.net.HttpURLConnection;
-import java.net.URI;
-
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.ApplicationPath;
-import java.util.Properties;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import org.eclipse.microprofile.rest.client.RestClientBuilder;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.faulttolerance.exceptions.*;
-
+import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Metered;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
@@ -62,6 +54,9 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
 
 @Path("/customer")
 @RequestScoped
@@ -106,6 +101,21 @@ public class CustomerService {
         summary = "Get customer by jwt username.",
         description = "Retrieves the customer informtation for the jwt subject."
     )
+    @Timed(name = "Customer.timer",
+            absolute = true,
+            displayName="Customer Timer",
+            description = "Time taken by the Customer Service",
+            reusable=true)
+    @Counted(name="Customer",
+            absolute = true,
+            displayName="Customer Call count",
+            description="Number of times the Customer call happened.",
+            monotonic=true,
+            reusable=true)
+    @Metered(name="CustomerMeter",
+            displayName="Customer Call Frequency",
+            description="Rate of the calls made to Inventory",
+            reusable=true)
     public javax.ws.rs.core.Response getCustomerByUsername() throws Exception{
         try {
             String username = "usernames:" + jwt.getSubject();
