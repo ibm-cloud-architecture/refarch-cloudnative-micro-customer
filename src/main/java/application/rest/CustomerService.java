@@ -104,14 +104,12 @@ public class CustomerService {
     @Timed(name = "Customer.timer",
             absolute = true,
             displayName="Customer Timer",
-            description = "Time taken by the Customer Service",
-            reusable=true)
+            description = "Time taken by the Customer Service")
     @Counted(name="Customer",
             absolute = true,
             displayName="Customer Call count",
             description="Number of times the Customer call happened.",
-            monotonic=true,
-            reusable=true)
+            monotonic=true)
     @Metered(name="CustomerMeter",
             displayName="Customer Call Frequency",
             description="Rate of the calls made to CloudantDB")
