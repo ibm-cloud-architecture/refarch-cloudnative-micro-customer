@@ -66,13 +66,13 @@ spec:
           - name: host
             value: "{{ .Release.Name }}-{{ .Values.service.cloudantservicename }}"
           - name: auth_health
-            value: "{{ .Release.Name }}-{{ .Values.service.auth }}"
+            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}/health"
           - name: PORT
             value: "{{ .Values.service.servicePort }}"
-          - name: APPLICATION_NAME
+          - name: RELEASE_NAME
             value: "{{ .Release.Name }}"
           - name: jwtid
-            value: {{ .Values.jwt.id }}
+            value: "{{ .Values.jwt.id }}"
           - name: jwksUri
             value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
           - name: jwksIssuer
