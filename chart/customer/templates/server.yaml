@@ -4,6 +4,7 @@ metadata:
   name: "{{ .Release.Name }}-{{ .Values.service.name }}"
   labels:
     chart: "{{ .Release.Name }}-{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: {{ .Release.Name }}
     implementation: microprofile
 spec:
   type: {{ .Values.service.type }}
@@ -16,6 +17,7 @@ spec:
     app: bluecompute
     micro: customer
     service: server
+    release: {{ .Release.Name }}
     implementation: microprofile
 ---
 apiVersion: extensions/v1beta1
@@ -27,6 +29,7 @@ metadata:
     micro: customer
     service: server
     tier: backend
+    release: {{ .Release.Name }}
     implementation: microprofile
     chart: '{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}'
 spec:
@@ -38,6 +41,7 @@ spec:
         micro: customer
         service: server
         tier: backend
+        release: {{ .Release.Name }}
         implementation: microprofile
 
     spec:
