@@ -1,11 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    bluecompute: "true"
   name: "{{ .Release.Name }}-{{ .Values.service.name }}"
   labels:
     chart: "{{ .Release.Name }}-{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: {{ .Release.Name }}
     implementation: microprofile
 spec:
   type: {{ .Values.service.type }}
@@ -18,6 +17,7 @@ spec:
     app: bluecompute
     micro: customer
     service: server
+    release: {{ .Release.Name }}
     implementation: microprofile
 ---
 apiVersion: extensions/v1beta1
@@ -29,6 +29,7 @@ metadata:
     micro: customer
     service: server
     tier: backend
+    release: {{ .Release.Name }}
     implementation: microprofile
     chart: '{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}'
 spec:
@@ -40,6 +41,7 @@ spec:
         micro: customer
         service: server
         tier: backend
+        release: {{ .Release.Name }}
         implementation: microprofile
 
     spec:
@@ -66,13 +68,13 @@ spec:
           - name: host
             value: "{{ .Release.Name }}-{{ .Values.service.cloudantservicename }}"
           - name: auth_health
-            value: "{{ .Release.Name }}-{{ .Values.service.auth }}"
+            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/health"
           - name: PORT
             value: "{{ .Values.service.servicePort }}"
-          - name: APPLICATION_NAME
+          - name: RELEASE_NAME
             value: "{{ .Release.Name }}"
           - name: jwtid
-            value: {{ .Values.jwt.id }}
+            value: "{{ .Values.jwt.id }}"
           - name: jwksUri
             value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
           - name: jwksIssuer

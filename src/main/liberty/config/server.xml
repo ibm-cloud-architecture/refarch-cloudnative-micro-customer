@@ -6,21 +6,20 @@
 
   <httpEndpoint httpPort="${default.http.port}" httpsPort="${default.https.port}"
       id="defaultHttpEndpoint" host="*" />
-      
+
   <!-- Automatically expand WAR files and EAR files -->
   <applicationManager autoExpand="true"/>
 
   <webApplication name="customer" location="${app.location}"/>
-           
-  <!--These values are defined in pom.xml-->
+
   <mpJwt
      id="${env.jwtid}"
      jwksUri="${env.jwksUri}"
      issuer="${env.jwksIssuer}">
-</mpJwt>
-  
+  </mpJwt>
+
   <ssl id="defaultSSLConfig" keyStoreRef="bcKeyStore" trustStoreRef="bcTrustStore"/>
-  <keyStore id="bcKeyStore" location="/etc/keystorevol/BCKeyStoreFile.jks" type="JKS" password="password" />
-  <keyStore id="bcTrustStore" location="/etc/keystorevol/truststore.jks" type="JKS" password="password" />
+  <keyStore id="bcKeyStore" location="/etc/keystorevol/BCKeyStoreFile.jks" type="JKS" password="password"/>
+  <keyStore id="bcTrustStore" location="/etc/keystorevol/truststore.jks" type="JKS" password="password"/>
 
 </server>
