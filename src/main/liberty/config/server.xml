@@ -13,9 +13,7 @@
     
   <opentracingZipkin host="${env.zipkinHost}" port="${env.zipkinPort}"/>
   
-  <webApplication name="customer" location="${app.location}">
-      <classloader apiTypeVisibility="api,ibm-api,spec,stable,third-party"/>
-  </webApplication>
+  <webApplication name="customer" location="${app.location}"/>
            
   <!--These values are defined in pom.xml-->
     <mpJwt
