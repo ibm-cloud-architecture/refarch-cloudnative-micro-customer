@@ -26,8 +26,6 @@
       <user-access-id>user:${env.userRealm}/user</user-access-id>
     </administrator-role>
 
-  <logging traceSpecification="*=info:com.ibm.ws.security.*:com.ibm.ws.webcontainer.security.*=finest"/>
-
   <ssl id="defaultSSLConfig" keyStoreRef="bcKeyStore" trustStoreRef="bcTrustStore"/>
   <keyStore id="bcKeyStore" location="/etc/keystorevol/BCKeyStoreFile.jks" type="JKS" password="password"/>
   <keyStore id="bcTrustStore" location="/etc/keystorevol/truststore.jks" type="JKS" password="password"/>
