@@ -114,7 +114,7 @@ public class CustomerService {
     @Metered(name="CustomerMeter",
             displayName="Customer Call Frequency",
             description="Rate of the calls made to CloudantDB")
-    @Traced(value = true)
+    @Traced(value = true, operationName = "getCustomerByUsername")
     public javax.ws.rs.core.Response getCustomerByUsername() throws Exception{
         try {
             String username = "usernames:" + jwt.getSubject();
