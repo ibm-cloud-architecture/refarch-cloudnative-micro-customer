@@ -79,6 +79,10 @@ spec:
             value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
           - name: jwksIssuer
             value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP"
+          - name: zipkinHost
+            value: "{{ .Release.Name }}-{{ .Values.service.zipkinHost }}"
+          - name: zipkinPort
+            value: "{{ .Values.service.zipkinPort }}"
         resources:
           requests:
             cpu: "{{ .Values.image.resources.requests.cpu }}"
