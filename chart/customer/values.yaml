@@ -6,7 +6,7 @@ image:
   #repository: registry.csplab.cloudns.cx/microprofile/customer-mp
   #repository: customer-mp
   repository: ibmcase/customer-mp
-  tag: v2.0.0
+  tag: v3.0.0
   pullPolicy: IfNotPresent
   resources:
     requests:
