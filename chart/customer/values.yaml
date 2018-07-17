@@ -4,9 +4,9 @@ replicaCount: 1
 revisionHistoryLimit: 1
 image:
   #repository: registry.csplab.cloudns.cx/microprofile/customer-mp
-  repository: customer-mp
-  #repository: ibmcase/customer-mp
-  tag: v1.0.0
+  #repository: customer-mp
+  repository: ibmcase/customer-mp
+  tag: v2.0.0
   pullPolicy: IfNotPresent
   resources:
     requests:
@@ -31,8 +31,6 @@ base:
 
 jwt:
   id: myMpJwt
-  uri: https://auth-service:9443/oidc/endpoint/OP/jwk
-  issuer: https://auth-service:9443/oidc/endpoint/OP
 
 cloudant:
   user: admin
@@ -44,8 +42,8 @@ cloudant:
   nodeport: 31222
   database: customers
   #image: registry.csplab.cloudns.cx/microprofile/populate
-  #image: ibmcase/populate
-  image: populate
+  image: ibmcase/populate
+  #image: populate
 
 ## Persist data to a persistent volume
 persistence:

@@ -7,15 +7,13 @@
 
   <httpEndpoint httpPort="${default.http.port}" httpsPort="${default.https.port}"
       id="defaultHttpEndpoint" host="*" />
-      
+
   <!-- Automatically expand WAR files and EAR files -->
   <applicationManager autoExpand="true"/>
     
   <opentracingZipkin host="${env.zipkinHost}" port="${env.zipkinPort}"/>
-
-  <webApplication name="customer" location="${app.location}">
-      <classloader apiTypeVisibility="api,ibm-api,spec,stable,third-party"/>
-  </webApplication>
+  
+  <webApplication name="customer" location="${app.location}"/>
            
   <!--These values are defined in pom.xml-->
     <mpJwt
@@ -28,10 +26,8 @@
       <user-access-id>user:${env.userRealm}/user</user-access-id>
     </administrator-role>
 
-  <logging traceSpecification="*=info:com.ibm.ws.security.*:com.ibm.ws.webcontainer.security.*=finest"/>
-
   <ssl id="defaultSSLConfig" keyStoreRef="bcKeyStore" trustStoreRef="bcTrustStore"/>
-  <keyStore id="bcKeyStore" location="/etc/keystorevol/BCKeyStoreFile.jks" type="JKS" password="password" />
-  <keyStore id="bcTrustStore" location="/etc/keystorevol/truststore.jks" type="JKS" password="password" />
+  <keyStore id="bcKeyStore" location="/etc/keystorevol/BCKeyStoreFile.jks" type="JKS" password="password"/>
+  <keyStore id="bcTrustStore" location="/etc/keystorevol/truststore.jks" type="JKS" password="password"/>
 
 </server>
