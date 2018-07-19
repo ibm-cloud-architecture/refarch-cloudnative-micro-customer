@@ -23,7 +23,7 @@
     </mpJwt>
 
     <administrator-role>
-      <user-access-id>user:${env.userRealm}/user</user-access-id>
+      <user-access-id>${env.administratorRealm}</user-access-id>
     </administrator-role>
 
   <ssl id="defaultSSLConfig" keyStoreRef="bcKeyStore" trustStoreRef="bcTrustStore"/>

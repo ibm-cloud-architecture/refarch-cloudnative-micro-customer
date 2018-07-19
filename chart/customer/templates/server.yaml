@@ -83,6 +83,8 @@ spec:
             value: "{{ .Release.Name }}-{{ .Values.service.zipkinHost }}"
           - name: zipkinPort
             value: "{{ .Values.service.zipkinPort }}"
+          - name: administratorRealm
+            value: "user:https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/user"
         resources:
           requests:
             cpu: "{{ .Values.image.resources.requests.cpu }}"

@@ -14,6 +14,7 @@
         <jwt.id>myMpJwt</jwt.id>
         <jwksUri>https://auth:9443/oidc/endpoint/OP/jwk</jwksUri>
         <jwksIssuer>https://auth:9443/oidc/endpoint/OP</jwksIssuer>
+        <administratorRealm>user:https://auth:9443/oidc/endpoint/OP/user</administratorRealm>
 
         <app.name>customer</app.name>
         <testServerHttpPort>9080</testServerHttpPort>
