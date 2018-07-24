@@ -3,9 +3,11 @@ FROM websphere-liberty:webProfile8
 MAINTAINER IBM Java engineering at IBM Cloud
 
 COPY /target/liberty/wlp/usr/servers/defaultServer /config/
-COPY target/liberty/wlp/usr/shared /opt/ibm/wlp/usr/shared/
+
+COPY /target/liberty/wlp/usr/extension /opt/ibm/wlp/usr/extension
 
 # Install required features if not present
+
 RUN installUtility install --acceptLicense defaultServer
 
 CMD ["/opt/ibm/wlp/bin/server", "run", "defaultServer"]

@@ -10,18 +10,18 @@
 
   <!-- Automatically expand WAR files and EAR files -->
   <applicationManager autoExpand="true"/>
-    
+
   <opentracingZipkin host="${env.zipkinHost}" port="${env.zipkinPort}"/>
-  
+
   <webApplication name="customer" location="${app.location}"/>
-           
+
   <!--These values are defined in pom.xml-->
     <mpJwt
          id="${env.jwtid}"
          jwksUri="${env.jwksUri}"
          issuer="${env.jwksIssuer}">
     </mpJwt>
-    
+
     <administrator-role>
       <user-access-id>${env.administratorRealm}</user-access-id>
     </administrator-role>
