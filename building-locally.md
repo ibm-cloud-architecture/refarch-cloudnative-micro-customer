@@ -42,8 +42,10 @@ To build the application, we used maven build. Maven is a project management too
 [INFO] ------------------------------------------------------------------------
 ```
 
-4. The Auth service will also be running. A JWT is required to use the Customer Service Locally.
+4. The Auth and Keystore services are required to be ran since a JWT is required to access the Customer endpoints.
+Follow the instructions below to run these services.
 https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile
+https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/Keystore/README.md
 
 
 ## Setting up Cloudant
@@ -74,8 +76,8 @@ If you want to access the traces for inventory service, run Zipkin as a docker c
 
 ### Running the app and stopping it
 
-1. Set the JDBC URL before you start your application. The host and port depends on the service you use.
-Also, set the Zipkin host and port to defaults.
+1. The host and port depends on the service you use.
+Set the Zipkin host and port to defaults.
 
 ```
 export zipkinHost=localhost
@@ -96,7 +98,7 @@ docker run \
 
 3. Start your server.
 ```
-mvn liberty:start-server -DhttpPort=9082 -DhttpsPort=9445
+mvn liberty:start-server -DhttpPort=9084 -DhttpsPort=9445
 ```
 You will see something similar to the below messages.
 
@@ -116,7 +118,7 @@ You will see something similar to the below messages.
 ```
 4. Validate the inventory service. You should get a list of all inventory items.  You should get user information from this call.
 ```
-curl -H "Authorization: Bearer <JWT>" http://localhost:9082/customer/rest/customer
+curl -H "Authorization: Bearer <JWT>" http://localhost:9084/customer/rest/customer
 ```
 
 5. If you are done accessing the application, you can stop your server using the following command.
