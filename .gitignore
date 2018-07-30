@@ -1,15 +1,50 @@
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# Don't ignore gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+build
+.gradle
 /bin/
-/build/
-/.gradle/
 
-/.settings
-/.classpath
-docker/app.jar
-.*.swp
-.idea
+# Eclipse
+.classpath
+.project
+.settings/
 
+# Intellij
+.idea/
+out/
+*.iml
+*.iws
+
+# swp, bak, tgz, log files
+*.swp
+*.bak
+*.tgz
+*.log
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/
+
+# Chart related files
 chart/customer/charts
 chart/customer/requirements.lock
 
-chart/customer-ce/charts
-chart/customer-ce/requirements.lock
+# Ignore test YAML files
+*.yaml.test
