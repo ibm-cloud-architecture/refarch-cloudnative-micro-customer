@@ -1,57 +1,27 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-{{ .Chart.Name }}
+  name: {{ template "customer.fullname" . }}
   labels:
-    app: bluecompute
-    micro: customer
-    tier: backend
-    release: {{.Release.Name | quote }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    {{- include "customer.labels" . | indent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
       labels:
-        app: bluecompute
-        micro: customer
-        tier: backend
-      annotations:
-        pod.beta.kubernetes.io/init-containers: '[
-          {
-            "name": "test-couchdb",
-            "image": "{{ .Values.dataloader.image.repository }}:{{ .Values.dataloader.image.tag }}",
-            "imagePullPolicy": "IfNotPresent",
-            "command": ["/bin/bash", "-c"],
-            "args": ["couchdb_uri=`echo ${couchdb} | jq .url -r`; until curl --max-time 1 ${couchdb_uri}; do echo waiting for couchdb; /bin/sleep 1; done;"],
-            "env": [{
-              "name": "couchdb",
-              "valueFrom": {
-                "secretKeyRef": {
-                  "name": "{{ template "customerCouchDBBinding" . }}",
-                  "key": "binding"
-                }
-              }
-            }]
-          }
-        ]'
+        {{- include "customer.labels" . | indent 8 }}
     spec:
+      initContainers:
+      {{- include "customer.couchdb.initcontainer" . | indent 6 }}
       containers:
       - name: customer
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        env:
-        - name: HS256_KEY
-          valueFrom:
-            secretKeyRef:
-                name: {{ template "hs256SecretName" . }}
-                key:  key
-        - name: couchdb
-          valueFrom:
-            secretKeyRef:
-                name: {{ template "customerCouchDBBinding" . }}
-                key: binding
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         ports:
         - containerPort: {{ .Values.service.internalPort }}
+          protocol: TCP
+        env:
+        {{- include "customer.couchdb.environmentvariables" . | indent 8 }}
+        {{- include "customer.hs256key.environmentvariables" . | indent 8 }}
         resources:
-{{ toYaml .Values.resources | indent 12 }}
+{{ toYaml .Values.resources | indent 10 }}

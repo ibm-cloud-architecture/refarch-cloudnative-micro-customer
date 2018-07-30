@@ -1,0 +1,6 @@
+dependencies:
+  - name: couchdb
+    alias: customercouchdb
+    version: 0.1.7
+    repository: http://storage.googleapis.com/kubernetes-charts-incubator
+    condition: customercouchdb.enabled
