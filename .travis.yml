@@ -18,7 +18,7 @@ jobs:
   include:
     - stage: local build and test
       services:
-      - couchdb
+      - docker
       before_cache:
         - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -27,10 +27,10 @@ jobs:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
       before_script:
-      - curl http://127.0.0.1:5984/_config/vendor/version
-      - curl http://127.0.0.1:5984
-      # Create admin user in CouchDB
-      - curl -X PUT http://127.0.0.1:5984/_config/admins/admin -d '"passw0rd"'
+      # Start CouchDB 2.1.2 and wait for it to start
+      # Using this instead of built-in couchdb, which is 1.6.1
+      - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
+      - sleep 20
       script:
       # Gradle Build
       - ./gradlew build -x test
@@ -41,16 +41,17 @@ jobs:
       # Run Customer API Test
       # TODO: Test more APIs
       # NOTE: Using separate script due to Travis CI limitations
-      - bash scripts/api_tests.sh "127.0.0.1" "8080" $HS256_KEY $COUCHDB_USER $COUCHDB_PASSWORD
+      - bash scripts/api_tests.sh 127.0.0.1 8080 $HS256_KEY $COUCHDB_USER $COUCHDB_PASSWORD
     - stage: docker build, deploy, and test
       services:
-      - couchdb
       - docker
       install:
         - true
       before_script:
-      # Create admin user in CouchDB
-      - curl -X PUT http://127.0.0.1:5984/_config/admins/admin -d '"passw0rd"'
+      # Start CouchDB 2.1.2 and wait for it to start
+      # Using this instead of built-in couchdb, which is 1.6.1
+      - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
+      - sleep 20
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
@@ -64,7 +65,7 @@ jobs:
       - docker logs customer
       # Run Customer API Test
       # TODO: Test more APIs, perhaps with a separate script
-      - bash scripts/api_tests.sh "127.0.0.1" "8080" $HS256_KEY $COUCHDB_USER $COUCHDB_PASSWORD
+      - bash scripts/api_tests.sh 127.0.0.1 8080 $HS256_KEY $COUCHDB_USER $COUCHDB_PASSWORD
     - stage: kubernetes build, deploy, and test
       services:
       - docker
