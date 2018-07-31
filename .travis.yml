@@ -27,6 +27,7 @@ jobs:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
       before_script:
+      - set -x;
       # Create admin user in CouchDB
       - curl -X PUT http://127.0.0.1:5984/_config/admins/admin -d '"passw0rd"'
       # Create JWT Token:
@@ -42,6 +43,7 @@ jobs:
       - jwt4=$(echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
       # Complete JWT
       - jwt=$(echo -n "${jwt3}.${jwt4}");
+      - set +x;
       script:
       # Gradle Build
       - ./gradlew build -x test
