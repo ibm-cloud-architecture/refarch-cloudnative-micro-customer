@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function parse_arguments() {
-	set -x;
+	#set -x;
 	# CUSTOMER_HOST
 	if [ -z "${CUSTOMER_HOST}" ]; then
 		echo "CUSTOMER_HOST not set. Using parameter \"$1\"";
@@ -57,7 +57,7 @@ function parse_arguments() {
 		COUCHDB_PASSWORD=passw0rd;
 	fi
 
-	set +x;
+	#set +x;
 }
 
 function create_jwt_admin() {
@@ -126,4 +126,3 @@ create_jwt_blue
 echo "Starting Tests"
 create_user
 search_user
-#delete_user
