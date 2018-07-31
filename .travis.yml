@@ -27,6 +27,8 @@ jobs:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
       before_script:
+      - curl http://127.0.0.1:5984/_config/vendor/version
+      - curl http://127.0.0.1:5984
       # Create admin user in CouchDB
       - curl -X PUT http://127.0.0.1:5984/_config/admins/admin -d '"passw0rd"'
       script:
