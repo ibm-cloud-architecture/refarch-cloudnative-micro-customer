@@ -30,7 +30,10 @@ jobs:
       # Start CouchDB 2.1.2 and wait for it to start
       # Using this instead of built-in couchdb, which is 1.6.1
       - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
+      # Wait for CouchDB to Start
       - sleep 20
+      # Test CouchDB
+      - curl http://127.0.0.1:5984
       script:
       # Gradle Build
       - ./gradlew build -x test
@@ -51,12 +54,17 @@ jobs:
       # Start CouchDB 2.1.2 and wait for it to start
       # Using this instead of built-in couchdb, which is 1.6.1
       - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
+      # Wait for CouchDB to Start
       - sleep 20
+      # Test CouchDB
+      - curl http://127.0.0.1:5984
+      # Get IP Address for CouchDB
+      - COUCHDB_IP=$(docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress')
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
       # Start Customer Container and Connect to local MySQL Service
-      - docker run --net=host --name customer -d -p 8080:8080 -e COUCHDB_URI="couchdb://root@127.0.0.1:3306/customers" "${IMAGE_NAME}:${TAG}"
+      - docker run --net=host --name customer -d -p 8080:8080 -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
       # Wait for the Customer container to start accepting connections
       - sleep 25
       # Check that the Customer container is running
