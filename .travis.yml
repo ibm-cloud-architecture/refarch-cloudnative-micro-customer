@@ -66,7 +66,7 @@ jobs:
       - docker build -t "${IMAGE_NAME}:${TAG}" .
       # Start Customer Container and Connect to local MySQL Service
       - set -x;
-      - docker run --net=host --name customer -d -p 8080:8080 -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
+      - docker run --net=host --name customer -d -p 8080:8080 -e HS256_KEY=${HS256_KEY} -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
       - set +x;
       # Wait for the Customer container to start accepting connections
       - sleep 25
