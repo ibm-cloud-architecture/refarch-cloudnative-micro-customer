@@ -60,12 +60,14 @@ jobs:
       - curl http://127.0.0.1:5984
       # Get IP Address for CouchDB
       - COUCHDB_IP=$(docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress')
-      - docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress'
+      #- docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress'
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
       # Start Customer Container and Connect to local MySQL Service
-      - docker run --net=host --name customer -d -p 8080:8080 -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@127.0.0.1:5984" "${IMAGE_NAME}:${TAG}"
+      - set -x;
+      - docker run --net=host --name customer -d -p 8080:8080 -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
+      - set +x;
       # Wait for the Customer container to start accepting connections
       - sleep 25
       # Check that the Customer container is running
