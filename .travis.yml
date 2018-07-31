@@ -28,7 +28,7 @@ jobs:
           - $HOME/.gradle/wrapper/
       before_script:
       # Create admin user in CouchDB
-      - curl -X PUT http://127.0.0.1:5984/_node/nonode@nohost/_config/admins/admin -d '"passw0rd"'
+      - curl -X PUT http://127.0.0.1:5984/_config/admins/admin -d '"passw0rd"'
       # Create JWT Token:
       # Secret Key
       - secret=${HS256_KEY};
@@ -65,7 +65,7 @@ jobs:
         - true
       before_script:
       # Create admin user in CouchDB
-      - curl -X PUT http://127.0.0.1:5984/_node/nonode@nohost/_config/admins/admin -d '"passw0rd"'
+      - curl -X PUT http://127.0.0.1:5984/_config/admins/admin -d '"passw0rd"'
       # Create JWT Token:
       # Secret Key
       - secret=${HS256_KEY};
