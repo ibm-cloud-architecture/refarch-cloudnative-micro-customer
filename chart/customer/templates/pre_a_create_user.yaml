@@ -1,3 +1,4 @@
+{{- if .Values.createUser }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -33,3 +34,4 @@ spec:
         env:
         {{- include "customer.couchdb.environmentvariables" . | indent 8 }}
         {{- include "customer.hs256key.environmentvariables" . | indent 8 }}
+{{- end }}

@@ -33,6 +33,8 @@ bash:
     tag: latest
     pullPolicy: IfNotPresent
 
+createUser: true
+
 # Included Community Couchdb Chart.
 # - Even if disabled, these fields are used to provide information
 #   for external CouchDB deployments.

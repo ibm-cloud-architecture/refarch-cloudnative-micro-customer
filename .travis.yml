@@ -121,7 +121,7 @@ jobs:
       - helm package chart/customer
       # helm install Customer from packaged chart. Use pullPolicy=Never so it uses local docker image
       - CHART_VERSION="$(cat chart/customer/Chart.yaml | grep version | awk '{print $2}')"
-      - helm upgrade --install customer --set service.type=NodePort,image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never customer-${CHART_VERSION}.tgz
+      - helm upgrade --install customer --set service.type=NodePort,createUser=false,image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never customer-${CHART_VERSION}.tgz
       # Wait for Customer to be ready
       - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
       - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')
