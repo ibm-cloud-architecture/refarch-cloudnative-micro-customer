@@ -52,10 +52,11 @@ jobs:
       # Run Inventory API Test
       # TODO: Test more APIs, perhaps with a separate script
       # TEST: Create User
-      - curl -X POST http://127.0.0.1:8080/micro/customer -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}"
+      # NOTE: Had to put the whole command in quotes due to issues with using : character in Header. To read more on that, checkout this StackOverflow:
+      # https://stackoverflow.com/questions/34687610/how-to-properly-use-curl-in-travis-ci-config-file-yaml
+      - "curl -X POST http://127.0.0.1:8080/micro/customer -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}' -d '{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}'"
       # TEST: Search User
-      - curl -X GET 'http://127.0.0.1:8080/micro/customer/search?username=admin' -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}" 
-      - curl http://127.0.0.1:8080/micro/customer
+      - "curl -X GET 'http://127.0.0.1:8080/micro/customer/search?username=admin' -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}'" 
     - stage: docker build, deploy, and test
       services:
       - couchdb
@@ -92,9 +93,9 @@ jobs:
       # Run Inventory API Test
       # TODO: Test more APIs, perhaps with a separate script
       # TEST: Create User
-      - curl -X POST http://127.0.0.1:8080/micro/customer -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}"
+      - "curl -X POST http://127.0.0.1:8080/micro/customer -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}' -d '{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}'"
       # TEST: Search User
-      - curl -X GET 'http://127.0.0.1:8080/micro/customer/search?username=admin' -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}" 
+      - "curl -X GET 'http://127.0.0.1:8080/micro/customer/search?username=admin' -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}'"
     - stage: kubernetes build, deploy, and test
       services:
       - docker
@@ -148,8 +149,9 @@ jobs:
       # Wait for Inventory deployment to start accepting connections
       - sleep 35
       # Run Inventory API Test
+      - MINIKUBE_IP=$(minikube ip)
       - NODE_PORT=$(kubectl get service ${RELEASE_NAME}-customer -o=jsonpath='{.spec.ports[0].nodePort}')
       # TEST: Create User
-      - curl -X POST http://$(minikube ip):${NODE_PORT}/micro/customer -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}"
+      - "curl -X POST http://${MINIKUBE_IP}:${NODE_PORT}/micro/customer -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}' -d '{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}'"
       # TEST: Search User
-      - curl -X GET 'http://$(minikube ip):${NODE_PORT}/micro/customer/search?username=admin' -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}" 
+      - "curl -X GET 'http://${MINIKUBE_IP}:${NODE_PORT}/micro/customer/search?username=admin' -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}'"
