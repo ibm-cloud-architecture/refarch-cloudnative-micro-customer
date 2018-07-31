@@ -1,9 +1,10 @@
 #!/bin/bash
 
 function parse_arguments() {
+	set -x;
 	# CUSTOMER_HOST
 	if [ -z "${CUSTOMER_HOST}" ]; then
-		echo "CUSTOMER_HOST not set. Using parameter $1";
+		echo "CUSTOMER_HOST not set. Using parameter \"$1\"";
 		CUSTOMER_HOST=$1;
 	fi
 
@@ -14,7 +15,7 @@ function parse_arguments() {
 
 	# CUSTOMER_PORT
 	if [ -z "${CUSTOMER_PORT}" ]; then
-		echo "CUSTOMER_PORT not set. Using parameter $2";
+		echo "CUSTOMER_PORT not set. Using parameter \"$2\"";
 		CUSTOMER_PORT=$2;
 	fi
 
@@ -25,7 +26,7 @@ function parse_arguments() {
 
 	# HS256_KEY
 	if [ -z "${HS256_KEY}" ]; then
-		echo "HS256_KEY not set. Using parameter $3";
+		echo "HS256_KEY not set. Using parameter \"$3\"";
 		HS256_KEY=$3;
 	fi
 
@@ -36,7 +37,7 @@ function parse_arguments() {
 
 	# COUCHDB_USER
 	if [ -z "${COUCHDB_USER}" ]; then
-		echo "COUCHDB_USER not set. Using parameter $4";
+		echo "COUCHDB_USER not set. Using parameter \"$4\"";
 		COUCHDB_USER=$4;
 	fi
 
@@ -47,7 +48,7 @@ function parse_arguments() {
 
 	# COUCHDB_PASSWORD
 	if [ -z "${COUCHDB_PASSWORD}" ]; then
-		echo "COUCHDB_PASSWORD not set. Using parameter $5";
+		echo "COUCHDB_PASSWORD not set. Using parameter \"$5\"";
 		COUCHDB_PASSWORD=$5;
 	fi
 
@@ -55,6 +56,8 @@ function parse_arguments() {
 		echo "COUCHDB_PASSWORD not set. Using default key";
 		COUCHDB_PASSWORD=passw0rd;
 	fi
+
+	set +x;
 }
 
 function create_jwt_admin() {
