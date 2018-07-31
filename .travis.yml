@@ -9,7 +9,7 @@ env:
     - TAG=travis-latest
     - HS256_KEY=E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a
     - COUCHDB_USER=admin
-    - COUCHDB_USER=passw0rd
+    - COUCHDB_PASSWORD=passw0rd
 stages:
   - local build and test
   - docker build, deploy, and test
@@ -56,9 +56,11 @@ jobs:
       # TEST: Create User
       # NOTE: Had to put the whole command in quotes due to issues with using : character in Header. To read more on that, checkout this StackOverflow:
       # https://stackoverflow.com/questions/34687610/how-to-properly-use-curl-in-travis-ci-config-file-yaml
+      - set -x;
       - "curl -X POST http://127.0.0.1:8080/micro/customer -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}' -d '{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}'"
       # TEST: Search User
-      - "curl -X GET 'http://127.0.0.1:8080/micro/customer/search?username=admin' -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}'" 
+      - "curl -X GET 'http://127.0.0.1:8080/micro/customer/search?username=admin' -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}'"
+      - set +x;
     - stage: docker build, deploy, and test
       services:
       - couchdb
