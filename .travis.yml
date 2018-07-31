@@ -30,37 +30,17 @@ jobs:
       - set -x;
       # Create admin user in CouchDB
       - curl -X PUT http://127.0.0.1:5984/_config/admins/admin -d '"passw0rd"'
-      # Create JWT Token:
-      # Secret Key
-      - secret=${HS256_KEY};
-      # JWT Header
-      - jwt1=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64);
-      # JWT Payload
-      - jwt2=$(echo -n "{\"scope\":[\"admin\"],\"user_name\":\"${COUCHDB_USER}\"}" | openssl enc -base64);
-      # JWT Signature: Header and Payload
-      - jwt3=$(echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
-      # JWT Signature: Create signed hash with secret key
-      - jwt4=$(echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
-      # Complete JWT
-      - jwt=$(echo -n "${jwt3}.${jwt4}");
-      - set +x;
       script:
       # Gradle Build
       - ./gradlew build -x test
       # Start Application
       - java -Deureka.client.fetchRegistry=false -Deureka.client.registerWithEureka=false -Djwt.sharedSecret=${HS256_KEY} -jar build/libs/micro-customer-0.0.1.jar &
-      # Wait for the Inventory container to start accepting connections
+      # Wait for the Customer container to start accepting connections
       - sleep 25
-      # Run Inventory API Test
-      # TODO: Test more APIs, perhaps with a separate script
-      # TEST: Create User
-      # NOTE: Had to put the whole command in quotes due to issues with using : character in Header. To read more on that, checkout this StackOverflow:
-      # https://stackoverflow.com/questions/34687610/how-to-properly-use-curl-in-travis-ci-config-file-yaml
-      - set -x;
-      - "curl -X POST http://127.0.0.1:8080/micro/customer -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}' -d '{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}'"
-      # TEST: Search User
-      - "curl -X GET 'http://127.0.0.1:8080/micro/customer/search?username=admin' -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}'"
-      - set +x;
+      # Run Customer API Test
+      # TODO: Test more APIs
+      # NOTE: Using separate script due to Travis CI limitations
+      - bash scripts/api_tests.sh "127.0.0.1" "8080" $HS256_KEY $COUCHDB_USER $COUCHDB_PASSWORD
     - stage: docker build, deploy, and test
       services:
       - couchdb
@@ -70,36 +50,20 @@ jobs:
       before_script:
       # Create admin user in CouchDB
       - curl -X PUT http://127.0.0.1:5984/_config/admins/admin -d '"passw0rd"'
-      # Create JWT Token:
-      # Secret Key
-      - secret=${HS256_KEY};
-      # JWT Header
-      - jwt1=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64);
-      # JWT Payload
-      - jwt2=$(echo -n "{\"scope\":[\"admin\"],\"user_name\":\"${COUCHDB_USER}\"}" | openssl enc -base64);
-      # JWT Signature: Header and Payload
-      - jwt3=$(echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
-      # JWT Signature: Create signed hash with secret key
-      - jwt4=$(echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
-      # Complete JWT
-      - jwt=$(echo -n "${jwt3}.${jwt4}");
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
-      # Start Inventory Container and Connect to local MySQL Service
+      # Start Customer Container and Connect to local MySQL Service
       - docker run --net=host --name customer -d -p 8080:8080 -e COUCHDB_URI="couchdb://root@127.0.0.1:3306/customers" "${IMAGE_NAME}:${TAG}"
-      # Wait for the Inventory container to start accepting connections
+      # Wait for the Customer container to start accepting connections
       - sleep 25
-      # Check that the Inventory container is running
+      # Check that the Customer container is running
       - docker ps
       # Check logs to see if it started properly
       - docker logs customer
-      # Run Inventory API Test
+      # Run Customer API Test
       # TODO: Test more APIs, perhaps with a separate script
-      # TEST: Create User
-      - "curl -X POST http://127.0.0.1:8080/micro/customer -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}' -d '{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}'"
-      # TEST: Search User
-      - "curl -X GET 'http://127.0.0.1:8080/micro/customer/search?username=admin' -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}'"
+      - bash scripts/api_tests.sh "127.0.0.1" "8080" $HS256_KEY $COUCHDB_USER $COUCHDB_PASSWORD
     - stage: kubernetes build, deploy, and test
       services:
       - docker
@@ -136,26 +100,23 @@ jobs:
       - kubectl cluster-info
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
-      # Download Inventory chart dependencies (MySQL)
+      # Download Customer chart dependencies (MySQL)
       - cd chart/customer; helm dependency update; cd ../..
       # helm lint
       - helm lint chart/customer
       # helm package
       - helm package chart/customer
-      # helm install Inventory from packaged chart. Use pullPolicy=Never so it uses local docker image
+      # helm install Customer from packaged chart. Use pullPolicy=Never so it uses local docker image
       - CHART_VERSION="$(cat chart/customer/Chart.yaml | grep version | awk '{print $2}')"
       - helm upgrade --install customer --set service.type=NodePort,image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never customer-${CHART_VERSION}.tgz
-      # Wait for Inventory to be ready
+      # Wait for Customer to be ready
       - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
       - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')
       - echo $READY
       - until [ -n "$READY" ] && [ ${READY} -ge 1 ]; do READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}'); kubectl get deployments -o wide; echo "Waiting for customer to be ready"; sleep 10; done
-      # Wait for Inventory deployment to start accepting connections
+      # Wait for Customer deployment to start accepting connections
       - sleep 35
-      # Run Inventory API Test
+      # Run Customer API Test
       - MINIKUBE_IP=$(minikube ip)
       - NODE_PORT=$(kubectl get service ${RELEASE_NAME}-customer -o=jsonpath='{.spec.ports[0].nodePort}')
-      # TEST: Create User
-      - "curl -X POST http://${MINIKUBE_IP}:${NODE_PORT}/micro/customer -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}' -d '{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}'"
-      # TEST: Search User
-      - "curl -X GET 'http://${MINIKUBE_IP}:${NODE_PORT}/micro/customer/search?username=admin' -H 'Content-type: application/json' -H 'Authorization: Bearer ${jwt}'"
+      - bash scripts/api_tests.sh $MINIKUBE_IP $NODE_PORT $HS256_KEY $COUCHDB_USER $COUCHDB_PASSWORD
