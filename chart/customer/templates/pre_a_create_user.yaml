@@ -21,13 +21,13 @@ spec:
         args:
         - >
             secret=${HS256_KEY};
-            jwt1=`echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64`;
-            jwt2=`echo -n '{"scope":["admin"],"user_name":"admin"}' | openssl enc -base64`;
-            jwt3=`echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n'`;
-            jwt4=`echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n'`;
-            jwt=`echo -n "${jwt3}.${jwt4}"`;
+            jwt1=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64);
+            jwt2=$(echo -n "{\"scope\":[\"admin\"],\"user_name\":\"${COUCHDB_USER}\"}" | openssl enc -base64);
+            jwt3=$(echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
+            jwt4=$(echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
+            jwt=$(echo -n "${jwt3}.${jwt4}");
             for i in `seq 1 120`; do
-              curl --max-time 5 -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -X POST -d '{"username": "${COUCHDB_USER}", "password": "${COUCHDB_PASSWORD}", "firstName": "user", "lastName": "name", "email": "user@name.com"}' http://{{- template "customer.fullname" . }}:{{ .Values.service.externalPort }}/micro/customer;
+              curl --max-time 5 -X POST http://{{- template "customer.fullname" . }}:{{ .Values.service.externalPort }}/micro/customer -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}";
             done
         imagePullPolicy: {{ .Values.bash.image.pullPolicy }}
         env:
