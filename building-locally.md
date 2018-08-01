@@ -97,7 +97,7 @@ docker run \
 
 3. Start your server.
 ```
-mvn liberty:start-server -DhttpPort=9084 -DhttpsPort=9445
+mvn liberty:start-server -DtestServerHttpPort=9084 -DtestServerHttpsPort=9445
 ```
 You will see something similar to the below messages.
 
