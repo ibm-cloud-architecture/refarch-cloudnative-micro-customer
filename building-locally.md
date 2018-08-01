@@ -44,8 +44,7 @@ To build the application, we used maven build. Maven is a project management too
 
 4. The Auth and Keystore services are required to be ran since a JWT is required to access the Customer endpoints.
 Follow the instructions below to run these services.
-https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile
-https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/Keystore/README.md
+https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile/building-locally.md
 
 
 ## Setting up Cloudant
@@ -116,7 +115,7 @@ You will see something similar to the below messages.
 [INFO] Final Memory: 12M/309M
 [INFO] ------------------------------------------------------------------------
 ```
-4. Validate the inventory service. You should get a list of all inventory items.  You should get user information from this call.
+4. Validate the customer service. You should get the user information for the Customer that the JWT belongs to.
 ```
 curl -H "Authorization: Bearer <JWT>" http://localhost:9084/customer/rest/customer
 ```
