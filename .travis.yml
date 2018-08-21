@@ -8,8 +8,8 @@ env:
     - RELEASE_NAME=customer
     - TAG=travis-latest
     - HS256_KEY=E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a
-    - COUCHDB_ADMIN_USER=admin
-    - COUCHDB_ADMIN_PASSWORD=passw0rd
+    - COUCHDB_USER=admin
+    - COUCHDB_PASSWORD=passw0rd
     - TEST_USER=testuser
     - TEST_PASSWORD=passw0rd
 stages:
@@ -31,7 +31,7 @@ jobs:
       before_script:
       # Start CouchDB 2.1.2 and wait for it to start
       # Using this instead of built-in couchdb, which is 1.6.1
-      - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_ADMIN_USER} -e COUCHDB_PASSWORD=${COUCHDB_ADMIN_PASSWORD} -d couchdb:2.1.2
+      - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
       # Wait for CouchDB to Start
       - sleep 20
       # Test CouchDB
@@ -55,7 +55,7 @@ jobs:
       before_script:
       # Start CouchDB 2.1.2 and wait for it to start
       # Using this instead of built-in couchdb, which is 1.6.1
-      - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_ADMIN_USER} -e COUCHDB_PASSWORD=${COUCHDB_ADMIN_PASSWORD} -d couchdb:2.1.2
+      - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
       # Wait for CouchDB to Start
       - sleep 20
       # Test CouchDB
@@ -67,7 +67,7 @@ jobs:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
       # Start Customer Container and Connect to local MySQL Service
-      - docker run --net=host --name customer -d -p 8080:8080 -e HS256_KEY=${HS256_KEY} -e COUCHDB_URI="http://${COUCHDB_ADMIN_USER}:${COUCHDB_ADMIN_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
+      - docker run --net=host --name customer -d -p 8080:8080 -e HS256_KEY=${HS256_KEY} -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
       # Wait for the Customer container to start accepting connections
       - sleep 25
       # Check that the Customer container is running
@@ -121,7 +121,7 @@ jobs:
       - helm package chart/customer
       # helm install Customer from packaged chart. Use pullPolicy=Never so it uses local docker image
       - CHART_VERSION="$(cat chart/customer/Chart.yaml | grep version | awk '{print $2}')"
-      - helm upgrade --install customer --set service.type=NodePort,createUser=false,image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never customer-${CHART_VERSION}.tgz
+      - helm upgrade --install customer --set service.type=NodePort,testUser.createUser=false,image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never customer-${CHART_VERSION}.tgz
       # Wait for Customer to be ready
       - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
       - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')
