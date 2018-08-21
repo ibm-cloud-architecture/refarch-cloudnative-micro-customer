@@ -1,33 +1,48 @@
-# Customer Microservice
+# refarch-cloudnative-micro-customer: Spring Boot Microservice with CouchDB Database
 [![Build Status](https://travis-ci.org/ibm-cloud-architecture/refarch-cloudnative-micro-customer.svg?branch=master)](https://travis-ci.org/ibm-cloud-architecture/refarch-cloudnative-micro-customer)
 
 *This project is part of the 'IBM Cloud Native Reference Architecture' suite, available at
 https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes*
 
+## Table of Contents
+  * [Introduction](#introduction)
+    + [APIs](#apis)
+  * [Pre-requisites:](#pre-requisites)
+  * [Deploy Customer Application to Kubernetes Cluster](#deploy-customer-application-to-kubernetes-cluster)
+  * [Validate the Customer Microservice API](#validate-the-customer-microservice-api)
+    + [Setup](#setup)
+      - [1. Create a temporary HS256 shared secret](#1-create-a-temporary-hs256-shared-secret)
+      - [2. Generate a JWT Token with `admin` Scope](#2-generate-a-jwt-token-with-admin-scope)
+    + [Create a Customer](#create-a-customer)
+    + [Search the Customer](#search-the-customer)
+    + [Get the Customer](#get-the-customer)
+      - [Generate a JWT Token with `blue` Scope for New User](#generate-a-jwt-token-with-blue-scope-for-new-user)
+      - [Use `blue` Scoped JWT Token to Get the Customer information](#use-blue-scoped-jwt-token-to-get-the-customer-information)
+    + [Delete the User](#delete-the-user)
+  * [Deploy Customer Application on Docker](#deploy-customer-application-on-docker)
+    + [Deploy the CouchDB Docker Container](#deploy-the-couchdb-docker-container)
+    + [Deploy the Customer Docker Container](#deploy-the-customer-docker-container)
+  * [Run Customer Service application on localhost](#run-customer-service-application-on-localhost)
+  * [Optional: Setup CI/CD Pipeline](#optional-setup-cicd-pipeline)
+  * [Conclusion](#conclusion)
+  * [Contributing](#contributing)
+    + [GOTCHAs](#gotchas)
+    + [Contributing a New Chart Package to Microservices Reference Architecture Helm Repository](#contributing-a-new-chart-package-to-microservices-reference-architecture-helm-repository)
+
 ## Introduction
+This project will demonstrate how to deploy a Spring Boot Application with a CouchDB database onto a Kubernetes Cluster.
 
-This project demonstrates how to build a Microservices application implemented as a Spring Boot application and deployed on Bluemix Container Service.  It provides basic operations of creating and querying customer profiles from [IBM Cloudant](https://console.ng.bluemix.net/docs/services/Cloudant/index.html#Cloudant) NoSQL database as part of the Customer Profile function of BlueCompute.  Additionally the [Auth Microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) calls this microservice to perform Customer username/password authentication.  This project covers the following technical areas:
+![Application Architecture](static/customer.png?raw=true)
 
-- Build a microservice as a Spring Boot Java application
-- OAuth protect the microservice REST API using JWT token signed with a HS256 shared secret
-- Deploy the Customer microservice as a container on the [IBM Bluemix Container Service](https://console.ng.bluemix.net/docs/containers/container_index.html).
-- Persist Customer data in an [IBM Cloudant](https://console.ng.bluemix.net/docs/services/Cloudant/index.html#Cloudant) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
+Here is an overview of the project's features:
+- Leverage [`Spring Boot`](https://projects.spring.io/spring-boot/) framework to build a Microservices application.
+- Uses [`Spring Data JPA`](http://projects.spring.io/spring-data-jpa/) to persist data to CouchDB database.
+- Uses [`CouchDB`](http://couchdb.apache.org/) as the customer database.
+- Uses [`Docker`](https://docs.docker.com/) to package application binary and its dependencies.
+- Uses [`Helm`](https://helm.sh/) to package application and CouchDB deployment configuration and deploy to a [`Kubernetes`](https://kubernetes.io/) cluster. 
 
-![Customer Microservice](customer_microservice.png)
-
-### REST API
-
+## APIs
 The Customer Microservice REST API is OAuth protected.  
-
-- `GET /micro/customer`
-  - Returns all customers.  The caller of this API must pass a valid OAuth token with the scope `blue`.  The OAuth token is a JWT signed and is verified using a HS256 shared key.  A JSON object array is returned consisting of only users that match the customer ID embedded in the JWT claim `user_name`, either length 0 or 1.
-
-- `GET /micro/customer/{id}`
-  - Return customer by ID.  The caller of this API must pass a valid OAuth token with the scope `blue`.  The OAuth token is a JWT signed and is verified using a HS256 shared key.  If the `id` matches the customer ID passed in the `user_name` claim in the JWT, it is returned as a JSON object in the response; otherwise `HTTP 401` is returned.
-
-- `GET /micro/customer/search`
-  - Return customer by username.  The caller of this API must pass a valid OAuth token with the scope `admin`.  This API is called by the [Auth Microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) when authenticating a user.  A JSON object array is returned consisting of only users that match the customer username (either length 0 or 1).
-
 - `POST /micro/customer`
   - Create a customer. - Return customer by username.  The caller of this API must pass a valid OAuth token with the scope `admin`.  The Customer object must be passed as JSON object in the request body with the following format:
     ```
@@ -46,307 +61,308 @@ The Customer Microservice REST API is OAuth protected.
 - `PUT /micro/customer/{id}`
   - Update a customer record.  The caller of this API must pass a valid OAuth token with the scope `blue`.  The full Customer object must be passed in the request body.  If the `id` matches the customer ID passed in the `user_name` claim in the JWT, the customer object is updated; otherwise `HTTP 401` is returned.  This API is currently not called as it is not a function of the BlueCompute application.
 
+- `GET /micro/customer`
+  - Returns all customers.  The caller of this API must pass a valid OAuth token with the scope `blue`.  The OAuth token is a JWT signed and is verified using a HS256 shared key.  A JSON object array is returned consisting of only users that match the customer ID embedded in the JWT claim `user_name`, either length 0 or 1.
 
-- `DELETE /micro/customer/{id}` (private)
+- `GET /micro/customer/{id}`
+  - Return customer by ID.  The caller of this API must pass a valid OAuth token with the scope `blue`.  The OAuth token is a JWT signed and is verified using a HS256 shared key.  If the `id` matches the customer ID passed in the `user_name` claim in the JWT, it is returned as a JSON object in the response; otherwise `HTTP 401` is returned.
+
+- `GET /micro/customer/search`
+  - Return customer by username.  The caller of this API must pass a valid OAuth token with the scope `admin`.  This API is called by the [Auth Microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) when authenticating a user.  A JSON object array is returned consisting of only users that match the customer username (either length 0 or 1).
+
+- `DELETE /micro/customer/{id}`
   - Delete a customer record.  The caller of this API must pass a valid OAuth token with the scope `blue`.  If the `id` matches the customer ID passed in the `user_name` claim in the JWT, the customer object is deleted; otherwise `HTTP 401` is returned.  This API is currently not called as it is not a function of the BlueCompute application.
 
-
-## Pre-requisites
-
-### Install Docker
-
-Install [Docker](https://www.docker.com)
-
-### Install Bluemix CLI and IBM Container Service plugins
-
-Install the [bx CLI](https://clis.ng.bluemix.net/ui/home.html), the Bluemix container-registry Plugin and the Bluemix container-service plugin.  The plugins can be installed directly [here](http://plugins.ng.bluemix.net/ui/repository.html), or using the following commands:
-
-```
-# bx plugin install container-service -r Bluemix
-# bx plugin install conatiner-registry -r Bluemix
+## Pre-requisites:
+* Create a Kubernetes Cluster by following the steps [here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes#create-a-kubernetes-cluster).
+* Install the following CLI's on your laptop/workstation:
+    + [`docker`](https://docs.docker.com/install/)
+    + [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+    + [`helm`](https://docs.helm.sh/using_helm/#installing-helm)
+* Clone customer repository:
+```bash
+$ git clone http://github.com/refarch-cloudnative-micro-customer.git
+$ cd refarch-cloudnative-micro-customer
 ```
 
-### Install kubectl
+## Deploy Customer Application to Kubernetes Cluster
+In this section, we are going to deploy the Customer Application, along with a CouchDB service, to a Kubernetes cluster using Helm. To do so, follow the instructions below:
+```bash
+# Go to Chart Directory
+$ cd chart/customer
 
-Install the [kubectl CLI](https://kubernetes.io/docs/tasks/kubectl/install/) to manage the Kubernetes cluster.
+# Download CouchDB Dependency Chart
+$ helm dependency update
 
-### Install helm
-
-The customer microservice is packaged as a [Helm Chart](https://github.com/kubernetes/helm/blob/master/docs/charts.md).  Install the [helm CLI](https://github.com/kubernetes/helm/blob/master/docs/install.md).
-
-### Provision Cloudant Database in Bluemix
-
-*Note that two components use Cloudant in BlueCompute, the Customer microservice and the [Social Review microservice](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-socialreview).  If deploying both components to the same space, they can share the Cloudant database instance, as the Customer microservice saves documents to the `customers` database, and the Social Review microservice saves documents to the `socialreviewdb` and `socialreviewdb-staging` databases.*
-
-1. Login to your Bluemix console  
-2. Open browser to create Cloudant Service using this link [https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db](https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db)  
-3. Name your Cloudant service name like `refarch-cloudantdb`  
-4. For testing, you can select the "Lite" plan, then click "Create"  
-5. Once the service has been created, note the service credentials under `Service Credentials`.  In particular, the Customer microservice requires the `url` property.
-
-
-
-## Build the code
-
-Build the application:
-
-```
-# ./gradlew build
+# Deploy Customer and CouchDB to Kubernetes cluster
+$ helm upgrade --install customer --set service.type=NodePort .
 ```
 
-## Validate the Customer microservice
+The last command will give you instructions on how to access/test the Customer application. Please note that before the Customer application starts, the CouchDB deployment must be fully up and running, which normally takes a couple of minutes. With Kubernetes [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/), the Customer Deployment polls for CouchDB readiness status so that Customer can start once CouchDB is ready, or error out if CouchDB fails to start.
 
-### Create a temporary HS256 shared secret
+Also, once CouchDB is fully up and running, a [`Kubernetes Job`](https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/) will run to populate the CouchDB database with a new customer record so that it can be served by the application. This is done for convenience to be used by the Bluecompute Web Application.
 
+To check and wait for the deployment status, you can run the following command:
+```bash
+$ kubectl get deployments -w
+NAME                  DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+customer-customer     1         1         1            1           10h
+```
+
+The `-w` flag is so that the command above not only retrieves the deployment but also listens for changes. If you a 1 under the `CURRENT` column, that means that the customer app deployment is ready.
+
+## Validate the Customer Microservice API
+Now that we have the customer service up and running, let's go ahead and test that the API works properly.
+
+### Setup
+#### a. Setup Customer Service Hostname and Port
+To make going through this document easier, we recommend you create environment variables for the customer service hostname/IP and port. To do so, run the following commands:
+```bash
+$ export CUSTOMER_HOST=localhost
+$ export CUSTOMER_PORT=8080
+```
+
+Where:
+* `CUSTOMER_HOST` is the hostname or IP address for the customer service.
+  + If using `IBM Cloud Private`, use the IP address of one of the proxy nodes.
+  + If using `IBM Cloud Kubernetes Service`, use the IP address of one of the worker nodes.
+* `CUSTOMER_PORT` is the port for the customer service.
+  + If using `IBM Cloud Private` or `IBM Cloud Kubernetes Service`, enter the value of the NodePort.
+
+#### b. Create a temporary HS256 shared secret
 As the APIs in this microservice as OAuth protected, the HS256 shared secret used to sign the JWT generated by the [Authorization Server](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) is needed to validate the access token provided by the caller.
 
-A 2048-bit secret can be generated using the following command:
-
+To make things easier for you, we pasted below the 2048-bit secret that's included in the customer chart [here](chart/customer/values.yaml#L28), which you can export to your environment as follows:
+```bash
+$ export HS256_KEY="E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a"
 ```
-# cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 256 | head -n 1 | xargs echo -n
+
+However, if you must create your own 2048-bit secret, one can be generated using the following command:
+```bash
+$ cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 256 | head -n 1 | xargs echo -n
 ```
 
 Note that if the [Authorization Server](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) is also deployed, it must use the *same* HS256 shared secret.
 
-### Run the microservice
-
-Start the service using the following, make sure that the parameters are replaced correctly:
-
-```
-# java \
-    -Deureka.client.fetchRegistry=false \
-    -Deureka.client.registerWithEureka=false \
-    -Dspring.application.cloudant.username=<Cloudant username> \
-    -Dspring.application.cloudant.password=<Cloudant password> \
-    -Dspring.application.cloudant.host=<Cloudant host> \
-    -Dspring.application.cloudant.port=<Cloudant port> \
-    -Dspring.application.cloudant.database=customers \
-    -Djwt.sharedSecret=<HS256 key> \
-    -jar build/libs/micro-customer-0.0.1.jar
-```
-    
-This starts the application in the current console.
-
-### Generate a temporary access token for `admin`
-
-Use the shared secret to generate a valid JWT signed with the shared secret generated above.  You can do this at [jwt.io](https://jwt.io) using the Debugger.  Paste the HS256 shared secret in the bottom in the box (and leave base64 encoded unchecked).  You can use the following payload initially:
-
-```
-{
-  "scope": [ "admin" ],
-  "user_name": "admin"
-}
+#### c. Generate a JWT Token with `admin` Scope
+To generate a JWT Token with an `admin` scope, which will let you create/get/delete users, run the commands below:
+```bash
+# JWT Header
+jwt1=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64);
+# JWT Payload
+jwt2=$(echo -n "{\"scope\":[\"admin\"],\"user_name\":\"${TEST_USER}\"}" | openssl enc -base64);
+# JWT Signature: Header and Payload
+jwt3=$(echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
+# JWT Signature: Create signed hash with secret key
+jwt4=$(echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${HS256_KEY}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
+# Complete JWT
+jwt=$(echo -n "${jwt3}.${jwt4}");
 ```
 
-Copy the text that appears in "Encoded"; this is the signed JWT that will be used for the "Create a Customer" call.
+Where:
+* `admin` is the scope needed to create the user.
+* `${TEST_USER}` is the user to create, i.e. `foo`.
+* `${HS256_KEY}` is the 2048-bit secret from the previous step.
 
-### Create a Customer
+### 1. Create a Customer
+Let's create a new customer with username `foo` and password `bar` and its respective profile with the following command:
+```bash
+$ curl -X POST -i "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer" -H "Content-Type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${TEST_USER}\", \"password\": \"bar\", \"firstName\": \"foo\", \"lastName\": \"bar\", \"email\": \"foo@bar.com\"}"
 
-Create a customer profile for the user `foo` with the password `bar`.  Make sure that you replace `<JWT>` with your generated JWT from the previous step.
-
-```
-# curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <JWT>" -d '{"username": "foo", "password": "bar", "firstName": "foo", "lastName": "bar", "email": "foo@bar.com"}' -i http://localhost:8080/micro/customer
 HTTP/1.1 201 Created
-X-Backside-Transport: OK OK
-Connection: Keep-Alive
-Transfer-Encoding: chunked
-Date: Wed, 08 Feb 2017 21:41:31 GMT
-Location: http://localhost:8080/micro/customer/bff5631f24c849e8897645be8b66af16
-X-Application-Context: zuul-proxy:8080
-X-Global-Transaction-ID: 1311769839
+Date: Mon, 20 Aug 2018 21:43:51 GMT
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+X-Application-Context: customer-microservice:8080
+Location: http://localhost:8080/micro/customer/41757d0170344f9ea47a2d9634bc9ba7
+Content-Length: 0
+Server: Jetty(9.2.13.v20150730)
 ```
 
-Note the `Location` header returned, which contains the ID of the created customer.  For the GET calls below, copy the ID in the `Location` header (e.g. in the above, `bff5631f24c849e8897645be8b66af16`).
+Where:
+* `${CUSTOMER_HOST}` is the hostname/ip address for the customer microservice.
+* `${CUSTOMER_PORT}` is the port for the customer microservice.
+* `${jwt}` is the JWT token created in the previous step.
+* `${TEST_USER}` is the user to create, i.e. `foo`.
 
-### Get Customer
-
-#### Generate temporary JWT for customer
-
-Use the id returned in the location above as the `user_name` field, and change the `scope` list to contain `blue`.  For example,
-
-```
-{
-  "scope": [ "blue" ],
-  "user_name": "bff5631f24c849e8897645be8b66af16"
-}
+Note the `Location` header returned, which contains the `CUSTOMER_ID` of the created customer.  For the GET calls below, copy the ID in the `Location` header (e.g. in the above, `41757d0170344f9ea47a2d9634bc9ba7`). This id will be used later when deleting the user. To save it in your environment, run the following command using the the id returned above:
+```bash
+# In this case, we are using the id that was returned in our sample command above, which will differ for you
+$ CUSTOMER_ID=41757d0170344f9ea47a2d9634bc9ba7
 ```
 
-Paste this to the `payload` using the [jwt.io](https://jwt.io) debugger, add the HS256 secret generated above, and copy the resulting encoded JWT for the next test.
+### 2. Search the Customer
+To search users with a particular username, i.e. `foo`, run the command below:
+```bash
+$ curl -s -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/search?username=${TEST_USER}" -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}"
 
-#### Call the GET REST API
-
-Verify the customer.  The caller identifies itself using the encoded `user_name` in the JWT passed in the Authorization header as Bearer token.
-
+[{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","email":"foo@bar.com","imageUrl":null,"customerId":"7145e43859764b3e8abc76784f1eb36a"}]
 ```
-# curl -H "Authorization: Bearer <JWT>"  http://localhost:8080/micro/customer
-{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16","email":"foo@bar.com"}
+
+Where:
+* `${CUSTOMER_HOST}` is the hostname/ip address for the customer microservice.
+* `${CUSTOMER_PORT}` is the port for the customer microservice.
+* `${jwt}` is the JWT token created in the previous step.
+* `${TEST_USER}` is the user to create, i.e. `foo`.
+
+### 3. Get the Customer
+To use the customer service as a non-admin user and still be able to retrieve a user's own record, you must create a JWT token with the `blue` scope and pass the customer id as the value for the `user_name` payload. By doing this, we guarantee that only the identied user can retrieve/update/delete it's own record.
+
+#### Generate a JWT Token with `blue` Scope for New Customer
+In order for the newly created user to retrieve its own record, and only its own record, you will need to create a new JWT token with the scope `blue` and a payload that has the `CUSTOMER_ID` as the value for `user_name`. To generate the new JWT token, run the following commands:
+```bash
+# JWT Header
+jwt1=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64);
+# JWT Payload
+jwt2=$(echo -n "{\"scope\":[\"blue\"],\"user_name\":\"${CUSTOMER_ID}\"}" | openssl enc -base64);
+# JWT Signature: Header and Payload
+jwt3=$(echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
+# JWT Signature: Create signed hash with secret key
+jwt4=$(echo -n "${jwt3}" | openssl dgst -binary -sha256 -hmac "${HS256_KEY}" | openssl enc -base64 | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
+# Complete JWT
+jwt_blue=$(echo -n "${jwt3}.${jwt4}");
+```
+
+Where:
+* `blue` is the scope needed to create the user.
+* `${CUSTOMER_ID}` is the id of the customer user crated earlier, i.e. `41757d0170344f9ea47a2d9634bc9ba7`.
+* `${HS256_KEY}` is the 2048-bit secret from the previous step.
+
+#### Use `blue` Scoped JWT Token to Retrieve the Customer Record
+To retrieve the customer record using the `blue` scoped JWT token, run the command below:
+```bash
+$ curl -s -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer" -H "Authorization: Bearer ${jwt_blue}"
+
+[{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","email":"foo@bar.com","imageUrl":null,"customerId":"7145e43859764b3e8abc76784f1eb36a"}]
 ```
 
 Note that *only* the customer object identified by the encoded `user_name` is returned to the caller.
 
-## Deploy to Bluemix
+### 4. Delete the Customer
+Using either the `admin` or the `blue` scoped JWT token, you can delete the customer record. If using the `blue` scoped JWT token, *only* the customer object identified by the encoded `user_name` can be deleted. To run with the `blue` scoped JWT token to delete the user, run the command below:
+```bash
+$ curl -X DELETE -i "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/${CUSTOMER_ID}" -H "Content-type: application/json" -H "Authorization: Bearer ${jwt_blue}"
 
-The service can be packaged as a Docker container and deployed to a Kubernetes cluster running on Bluemix.
+HTTP/1.1 200 OK
+Date: Mon, 20 Aug 2018 22:20:00 GMT
+X-Application-Context: customer-microservice:8080
+Content-Length: 0
+Server: Jetty(9.2.13.v20150730)
+```
 
-### Build Docker Container
+Where:
+* `${CUSTOMER_HOST}` is the hostname/ip address for the customer microservice.
+* `${CUSTOMER_PORT}` is the port for the customer microservice.
+* `${CUSTOMER_ID}` is the id of the customer user crated earlier, i.e. `41757d0170344f9ea47a2d9634bc9ba7`.
+* `${jwt_blue}` is the JWT token created in the previous step.
 
-1. Copy the binaries to the `docker` directory and build the image:
-   
-   ```
-   # ./gradlew docker
-   # cd docker
-   # docker build -t customer-microservice .
-   ```
+If successful, you should get a `200 OK` status code as shown in the command above.
 
-### Push the Docker image to the Bluemix private container registry
+## Deploy Customer Application on Docker
+You can also run the Customer Application locally on Docker. Before we show you how to do so, you will need to have a running CouchDB deployment running somewhere. 
 
-1. Log into the Bluemix CLI
+### Deploy the CouchDB Docker Container
+The easiest way to get CouchDB running is via a Docker container. To do so, run the following commands:
+```bash
+# Start a CouchDB Container with a database user, a password, and create a new database
+$ docker run --name customercouchdb -p 5984:5984 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb
 
-   ```
-   # bx login
-   ```
-   
-   Be sure to set the correct target space where Cloudant instance was provisioned.
-   
-2. Initialize the Bluemix Container Service plugin
-   
-   ```
-   # bx cs init
-   ```
-   
-   Initialize the Bluemix Container Registry plugin:
-   
-   ```
-   # bx cr login
-   ```
-   
-   Get the registry namespace:
-   
-   ```
-   # bx cr namespaces
-   ```
-   
-   If there are no namespaces available, use the following command to create one:
-   
-   ```
-   # bx cr namespace-add <namespace>
-   ```
-   
-3. Tag and push the docker image to the Bluemix private registry:
+# Get the CouchDB Container's IP Address
+$ docker inspect customercouchdb | grep "IPAddress"
+            "SecondaryIPAddresses": null,
+            "IPAddress": "172.17.0.2",
+                    "IPAddress": "172.17.0.2",
+```
+Make sure to select the IP Address in the `IPAddress` field. You will use this IP address when deploying the Customer container.
 
-   ```
-   # docker tag customer-microservice registry.ng.bluemix.net/<namespace>/customer-microservice:latest
-   # docker push registry.ng.bluemix.net/<namespace>/customer-microservice:latest
-   ```
+### Deploy the Customer Docker Container
+To deploy the Customer container, run the following commands:
+```bash
+# Build the Docker Image
+$ docker build -t customer .
 
-4. Create a Kubernetes Cluster (if applicable)
-   
-   If a Kubernetes cluster has not previously been created, create a free Kubernetes cluster using the following:
-   
-   ```
-   # bx cs cluster-create --name <cluster_name>
-   ```
-   
-   You can monitor the cluster creation using `bx cs clusters` and `bx cs workers <cluster_name>`. 
-   
-5. Set up kubectl
+# Start the Customer Container
+$ docker run --name customer \
+    -e COUCHDB_PROTOCOL=http \
+    -e COUCHDB_USER=admin \
+    -e COUCHDB_PASSWORD=password \
+    -e COUCHDB_HOST=${COUCHDB_IP_ADDRESS} \
+    -e COUCHDB_PORT=5984 \
+    -e HS256_KEY=${HS256_KEY} \
+    -p 8080:8080 \
+    -d customer
+```
 
-   Once the cluster has been created, download the configuration:
-   
-   ```
-   # bx cs cluster-config <cluster_name>
-   ```
-   
-   Cut and paste the `export KUBECONFIG` command to set up the kubectl CLI to talk to the Kubernetes instance.
-   
-6. Install Helm in the Kubernetes Cluster
+Where `${COUCHDB_IP_ADDRESS}` is the IP address of the CouchDB container, which is only accessible from the Docker container network.
 
-   Install helm in the Kubernetes cluster.  This is installes the server-side Tiller component in Kubernetes that manages packages.
-   
-   ```
-   # helm init
-   ```
+If everything works successfully, you should be able to get some data when you run the following command:
+```bash
+$ curl http://localhost:8080/micro/customer
+```
 
-7. Update the Chart `values.yaml`
-   
-   Update the `values.yaml` in the `charts/bluecompute-customer` directory to use the docker image you built earlier.  Here is an example excerpt from `values.yaml`:
-   
-   ```
-   image:
-     repository: registry.ng.bluemix.net/<namespace>/customer-microservice
-     tag: latest
-   ```
-   
-   Additionally, if the Cloudant database service created earlier is not named `refarch-cloudantdb`, change the `cloudant.serviceName` value in the yaml.  Otherwise, the chart will attempt to create a new Cloudant instance in your Bluemix space called `refarch-cloudantdb`.
-   
-8. Create the configmap and secrets
+## Run Customer Service application on localhost
+In this section you will run the Spring Boot application to run on your local workstation. Before we show you how to do so, you will need to deploy a CouchDB Docker container as shown in the [Deploy a CouchDB Docker Container](#deploy-a-couchdb-docker-container).
 
-   The chart depends on a Kubernetes [configmap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/) containing the Bluemix target.
-   
-   Update the config-map in `kubernetes/bluemix-target-configmap.yaml` to include your Bluemix account information.
-   
-   Additionally, the chart uses a Kubernetes [secret](https://kubernetes.io/docs/concepts/configuration/secret/) containing the Bluemix API key.  Use the following commands to generate one:
-   
-   ```
-   # bx iam api-key-create my-kube-api-key
-   ```
-   
-   Copy the output and create the Kubernetes secret:
-   
-   ```
-   # kubectl create secret bluemix-api-key --from-literal=api-key=<API KEY>
-   ```
-  
-9. Install the helm chart
+Once CouchDB is ready, we can run the Spring Boot Customer application locally as follows:
 
-   Execute the following commands to install the chart:
-   
-   ```
-   # cd chart
-   # helm install bluecompute-customer
-   ```
-   
-   The deployment attempts to create a Cloudant instance in your target space , bind it to your Kubernetes cluster, creates a new HS256 shared secret, deploys the customer microservice pods and services, then creates a user with username `user` and password `passw0rd`.
-   
-   To view the package once it's installed, use the following command:
-   
-   ```
-   # helm list
-   ```
-   
-   To view the pods used to create the deployment:
-   
-   ```
-   # kubectl get pods -l app=bluecompute -l micro=customer
-   ```
-   
-10. Verify the deployment
+1. Open [`src/main/resources/application.yml`](src/main/resources/application.yml) file, enter the following values for the fields under `spring.application.cloudant`, and save the file:
+    * **protocol:** http
+    * **username:** admin
+    * **password:** passw0rd
+    * **host:** 127.0.0.1
+    * **port:** 5984
+    * **database:** customers
 
-    The customer service can be reached by forwarding a local port to the customer service.  Select a pod used in the deployment above and execute the following command to forward local port 8080:
-    
-    ```
-    # kubectl port-forward <pod-name> 8080
-    ```
-    
-    Retrieve the HS256 shared secret from Kubernetes:
-    
-    ```
-    # kubectl get secrets hs256-key -o go-template --template '{{ .data.key }}'
-    ```
-    
-    Paste this into the `secret` section at [jwt.io](https://jwt.io), and check `base 64 encoded`, then create the JWT with the following payload:
-    
-    ```
-    {
-      "scope": [ "admin" ],
-      "user_name": "admin"
-    }
-    ```
-    
-    Copy the text in `Encoded` as the JWT.  Run the following curl command to call the API from another console:
-    
-    ```
-    curl -H "Authorization: Bearer <JWT>" http://localhost:8080/micro/customer/search?username=user
-    ```
-    
-    This should return a user with the name `user` that was created during the deployment.
+2. Build the application:
+```bash
+$ ./gradlew build -x test
+```
+
+3. Run the application on localhost:
+```bash
+$ java -jar build/libs/micro-customer-0.0.1.jar
+```
+
+4. Validate. You should get a list of all customer items:
+```bash
+$ curl http://localhost:8080/micro/customer
+```
+
+That's it, you have successfully deployed and tested the Customer microservice.
+
+## Optional: Setup CI/CD Pipeline
+If you would like to setup an automated Jenkins CI/CD Pipeline for this repository, we provided a sample [Jenkinsfile](Jenkinsfile), which uses the [Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/) syntax of the [Jenkins Kubernetes Plugin](https://github.com/jenkinsci/kubernetes-plugin) to automatically create and run Jenkis Pipelines from your Kubernetes environment. 
+
+To learn how to use this sample pipeline, follow the guide below and enter the corresponding values for your environment and for this repository:
+* https://github.com/ibm-cloud-architecture/refarch-cloudnative-devops-kubernetes
+
+## Conclusion
+You have successfully deployed and tested the Customer Microservice and a CouchDB database both on a Kubernetes Cluster and in local Docker Containers.
+
+To see the Customer app working in a more complex microservices use case, checkout our Microservice Reference Architecture Application [here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes).
+
+## Contributing
+If you would like to contribute to this repository, please fork it, submit a PR, and assign as reviewers any of the GitHub users listed here:
+* https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/graphs/contributors
+
+### GOTCHAs
+1. We use [Travis CI](https://travis-ci.org/) for our CI/CD needs, so when you open a Pull Request you will trigger a build in Travis CI, which needs to pass before we consider merging the PR. We use Travis CI to test the following:
+    * Create and load a CouchDB database with the customer static data.
+    * Building and running the Customer app against the CouchDB database and run API tests.
+    * Build and Deploy a Docker Container, using the same CouchDB database.
+    * Run API tests against the Docker Container.
+    * Deploy a minikube cluster to test Helm charts.
+    * Download Helm Chart dependencies and package the Helm chart.
+    * Deploy the Helm Chart into Minikube.
+    * Run API tests against the Helm Chart.
+
+2. We use the Community Chart for CouchDB as the dependency chart for the Customer Chart. If you would like to learn more about that chart and submit issues/PRs, please check out its repo here:
+    * https://github.com/helm/charts/tree/master/stable/couchdb
+
+### Contributing a New Chart Package to Microservices Reference Architecture Helm Repository
+To contribute a new chart version to the [Microservices Reference Architecture](https://github.com/ibm-cloud-architecture/refarch-cloudnative-devops-kubernetes) helm repository, follow its guide here:
+* COMING SOON
