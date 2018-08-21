@@ -35,26 +35,26 @@ function parse_arguments() {
 		HS256_KEY=E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a;
 	fi
 
-	# COUCHDB_USER
-	if [ -z "${COUCHDB_USER}" ]; then
-		echo "COUCHDB_USER not set. Using parameter \"$4\"";
-		COUCHDB_USER=$4;
+	# TEST_USER
+	if [ -z "${TEST_USER}" ]; then
+		echo "TEST_USER not set. Using parameter \"$4\"";
+		TEST_USER=$4;
 	fi
 
-	if [ -z "${COUCHDB_USER}" ]; then
-		echo "COUCHDB_USER not set. Using default key";
-		COUCHDB_USER=user;
+	if [ -z "${TEST_USER}" ]; then
+		echo "TEST_USER not set. Using default key";
+		TEST_USER=user;
 	fi
 
-	# COUCHDB_PASSWORD
-	if [ -z "${COUCHDB_PASSWORD}" ]; then
-		echo "COUCHDB_PASSWORD not set. Using parameter \"$5\"";
-		COUCHDB_PASSWORD=$5;
+	# TEST_PASSWORD
+	if [ -z "${TEST_PASSWORD}" ]; then
+		echo "TEST_PASSWORD not set. Using parameter \"$5\"";
+		TEST_PASSWORD=$5;
 	fi
 
-	if [ -z "${COUCHDB_PASSWORD}" ]; then
-		echo "COUCHDB_PASSWORD not set. Using default key";
-		COUCHDB_PASSWORD=passw0rd;
+	if [ -z "${TEST_PASSWORD}" ]; then
+		echo "TEST_PASSWORD not set. Using default key";
+		TEST_PASSWORD=passw0rd;
 	fi
 
 	#set +x;
@@ -66,7 +66,7 @@ function create_jwt_admin() {
 	# JWT Header
 	jwt1=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64);
 	# JWT Payload
-	jwt2=$(echo -n "{\"scope\":[\"admin\"],\"user_name\":\"${COUCHDB_USER}\"}" | openssl enc -base64);
+	jwt2=$(echo -n "{\"scope\":[\"admin\"],\"user_name\":\"${TEST_USER}\"}" | openssl enc -base64);
 	# JWT Signature: Header and Payload
 	jwt3=$(echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
 	# JWT Signature: Create signed hash with secret key
@@ -83,7 +83,7 @@ function create_jwt_blue() {
 	# JWT Header
 	jwt1=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64);
 	# JWT Payload
-	jwt2=$(echo -n "{\"scope\":[\"blue\"],\"user_name\":\"${COUCHDB_USER}\"}" | openssl enc -base64);
+	jwt2=$(echo -n "{\"scope\":[\"blue\"],\"user_name\":\"${TEST_USER}\"}" | openssl enc -base64);
 	# JWT Signature: Header and Payload
 	jwt3=$(echo -n "${jwt1}.${jwt2}" | tr '+\/' '-_' | tr -d '=' | tr -d '\r\n');
 	# JWT Signature: Create signed hash with secret key
@@ -95,7 +95,7 @@ function create_jwt_blue() {
 }
 
 function create_user() {
-	CURL=$(curl --write-out %{http_code} --silent --output /dev/null --max-time 5 -X POST "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer" -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${COUCHDB_USER}\", \"password\": \"${COUCHDB_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}");
+	CURL=$(curl --write-out %{http_code} --silent --output /dev/null --max-time 5 -X POST "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer" -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${TEST_USER}\", \"password\": \"${TEST_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}");
 
 	# Check for 201 Status Code
 	if [ "$CURL" != "201" ]; then
@@ -107,9 +107,10 @@ function create_user() {
 }
 
 function search_user() {
-	CURL=$(curl -s --max-time 5 -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/search?username=${COUCHDB_USER}" -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}" | jq -r '.[0].username' | grep ${COUCHDB_USER});
+	CURL=$(curl -s --max-time 5 -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/search?username=${TEST_USER}" -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}" | jq -r '.[0].username' | grep ${TEST_USER});
+	#echo "Found user with name: \"${CURL}\""
 
-	if [ "$CURL" != "$COUCHDB_USER" ]; then
+	if [ "$CURL" != "$TEST_USER" ]; then
 		echo "search_user: ❌ could not find user";
         exit 1;
     else 
@@ -118,9 +119,9 @@ function search_user() {
 }
 
 function delete_user() {
-	CUSTOMER_ID=$(curl -s --max-time 5 -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/search?username=${COUCHDB_USER}" -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}" | jq -r '.[0].customerId');
+	CUSTOMER_ID=$(curl -s --max-time 5 -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/search?username=${TEST_USER}" -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}" | jq -r '.[0].customerId');
 	
-	#echo "Deleting customer with name: ${COUCHDB_USER} and id: ${CUSTOMER_ID}"
+	#echo "Deleting customer with name: ${TEST_USER} and id: ${CUSTOMER_ID}"
 	CURL=$(curl --write-out %{http_code} --silent --output /dev/null --max-time 5 -X DELETE "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/${CUSTOMER_ID}" -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}");
 
 	# Check for 201 Status Code
