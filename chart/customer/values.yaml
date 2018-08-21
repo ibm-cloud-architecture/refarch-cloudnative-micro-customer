@@ -1,12 +1,9 @@
-# Default values for micro-customer.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 replicaCount: 1
 
 image:
   repository: ibmcase/bluecompute-customer
-  tag: latest
   pullPolicy: Always
+  tag: 0.5.0
 
 service:
   name: customer
@@ -25,46 +22,49 @@ tls:
   crt: ENTER_BASE64_ENCODED_CERTIFICATE
   key: ENTER_BASE64_ENCODED_KEY
 
-global:
-  hs256key:
-    secret:
-    secretName:
-
-  bluemix:
-    apiKey:
-
-    target:
-      endpoint: api.ng.bluemix.net
-      org:
-      space:
-
-    clusterName:
-
-tags:
-  bluemix: false
-  localdb: false
-
 hs256key:
-  skipDelete: true
-  secretName: hs256-key
+  # If there is an existing secret with the key, provide it here
+  secretName:
   secret: E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a
-
-resources:
-  limits:
-    memory: 128Mi
-  requests:
-    memory: 64Mi
-
-dataloader:
-  image:
-    repository: ibmcase/bluecompute-dataloader
-    tag: latest
 
 bash:
   image:
     repository: ibmcase/bluecompute-bash-curl-ssl
     tag: latest
+    pullPolicy: IfNotPresent
 
+testUser:
+  createUser: true
+  username: user
+  passw0rd: passw0rd
+
+# Included Community Couchdb Chart.
+# - Even if disabled, these fields are used to provide information
+#   for external CouchDB deployments.
 customercouchdb:
-  binding:
-    name: binding-customer-couchdb
+  enabled: true
+  image: 
+    repository: "couchdb"
+    tag: "2.1.1"
+    pullPolicy: IfNotPresent
+  # If chart is not enabled, this field can be used as external mysql host
+  fullnameOverride: bluecompute-customer
+  protocol: http
+  createAdminSecret: true
+  adminUsername: user
+  adminPassword: passw0rd
+  service:
+    externalPort: 5984
+  clusterSize: 1
+  persistentVolume:
+    enabled: false
+  helperImage:
+    repository: kocolosk/couchdb-statefulset-assembler
+    tag: 1.1.0
+    pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    memory: 384Mi
+  requests:
+    memory: 64Mi

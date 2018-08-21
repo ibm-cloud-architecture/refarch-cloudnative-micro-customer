@@ -1,5 +1,0 @@
-apiVersion: v1
-description: CouchDB
-name: customercouchdb
-version: 0.3.0
-icon: http://couchdb.apache.org/image/couch@2x.png

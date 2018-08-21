@@ -16,9 +16,9 @@ spring:
      name: customer-microservice
      
      cloudant:
-        protocol: https
-        username: 
-        password: 
-        host: 
-        port: 443
+        protocol: http
+        username: admin
+        password: passw0rd
+        host: 127.0.0.1
+        port: 5984
         database: customers

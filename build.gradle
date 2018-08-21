@@ -63,17 +63,6 @@ test {
     }
 }
 
-task docker {
-    doLast {
-        copy {
-            from 'build/libs/micro-customer-0.0.1.jar'
-            into 'docker'
-        }
-        file("docker/micro-customer-0.0.1.jar").renameTo(file("docker/app.jar"))
-
-    }
-}
-
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
 }
