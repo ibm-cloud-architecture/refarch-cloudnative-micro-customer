@@ -33,7 +33,10 @@ bash:
     tag: latest
     pullPolicy: IfNotPresent
 
-createUser: true
+testUser:
+  createUser: true
+  username: user
+  passw0rd: passw0rd
 
 # Included Community Couchdb Chart.
 # - Even if disabled, these fields are used to provide information

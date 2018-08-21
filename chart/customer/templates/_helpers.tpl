@@ -80,3 +80,11 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     {{- .Release.Name }}-{{ .Chart.Name }}-hs256key
   {{- end }}
 {{- end -}}
+
+{{/* Customer Test User Environment Variables */}}
+{{- define "customer.testuser.environmentvariables" }}
+- name: TEST_USER
+  value: {{ .Values.testUser.username | quote }}
+- name: TEST_PASSWORD
+  value: {{ .Values.testUser.password | quote }}
+{{- end }}
