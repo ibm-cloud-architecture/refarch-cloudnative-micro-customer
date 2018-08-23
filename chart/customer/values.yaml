@@ -34,7 +34,7 @@ global:
 testUser:
   createUser: true
   username: user
-  passw0rd: passw0rd
+  password: passw0rd
 
 bash:
   image:
