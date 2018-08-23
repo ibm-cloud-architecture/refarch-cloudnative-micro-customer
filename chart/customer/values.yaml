@@ -27,16 +27,20 @@ hs256key:
   secretName:
   secret: E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a
 
-bash:
-  image:
-    repository: ibmcase/bluecompute-bash-curl-ssl
-    tag: latest
-    pullPolicy: IfNotPresent
+global:
+  hs256key:
+    secretName:
 
 testUser:
   createUser: true
   username: user
   passw0rd: passw0rd
+
+bash:
+  image:
+    repository: ibmcase/bluecompute-bash-curl-ssl
+    tag: latest
+    pullPolicy: IfNotPresent
 
 # Included Community Couchdb Chart.
 # - Even if disabled, these fields are used to provide information

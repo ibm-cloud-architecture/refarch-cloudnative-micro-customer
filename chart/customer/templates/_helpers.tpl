@@ -68,13 +68,15 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 - name: HS256_KEY
   valueFrom:
     secretKeyRef:
-        name: {{ template "customer.hs256SecretName" . }}
+        name: {{ template "customer.hs256key.secretName" . }}
         key:  key
 {{- end }}
 
 {{/* Customer HS256KEY Secret Name */}}
-{{- define "customer.hs256SecretName" -}}
-  {{- if .Values.hs256key.secretName -}}
+{{- define "customer.hs256key.secretName" -}}
+  {{- if .Values.global.hs256key.secretName -}}
+    {{ .Values.global.hs256key.secretName -}}
+  {{- else if .Values.hs256key.secretName -}}
     {{ .Values.hs256key.secretName -}}
   {{- else -}}
     {{- .Release.Name }}-{{ .Chart.Name }}-hs256key
