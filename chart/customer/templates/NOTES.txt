@@ -22,7 +22,7 @@ To access the Customer Microservice API, please follow the steps below:
 
 3. Generate an "admin" scoped JWT token to use the API
   # Get the HS256 Key
-  HS256_KEY=$(kubectl get secrets {{ template "customer.hs256SecretName" . }} -o jsonpath='{.data.key}' | base64 --decode)
+  HS256_KEY=$(kubectl get secrets {{ template "customer.hs256key.secretName" . }} -o jsonpath='{.data.key}' | base64 --decode)
 
   # JWT Header
   jwt1=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl enc -base64);
