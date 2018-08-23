@@ -3,7 +3,7 @@
 ## Introduction
 This chart will deploy a Spring Boot Application with a CouchDB database onto a Kubernetes Cluster.
 
-![Application Architecture](https://raw.githubusercontent.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/master/static/customer.png?raw=true)
+![Application Architecture](https://raw.githubusercontent.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/spring/static/customer.png?raw=true)
 
 Here is an overview of the chart's features:
 - Leverage [`Spring Boot`](https://projects.spring.io/spring-boot/) framework to build a Microservices application.
@@ -14,7 +14,7 @@ Here is an overview of the chart's features:
 
 ## Chart Source
 The source for the `Customer` chart can be found at:
-* https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/tree/master/chart/customer
+* https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/tree/spring/chart/customer
 
 The source for the `CouchDB` chart can be found at:
 * https://github.com/helm/charts/tree/master/incubator/couchdb
@@ -55,7 +55,7 @@ The Customer Microservice REST API is OAuth protected.
 To deploy the Customer Chart and its CouchDB dependency Chart to a Kubernetes cluster using Helm CLI, follow the instructions below:
 ```bash
 # Clone customer repository:
-$ git clone http://github.com/refarch-cloudnative-micro-customer.git
+$ git clone -b spring --single-branch https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git
 
 # Go to Chart Directory
 $ cd refarch-cloudnative-micro-customer/chart/customer
