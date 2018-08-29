@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/ibm-cloud-architecture/refarch-cloudnative-micro-customer.svg?branch=master)](https://travis-ci.org/ibm-cloud-architecture/refarch-cloudnative-micro-customer)
 
 *This project is part of the 'IBM Cloud Native Reference Architecture' suite, available at
-https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes*
+https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/spring*
 
 ## Table of Contents
   * [Introduction](#introduction)
@@ -305,7 +305,7 @@ $ curl http://localhost:8080/micro/customer
 ```
 
 ## Run Customer Service application on localhost
-In this section you will run the Spring Boot application to run on your local workstation. Before we show you how to do so, you will need to deploy a CouchDB Docker container as shown in the [Deploy a CouchDB Docker Container](#deploy-a-couchdb-docker-container).
+In this section you will run the Spring Boot application on your local workstation. Before we show you how to do so, you will need to deploy a CouchDB Docker container as shown in the [Deploy a CouchDB Docker Container](#deploy-a-couchdb-docker-container).
 
 Once CouchDB is ready, we can run the Spring Boot Customer application locally as follows:
 
