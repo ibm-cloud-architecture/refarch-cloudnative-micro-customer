@@ -15,6 +15,8 @@ ingress:
   enabled: false
   hostname: customer.bluecompute.com
   path: /micro/customer
+  ibmCloud:
+    redirectToHTTPS: false
 
 tls:
   enabled: false
@@ -45,7 +47,7 @@ bash:
 # Included Community Couchdb Chart.
 # - Even if disabled, these fields are used to provide information
 #   for external CouchDB deployments.
-customercouchdb:
+couchdb:
   enabled: true
   image: 
     repository: "couchdb"

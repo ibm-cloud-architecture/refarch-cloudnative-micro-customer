@@ -29,7 +29,7 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{- define "customer.couchdb.initcontainer" }}
 - name: test-couchdb
   image: {{ .Values.bash.image.repository }}:{{ .Values.bash.image.tag }}
-  imagePullPolicy: {{ .Values.customercouchdb.imagePullPolicy }}
+  imagePullPolicy: {{ .Values.couchdb.imagePullPolicy }}
   command:
   - "/bin/bash"
   - "-c"
@@ -40,27 +40,40 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 
 {{/* Customer CouchDB Environment Variables */}}
 {{- define "customer.couchdb.environmentvariables" }}
-{{- if and .Values.customercouchdb.enabled }}
 - name: COUCHDB_HOST
-  value: "{{ .Values.customercouchdb.fullnameOverride }}-svc-customercouchdb"
-{{- else }}
-- name: COUCHDB_HOST
-  value: {{ .Values.customercouchdb.fullnameOverride | quote }}
-{{- end }}
+  value: {{ template "customer.couchdb.host" . }}
 - name: COUCHDB_PROTOCOL
-  value: {{ .Values.customercouchdb.protocol | quote }}
+  value: {{ .Values.couchdb.protocol | quote }}
 - name: COUCHDB_PORT
-  value: {{ .Values.customercouchdb.service.externalPort | quote }}
+  value: {{ .Values.couchdb.service.externalPort | quote }}
 - name: COUCHDB_USER
   valueFrom:
     secretKeyRef:
-      name: {{ .Values.customercouchdb.fullnameOverride }}-customercouchdb
+      name: {{ template "customer.couchdb.secretName" . }}
       key: adminUsername
 - name: COUCHDB_PASSWORD
   valueFrom:
     secretKeyRef:
-      name: {{ .Values.customercouchdb.fullnameOverride }}-customercouchdb
+      name: {{ template "customer.couchdb.secretName" . }}
       key: adminPassword
+{{- end }}
+
+{{/* Customer CouchDB Host */}}
+{{- define "customer.couchdb.host" }}
+  {{- if .Values.couchdb.enabled }}
+    {{ .Values.couchdb.fullnameOverride }}-svc-couchdb
+  {{- else -}}
+    {{ .Values.couchdb.fullnameOverride }}
+  {{- end }}
+{{- end }}
+
+{{/* Customer CouchDB Secret Name */}}
+{{- define "customer.couchdb.secretName" }}
+  {{- if .Values.couchdb.enabled }}
+    {{- printf "%s-couchdb" .Values.couchdb.fullnameOverride -}}
+  {{- else -}}
+    {{ template "customer.fullname" . }}-couchdb-secret
+  {{- end }}
 {{- end }}
 
 {{/* Customer HS256KEY Environment Variables */}}
@@ -68,8 +81,8 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 - name: HS256_KEY
   valueFrom:
     secretKeyRef:
-        name: {{ template "customer.hs256key.secretName" . }}
-        key:  key
+      name: {{ template "customer.hs256key.secretName" . }}
+      key:  key
 {{- end }}
 
 {{/* Customer HS256KEY Secret Name */}}
