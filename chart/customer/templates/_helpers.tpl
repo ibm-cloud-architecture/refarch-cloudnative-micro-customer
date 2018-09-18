@@ -58,7 +58,6 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
       key: adminPassword
 {{- end }}
 
-
 {{/* Customer CouchDB Host */}}
 {{- define "customer.couchdb.host" }}
   {{- if .Values.couchdb.enabled }}
@@ -68,14 +67,7 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   {{- end }}
 {{- end }}
 
-
-{{/* Catalog Elasticsearch Health Check */}}
-{{- define "catalog.elasticsearch.test" -}}
-  {{- printf "grep green; do echo waiting for elasticsearch; sleep 1; done; echo elasticsearch is ready" -}}
-{{- end -}}
-
-
-{{/* Customer CouchDB User */}}
+{{/* Customer CouchDB Secret Name */}}
 {{- define "customer.couchdb.secretName" }}
   {{- if .Values.couchdb.enabled }}
     {{- printf "%s-couchdb" .Values.couchdb.fullnameOverride -}}
@@ -83,7 +75,6 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     {{ template "customer.fullname" . }}-couchdb-secret
   {{- end }}
 {{- end }}
-
 
 {{/* Customer HS256KEY Environment Variables */}}
 {{- define "customer.hs256key.environmentvariables" }}
