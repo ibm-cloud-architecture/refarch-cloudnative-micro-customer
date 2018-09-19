@@ -74,6 +74,6 @@ $ git clone -b spring --single-branch https://github.com/ibm-cloud-architecture/
 # Go to Chart Directory
 $ cd refarch-cloudnative-micro-customer/chart/customer
 
-# Deploy Customer and CouchDB to Kubernetes cluster
+# Deploy Customer to Kubernetes cluster
 $ helm upgrade --install customer --set service.type=NodePort .
 ```

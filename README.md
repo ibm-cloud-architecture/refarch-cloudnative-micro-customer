@@ -105,7 +105,7 @@ $ helm upgrade --install couchdb \
 # Go to Chart Directory
 $ cd chart/customer
 
-# Deploy Customer and CouchDB to Kubernetes cluster
+# Deploy Customer to Kubernetes cluster
 $ helm upgrade --install customer --set service.type=NodePort .
 ```
 
