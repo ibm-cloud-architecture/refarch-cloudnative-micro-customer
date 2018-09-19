@@ -88,11 +88,22 @@ $ cd refarch-cloudnative-micro-customer
 ## Deploy Customer Application to Kubernetes Cluster
 In this section, we are going to deploy the Customer Application, along with a CouchDB service, to a Kubernetes cluster using Helm. To do so, follow the instructions below:
 ```bash
+# Add helm repos for CouchDB Chart
+$ helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+
+# Install CouchDB Chart
+$ helm upgrade --install couchdb \
+  --version 0.1.7 \
+  --set fullnameOverride=customer-couchdb \
+  --set createAdminSecret=true \
+  --set adminUsername=user \
+  --set adminPassword=passw0rd \
+  --set clusterSize=1 \
+  --set persistentVolume.enabled=false \
+  incubator/couchdb
+
 # Go to Chart Directory
 $ cd chart/customer
-
-# Download CouchDB Dependency Chart
-$ helm dependency update
 
 # Deploy Customer and CouchDB to Kubernetes cluster
 $ helm upgrade --install customer --set service.type=NodePort .

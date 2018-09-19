@@ -44,30 +44,14 @@ bash:
     tag: latest
     pullPolicy: IfNotPresent
 
-# Included Community Couchdb Chart.
-# - Even if disabled, these fields are used to provide information
-#   for external CouchDB deployments.
 couchdb:
-  enabled: true
-  image: 
-    repository: "couchdb"
-    tag: "2.1.1"
-    pullPolicy: IfNotPresent
   # If chart is not enabled, this field can be used as external mysql host
-  fullnameOverride: bluecompute-customer
+  host: customer-couchdb-svc-couchdb
   protocol: http
-  createAdminSecret: true
+  port: 5984
+  existingSecret:
   adminUsername: user
   adminPassword: passw0rd
-  service:
-    externalPort: 5984
-  clusterSize: 1
-  persistentVolume:
-    enabled: false
-  helperImage:
-    repository: kocolosk/couchdb-statefulset-assembler
-    tag: 1.1.0
-    pullPolicy: IfNotPresent
 
 resources:
   limits:
