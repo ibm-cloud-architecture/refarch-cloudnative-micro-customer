@@ -1,5 +1,9 @@
 {{- define "customer.fullname" -}}
-  {{- .Release.Name }}-{{ .Chart.Name -}}
+  {{- if .Values.fullnameOverride -}}
+    {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+  {{- else -}}
+    {{- printf "%s-%s" .Release.Name .Chart.Name -}}
+  {{- end -}}
 {{- end -}}
 
 {{/* Customer Labels Template */}}
@@ -41,11 +45,11 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{/* Customer CouchDB Environment Variables */}}
 {{- define "customer.couchdb.environmentvariables" }}
 - name: COUCHDB_HOST
-  value: {{ template "customer.couchdb.host" . }}
+  value: {{ .Values.couchdb.host | quote }}
 - name: COUCHDB_PROTOCOL
   value: {{ .Values.couchdb.protocol | quote }}
 - name: COUCHDB_PORT
-  value: {{ .Values.couchdb.service.externalPort | quote }}
+  value: {{ .Values.couchdb.port | quote }}
 - name: COUCHDB_USER
   valueFrom:
     secretKeyRef:
@@ -58,19 +62,10 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
       key: adminPassword
 {{- end }}
 
-{{/* Customer CouchDB Host */}}
-{{- define "customer.couchdb.host" }}
-  {{- if .Values.couchdb.enabled }}
-    {{ .Values.couchdb.fullnameOverride }}-svc-couchdb
-  {{- else -}}
-    {{ .Values.couchdb.fullnameOverride }}
-  {{- end }}
-{{- end }}
-
 {{/* Customer CouchDB Secret Name */}}
 {{- define "customer.couchdb.secretName" }}
-  {{- if .Values.couchdb.enabled }}
-    {{- printf "%s-couchdb" .Values.couchdb.fullnameOverride -}}
+  {{- if .Values.couchdb.existingSecret }}
+    {{- .Values.couchdb.existingSecret }}
   {{- else -}}
     {{ template "customer.fullname" . }}-couchdb-secret
   {{- end }}

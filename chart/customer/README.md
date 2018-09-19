@@ -54,15 +54,26 @@ The Customer Microservice REST API is OAuth protected.
 ## Deploy Customer Application to Kubernetes Cluster from CLI
 To deploy the Customer Chart and its CouchDB dependency Chart to a Kubernetes cluster using Helm CLI, follow the instructions below:
 ```bash
+# Add helm repos for CouchDB Chart
+$ helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+
+# Install CouchDB Chart
+$ helm upgrade --install couchdb \
+  --version 0.1.7 \
+  --set fullnameOverride=customer-couchdb \
+  --set createAdminSecret=true \
+  --set adminUsername=user \
+  --set adminPassword=passw0rd \
+  --set clusterSize=1 \
+  --set persistentVolume.enabled=false \
+  incubator/couchdb
+
 # Clone customer repository:
 $ git clone -b spring --single-branch https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git
 
 # Go to Chart Directory
 $ cd refarch-cloudnative-micro-customer/chart/customer
 
-# Download CouchDB Dependency Chart
-$ helm dependency update
-
-# Deploy Customer and CouchDB to Kubernetes cluster
+# Deploy Customer to Kubernetes cluster
 $ helm upgrade --install customer --set service.type=NodePort .
 ```
