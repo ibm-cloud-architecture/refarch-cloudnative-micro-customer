@@ -45,7 +45,6 @@ bash:
     pullPolicy: IfNotPresent
 
 couchdb:
-  # If chart is not enabled, this field can be used as external mysql host
   host: customer-couchdb-svc-couchdb
   protocol: http
   port: 5984
