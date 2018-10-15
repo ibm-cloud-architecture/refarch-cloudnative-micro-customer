@@ -85,7 +85,91 @@ Customer microservice is ready for business...
 [AUDIT   ] CWWKF0011I: The server BoostServer is ready to run a smarter planet.
 ```
 
-That's it, you have successfully deployed and tested the Customer microservice. To validate the service, have a look at [Validate the Customer Microservice API](#validate-the-customer-microservice-api)
+That's it, you have successfully deployed the Customer microservice. To validate the service, have a look at [Validate the Customer Microservice API](#validate-the-customer-microservice-api)
+
+## Deploy the Customer Docker Container
+
+In this section you will run the Spring Boot application on Open Liberty using Docker. Before we show you how to do so, you will need to deploy the CouchDB Docker Container as shown in [Deploy the CouchDB Docker Container](#deploy-the-couchdb-docker-container).
+
+Once it is deployed, we can run the Spring Boot Customer application on Open Liberty docker as follows:
+
+1. Open [`src/main/resources/application.yml`](src/main/resources/application.yml) file, enter the following values as follows, and save the file:
+
+```
+# Server configuration
+server:
+  context-path: /micro
+  port: 8080
+
+# Spring properties
+spring:
+  application:
+     name: customer-microservice
+
+     cloudant:
+        protocol: http
+        username: admin
+        password: passw0rd
+        host: customercouchdb
+        port: 5984
+        database: customers
+
+jwt:
+  sharedSecret: ${HS256_KEY}
+```
+
+2. Modify your POM file to generate the Docker image. Follow the below steps.
+- Open [`pom.xml`](pom.xml)
+- Modify the `boost-maven-plugin` as below.
+
+```
+            <plugin>
+                <groupId>io.openliberty.boost</groupId>
+                <artifactId>boost-maven-plugin</artifactId>
+                <version>0.1</version>
+                <executions>
+                  <execution>
+                    <!-- <phase>package</phase>
+                    <goals>
+                        <goal>package</goal>
+                    </goals> -->
+                    <goals>
+                      <goal>docker-build</goal>
+                    </goals>
+                  </execution>
+                </executions>
+            </plugin>
+```
+
+3. To deploy the Customer container, run the following commands:
+
+Before building the Docker image, make sure there are no other dockerfiles in your repo. If a dockerfile already exists, please remove it.
+
+```bash
+# Build the Docker Image
+$ mvn clean install 
+```
+
+Once done, a Docker image named `liberty-customer-spring:latest` will be built automatically for you.
+
+Run the Docker container as follows.
+
+```
+# Start the Customer Container    
+$ docker run --name customer \
+    -e COUCHDB_PROTOCOL=http \
+    -e COUCHDB_USER=admin \
+    -e COUCHDB_PASSWORD=password \
+    -e COUCHDB_HOST=customercouchdb \
+    -e COUCHDB_PORT=5984 \
+    -e HS256_KEY=${HS256_KEY} \
+    -p 8080:8080 \
+    -p 9080:9080 \
+    --link customercouchdb:customercouchdb \
+    -d liberty-customer-spring:latest
+```
+
+That's it, you have successfully deployed the Customer microservice on Docker. To validate the service, have a look at [Validate the Customer Microservice API](#validate-the-customer-microservice-api)
 
 ## Validate the Customer Microservice API
 
@@ -96,7 +180,10 @@ Now that we have the customer service up and running, let's go ahead and test th
 To make going through this document easier, we recommend you create environment variables for the customer service hostname/IP and port. To do so, run the following commands:
 ```bash
 $ export CUSTOMER_HOST=localhost
+# For maven build, the port is 8080
 $ export CUSTOMER_PORT=8080
+# For docker build, the port is 9080
+$ export CUSTOMER_PORT=9080
 ```
 
 Where:
