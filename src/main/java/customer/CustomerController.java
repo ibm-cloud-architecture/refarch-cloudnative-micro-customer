@@ -72,10 +72,10 @@ public class CustomerController {
                 final Map<String, Object> names = new HashMap<String, Object>();
                 names.put("index", "function(doc){index(\"usernames\", doc.username); }");
 
-                final Map<String, Object> indexes = new HashMap<>();
+                final Map<String, Object> indexes = new HashMap<String, Object>();
                 indexes.put("usernames", names);
 
-                final Map<String, Object> view_ddoc = new HashMap<>();
+                final Map<String, Object> view_ddoc = new HashMap<String, Object>();
                 view_ddoc.put("_id", "_design/username_searchIndex");
                 view_ddoc.put("indexes", indexes);
 
@@ -98,7 +98,7 @@ public class CustomerController {
      * check
      */
     @RequestMapping("/check")
-    @ResponseBody ResponseEntity<String> check() {
+    protected @ResponseBody ResponseEntity<String> check() {
     	// test the cloudant connection
     	try {
 			getCloudantDatabase().info();
@@ -114,7 +114,7 @@ public class CustomerController {
      */
     @PreAuthorize("#oauth2.hasScope('admin')")
     @RequestMapping(value = "/customer/search", method = RequestMethod.GET)
-    @ResponseBody ResponseEntity<?> searchCustomers(@RequestHeader Map<String, String> headers, @RequestParam(required=true) String username) {
+    protected @ResponseBody ResponseEntity<?> searchCustomers(@RequestHeader Map<String, String> headers, @RequestParam(required=true) String username) {
         try {
         	
         	if (username == null) {
@@ -154,10 +154,11 @@ public class CustomerController {
     }
      /**
      * @return all customer
+     * @throws Exception 
      */
 //    @HystrixCommand(fallbackMethod="failGetCustomers")
     @RequestMapping(value = "/customer", method = RequestMethod.GET)
-    ResponseEntity<?> getCustomers() {
+    protected ResponseEntity<?> getCustomers() throws Exception {
         try {
         	final String customerId = getCustomerId();
         	if (customerId == null) {
@@ -180,7 +181,7 @@ public class CustomerController {
      * @return customer by id
      */
     @RequestMapping(value = "/customer/{id}", method = RequestMethod.GET)
-    ResponseEntity<?> getById(@RequestHeader Map<String, String> headers, @PathVariable String id) {
+    protected ResponseEntity<?> getById(@RequestHeader Map<String, String> headers, @PathVariable String id) {
         try {
         	final String customerId = getCustomerId();
         	if (customerId == null) {
@@ -208,7 +209,7 @@ public class CustomerController {
      * @return transaction status
      */
     @RequestMapping(value = "/customer", method = RequestMethod.POST, consumes = "application/json")
-    ResponseEntity<?> create(@RequestHeader Map<String, String> headers, @RequestBody Customer payload) {
+    protected ResponseEntity<?> create(@RequestHeader Map<String, String> headers, @RequestBody Customer payload) {
         try {
         	// TODO: no one should have access to do this, it's not exposed to APIC
             final Database cloudant = getCloudantDatabase();
@@ -252,7 +253,7 @@ public class CustomerController {
      * @return transaction status
      */
     @RequestMapping(value = "/customer/{id}", method = RequestMethod.PUT, consumes = "application/json")
-    ResponseEntity<?> update(@RequestHeader Map<String, String> headers, @PathVariable String id, @RequestBody Customer payload) {
+    protected ResponseEntity<?> update(@RequestHeader Map<String, String> headers, @PathVariable String id, @RequestBody Customer payload) {
 
         try {
         	final String customerId = getCustomerId();
@@ -295,7 +296,7 @@ public class CustomerController {
      * @return transaction status
      */
     @RequestMapping(value = "/customer/{id}", method = RequestMethod.DELETE)
-    ResponseEntity<?> delete(@RequestHeader Map<String, String> headers, @PathVariable String id) {
+    protected ResponseEntity<?> delete(@RequestHeader Map<String, String> headers, @PathVariable String id) {
 		// TODO: no one should have access to do this, it's not exposed to APIC
     	
         try {

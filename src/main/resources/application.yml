@@ -14,7 +14,7 @@ server:
 spring:
   application:
      name: customer-microservice
-     
+
      cloudant:
         protocol: http
         username: admin
@@ -22,3 +22,6 @@ spring:
         host: 127.0.0.1
         port: 5984
         database: customers
+
+jwt:
+  sharedSecret: ${HS256_KEY}
