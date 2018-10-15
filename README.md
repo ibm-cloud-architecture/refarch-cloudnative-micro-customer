@@ -23,6 +23,7 @@ https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/sp
     + [Deploy the CouchDB Docker Container](#deploy-the-couchdb-docker-container)
     + [Deploy the Customer Docker Container](#deploy-the-customer-docker-container)
   * [Run Customer Service application on localhost](#run-customer-service-application-on-localhost)
+  * [Deploy Customer Application on Open Liberty](#deploy-customer-application-on-openliberty)
   * [Optional: Setup CI/CD Pipeline](#optional-setup-cicd-pipeline)
   * [Conclusion](#conclusion)
   * [Contributing](#contributing)
@@ -344,6 +345,10 @@ $ curl http://localhost:8080/micro/customer
 ```
 
 That's it, you have successfully deployed and tested the Customer microservice.
+
+## Deploy Customer Application on OpenLiberty
+
+The Spring Boot applications can be deployed on WebSphere Liberty as well. In this case, the embedded server i.e. the application server packaged up in the JAR file will be Liberty. For instructions on how to deploy the Customer application optimized for Docker on Open Liberty, which is the open source foundation for WebSphere Liberty, follow the instructions [here](OpenLiberty.MD)
 
 ## Optional: Setup CI/CD Pipeline
 If you would like to setup an automated Jenkins CI/CD Pipeline for this repository, we provided a sample [Jenkinsfile](Jenkinsfile), which uses the [Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/) syntax of the [Jenkins Kubernetes Plugin](https://github.com/jenkinsci/kubernetes-plugin) to automatically create and run Jenkis Pipelines from your Kubernetes environment. 
