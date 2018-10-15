@@ -176,7 +176,6 @@ $ docker run --name customer \
     -e COUCHDB_HOST=customercouchdb \
     -e COUCHDB_PORT=5984 \
     -e HS256_KEY=${HS256_KEY} \
-    -p 8080:8080 \
     -p 9080:9080 \
     --link customercouchdb:customercouchdb \
     -d liberty-customer-spring:latest
