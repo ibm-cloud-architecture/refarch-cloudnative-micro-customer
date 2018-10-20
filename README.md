@@ -131,7 +131,7 @@ Now that we have the customer service up and running, let's go ahead and test th
 To make going through this document easier, we recommend you create environment variables for the customer service hostname/IP and port. To do so, run the following commands:
 ```bash
 $ export CUSTOMER_HOST=localhost
-$ export CUSTOMER_PORT=8080
+$ export CUSTOMER_PORT=8082
 ```
 
 Where:
@@ -189,8 +189,8 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-X-Application-Context: customer-microservice:8080
-Location: http://localhost:8080/micro/customer/41757d0170344f9ea47a2d9634bc9ba7
+X-Application-Context: customer-microservice:8082
+Location: http://localhost:8082/micro/customer/41757d0170344f9ea47a2d9634bc9ba7
 Content-Length: 0
 Server: Jetty(9.2.13.v20150730)
 ```
@@ -261,7 +261,7 @@ $ curl -X DELETE -i "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/${C
 
 HTTP/1.1 200 OK
 Date: Mon, 20 Aug 2018 22:20:00 GMT
-X-Application-Context: customer-microservice:8080
+X-Application-Context: customer-microservice:8082
 Content-Length: 0
 Server: Jetty(9.2.13.v20150730)
 ```
@@ -281,7 +281,7 @@ You can also run the Customer Application locally on Docker. Before we show you 
 The easiest way to get CouchDB running is via a Docker container. To do so, run the following commands:
 ```bash
 # Start a CouchDB Container with a database user, a password, and create a new database
-$ docker run --name customercouchdb -p 5984:5984 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb
+$ docker run --name customercouchdb -p 5985:5985 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb
 
 # Get the CouchDB Container's IP Address
 $ docker inspect customercouchdb | grep "IPAddress"
@@ -303,9 +303,9 @@ $ docker run --name customer \
     -e COUCHDB_USER=admin \
     -e COUCHDB_PASSWORD=password \
     -e COUCHDB_HOST=${COUCHDB_IP_ADDRESS} \
-    -e COUCHDB_PORT=5984 \
+    -e COUCHDB_PORT=5985 \
     -e HS256_KEY=${HS256_KEY} \
-    -p 8080:8080 \
+    -p 8082:8082 \
     -d customer
 ```
 
@@ -313,7 +313,7 @@ Where `${COUCHDB_IP_ADDRESS}` is the IP address of the CouchDB container, which 
 
 If everything works successfully, you should be able to get some data when you run the following command:
 ```bash
-$ curl http://localhost:8080/micro/customer
+$ curl http://localhost:8082/micro/customer
 ```
 
 ## Run Customer Service application on localhost
@@ -326,7 +326,7 @@ Once CouchDB is ready, we can run the Spring Boot Customer application locally a
     * **username:** admin
     * **password:** passw0rd
     * **host:** 127.0.0.1
-    * **port:** 5984
+    * **port:** 5985
     * **database:** customers
 
 2. Build the application:
@@ -341,7 +341,7 @@ $ java -jar build/libs/micro-customer-0.0.1.jar
 
 4. Validate. You should get a list of all customer items:
 ```bash
-$ curl http://localhost:8080/micro/customer
+$ curl http://localhost:8082/micro/customer
 ```
 
 That's it, you have successfully deployed and tested the Customer microservice.

@@ -8,7 +8,7 @@ eureka:
 # Server configuration
 server:
   context-path: /micro
-  port: 8080
+  port: 8082
 
 # Spring properties
 spring:
@@ -20,7 +20,7 @@ spring:
         username: admin
         password: passw0rd
         host: 127.0.0.1
-        port: 5984
+        port: 5985
         database: customers
 
 jwt:

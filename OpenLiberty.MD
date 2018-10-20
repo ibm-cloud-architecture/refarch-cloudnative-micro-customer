@@ -15,7 +15,7 @@ You can run your Spring Boot applications on Open Liberty. Open Liberty will be 
 Run the CouchDB as a Docker container. Below is the command to start it.
 ```bash
 # Start a CouchDB Container with a database user, a password, and create a new database
-$ docker run --name customercouchdb -p 5984:5984 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb
+$ docker run --name customercouchdb -p 5985:5985 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb
 ```
 
 ## Deploy the Customer locally
@@ -30,7 +30,7 @@ Once CouchDB is up and running, we can run the Spring Boot Customer application 
 # Server configuration
 server:
   context-path: /micro
-  port: 8080
+  port: 8082
 
 # Spring properties
 spring:
@@ -42,7 +42,7 @@ spring:
         username: admin
         password: passw0rd
         host: 127.0.0.1
-        port: 5984
+        port: 5985
         database: customers
 
 jwt:
@@ -98,7 +98,7 @@ Once it is deployed, we can run the Spring Boot Customer application on Open Lib
 # Server configuration
 server:
   context-path: /micro
-  port: 8080
+  port: 8082
 
 # Spring properties
 spring:
@@ -110,7 +110,7 @@ spring:
         username: admin
         password: passw0rd
         host: customercouchdb
-        port: 5984
+        port: 5985
         database: customers
 
 jwt:
@@ -176,7 +176,7 @@ $ docker run --name customer \
     -e COUCHDB_USER=admin \
     -e COUCHDB_PASSWORD=password \
     -e COUCHDB_HOST=customercouchdb \
-    -e COUCHDB_PORT=5984 \
+    -e COUCHDB_PORT=5985 \
     -e HS256_KEY=${HS256_KEY} \
     -p 9080:9080 \
     --link customercouchdb:customercouchdb \
@@ -194,8 +194,8 @@ Now that we have the customer service up and running, let's go ahead and test th
 To make going through this document easier, we recommend you create environment variables for the customer service hostname/IP and port. To do so, run the following commands:
 ```bash
 $ export CUSTOMER_HOST=localhost
-# For maven build, the port is 8080
-$ export CUSTOMER_PORT=8080
+# For maven build, the port is 8082
+$ export CUSTOMER_PORT=8082
 # For docker build, the port is 9080
 $ export CUSTOMER_PORT=9080
 ```
@@ -257,8 +257,8 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-X-Application-Context: customer-microservice:8080
-Location: http://localhost:8080/micro/customer/4533316ae77649d4bd6a44a86626d599
+X-Application-Context: customer-microservice:8082
+Location: http://localhost:8082/micro/customer/4533316ae77649d4bd6a44a86626d599
 Content-Language: en-US
 Transfer-Encoding: chunked
 Date: Mon, 15 Oct 2018 19:01:13 GMT
@@ -343,7 +343,7 @@ When it is successful, you will see something similar to below.
 ```
 HTTP/1.1 200 OK
 X-Powered-By: Servlet/4.0
-X-Application-Context: customer-microservice:8080
+X-Application-Context: customer-microservice:8082
 Content-Language: en-US
 Transfer-Encoding: chunked
 Date: Mon, 15 Oct 2018 19:10:09 GMT

@@ -7,8 +7,8 @@ image:
 
 service:
   type: ClusterIP
-  externalPort: 8080
-  internalPort: 8080
+  externalPort: 8082
+  internalPort: 8082
   nodePort: 31382
 
 ingress:
@@ -47,7 +47,7 @@ bash:
 couchdb:
   host: customer-couchdb-svc-couchdb
   protocol: http
-  port: 5984
+  port: 5985
   existingSecret:
   adminUsername: user
   adminPassword: passw0rd

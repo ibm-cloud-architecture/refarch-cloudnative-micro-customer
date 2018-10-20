@@ -8,7 +8,8 @@
 
 {{/* Customer Labels Template */}}
 {{- define "customer.labels" }}
-app: bluecompute
+app: customer
+version: v1
 micro: customer
 tier: backend
 heritage: {{ .Release.Service | quote }}

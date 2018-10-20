@@ -21,7 +21,7 @@ function parse_arguments() {
 
 	if [ -z "${CUSTOMER_PORT}" ]; then
 		echo "CUSTOMER_PORT not set. Using default key";
-		CUSTOMER_PORT=8080;
+		CUSTOMER_PORT=8082;
 	fi
 
 	# HS256_KEY
