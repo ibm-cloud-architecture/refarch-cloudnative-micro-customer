@@ -57,3 +57,8 @@ resources:
     memory: 384Mi
   requests:
     memory: 64Mi
+
+labels:
+  app: customer
+  version: v1
+  tier: backend

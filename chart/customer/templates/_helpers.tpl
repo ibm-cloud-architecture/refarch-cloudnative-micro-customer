@@ -8,10 +8,9 @@
 
 {{/* Customer Labels Template */}}
 {{- define "customer.labels" }}
-app: customer
-version: v1
-micro: customer
-tier: backend
+{{- range $key, $value := .Values.labels }}
+{{ $key }}: {{ $value | quote }}
+{{- end }}
 heritage: {{ .Release.Service | quote }}
 release: {{ .Release.Name | quote }}
 chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
