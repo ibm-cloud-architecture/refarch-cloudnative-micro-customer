@@ -5,6 +5,7 @@
 * [Building the app](#building-the-app)
 * [Setting up Cloudant](#setting-up-cloudant)
 * [Setting up Zipkin](#setting-up-zipkin) (Optional)
+* [Running the app and stopping it](#running-the-app-and-stopping-it)
 
 ## Building the app
 
@@ -19,8 +20,20 @@ To build the application, we used maven build. Maven is a project management too
 2. Checkout MicroProfile branch.
 
    `git checkout microprofile`
+   
+3. The Auth and Keystore services are required to be ran since a JWT is required to access the Customer endpoints.
+Follow the instructions below to run these services.
+https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile/building-locally.md
+   
+4. Create the [auth keystore and truststore](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/microprofile/Keystore)
+, and then correct their locations in your server.xml
+    ```
+    <ssl id="defaultSSLConfig" keyStoreRef="KeystorebcKeyStore" trustStoreRef="bcTrustStore"/>
+    <keyStore id="bcKeyStore" location="<Path to BCKeyStoreFile.jks>" type="JKS" password="password"/>
+    <keyStore id="bcTrustStore" location="<Path to truststore.jks>" type="JKS" password="password"/>
+    ```
 
-3. Run this command. This command builds the project and installs it.
+5. Run this command. This command builds the project and installs it.
 
    `mvn install`
    
@@ -42,45 +55,15 @@ To build the application, we used maven build. Maven is a project management too
 [INFO] ------------------------------------------------------------------------
 ```
 
-4. The Auth and Keystore services are required to be ran since a JWT is required to access the Customer endpoints.
-Follow the instructions below to run these services.
-https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile/building-locally.md
-
-
 ## Setting up Cloudant
 
 To set up the Cloudant database locally, we are running it as a docker container. You need [Docker](https://www.docker.com/) as a prerequisite.
 To run cloudant on docker locally, run the commands below.
 
-1.
+1. Pull the Cloudant docker image.
+
 ```
 docker pull ibmcom/cloudant-developer
-```
-
-
-2. In this case, you will need to set this property in microprofile-config.properties
-https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/microprofile/src/main/resources/META-INF/microprofile-config.properties
-
-```
-application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
-```
-
-## Setting up Zipkin
-
-This is an optional step.
-
-In our sample application, we used Zipkin as our distributed tracing system.
-
-If you want to access the traces for inventory service, run Zipkin as a docker container locally. You can find the instructions and more details [here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/Zipkin/README.md)
-
-### Running the app and stopping it
-
-1. The host and port depends on the service you use.
-Set the Zipkin host and port to defaults.
-
-```
-export zipkinHost=localhost
-export zipkinPort=9411
 ```
 
 2. Run the docker image.
@@ -94,6 +77,48 @@ docker run \
        --hostname cloudant.dev \
        ibmcom/cloudant-developer
 ```
+
+3. In this case, you will need to set this property in microprofile-config.properties
+https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/microprofile/src/main/resources/META-INF/microprofile-config.properties
+
+```
+application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
+```
+
+This requires a rebuild, run `mvn install`.
+
+## Setting up Zipkin
+
+This is an optional step.
+
+In our sample application, we used Zipkin as our distributed tracing system.
+
+If you want to access the traces for inventory service, run Zipkin as a docker container locally. You can find the instructions and more details [here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/Zipkin/README.md)
+
+## Running the app and stopping it
+
+1. Set some environment variables as following.
+
+We must set the Zipkin host and port to defaults to suppress some missing config messages.
+    
+    ```
+    export zipkinHost=localhost
+    export zipkinPort=9411
+    ``` 
+    
+    If hitting the secure REST endpoints, such as `orders/rest/orders`, we must set some JWKS vars.
+    ```
+    export jwksUri=https://localhost:9443/oidc/endpoint/OP/jwk
+    export jwksIssuer=https://localhost:9443/oidc/endpoint/OP
+    export administratorRealm=https://localhost:9443/oidc/endpoint/OP
+    ```
+    
+    And lastly here are optional exports if Auth or Inventory are running.
+    ```
+    export auth_health=https://localhost:9443/health
+    ```
+2. To enable authentication, the [Auth MicroService](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile) 
+must be running and the keystore must be set up. Please refer to the link for further instructions.
 
 3. Start your server.
 ```
@@ -115,12 +140,17 @@ You will see something similar to the below messages.
 [INFO] Final Memory: 12M/309M
 [INFO] ------------------------------------------------------------------------
 ```
-4. Validate the customer service. You should get the user information for the Customer that the JWT belongs to.
+4. Retrieve the JWT from the Auth Service to authorize secure REST calls:
+    ```
+    curl -k -d 'grant_type=password&client_id=bluecomputeweb&client_secret=bluecomputewebs3cret&username=user&password=password&scope=openid' https://localhost:9443/oidc/endpoint/OP/token
+    ```
+
+5. Validate the customer service. You should get the user information for the Customer that the JWT belongs to.
 ```
 curl -H "Authorization: Bearer <JWT>" http://localhost:9084/customer/rest/customer
 ```
 
-5. If you are done accessing the application, you can stop your server using the following command.
+6. If you are done accessing the application, you can stop your server using the following command.
 
 `mvn liberty:stop-server`
 
