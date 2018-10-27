@@ -1,46 +1,19 @@
 package application.rest;
 
-import config.JwtConfig;
 import model.Customer;
 import application.rest.client.CloudantClientService;
 
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.context.ApplicationScoped;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 import java.time.temporal.ChronoUnit;
 
 import javax.inject.Inject;
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ProcessingException;
-
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.opentracing.Traced;
-import org.eclipse.microprofile.faulttolerance.exceptions.*;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Metered;
@@ -51,13 +24,10 @@ import org.eclipse.microprofile.openapi.annotations.info.Info;
 import org.eclipse.microprofile.openapi.annotations.info.Contact;
 import org.eclipse.microprofile.openapi.annotations.info.License;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
-import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-
 
 @Path("/customer")
 @RequestScoped
@@ -72,17 +42,17 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
         )
     )
 public class CustomerService {
-	
+
     @Inject
     private JsonWebToken jwt;
 
     @Inject
     @RestClient
     private CloudantClientService defaultCloudantClient;
-    
+
 
     @Timeout(value = 2, unit = ChronoUnit.SECONDS)
-    @Retry(maxRetries = 2, maxDuration= 10000)
+    @Retry(maxRetries = 2, maxDuration= 2000)
     @Fallback(fallbackMethod = "fallbackService")
     //@Produces("application/json")
     @GET
@@ -114,7 +84,7 @@ public class CustomerService {
     @Metered(name="CustomerMeter",
             displayName="Customer Call Frequency",
             description="Rate of the calls made to CloudantDB")
-    @Traced(value = true, operationName = "getCustomerByUsername")
+    @Traced(value = true, operationName = "getCustByUsername")
     public javax.ws.rs.core.Response getCustomerByUsername() throws Exception{
         try {
             String username = "usernames:" + jwt.getSubject();
@@ -126,7 +96,7 @@ public class CustomerService {
             throw new Exception(e.toString());
         }
     }
-    
+
     @Produces("application/json")
     @GET
     public javax.ws.rs.core.Response fallbackService() {
