@@ -54,6 +54,27 @@ https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/micropro
 [INFO] Final Memory: 26M/266M
 [INFO] ------------------------------------------------------------------------
 ```
+By default, the application runs on [WebSphere Liberty with Web Profile](https://developer.ibm.com/wasdev/websphere-liberty/). You can also run it on [Open Liberty](https://openliberty.io/) as follows.
+
+`mvn clean install -Popenliberty`
+
+ If this runs successfully, you will be able to see the below messages.
+ 
+ ```
+[INFO] --- maven-failsafe-plugin:2.18.1:verify (verify-results) @ customer ---
+[INFO] Failsafe report directory: /Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/target/test-reports/it
+[INFO]
+[INFO] --- maven-install-plugin:2.4:install (default-install) @ customer ---
+[INFO] Installing /Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/target/customer-1.0-SNAPSHOT.war to /Users/user@ibm.com/.m2/repository/projects/customer/1.0-SNAPSHOT/customer-1.0-SNAPSHOT.war
+[INFO] Installing /Users/user@ibm.com/BlueCompute/refarch-cloudnative-micro-customer/pom.xml to /Users/user@ibm.com/.m2/repository/projects/customer/1.0-SNAPSHOT/customer-1.0-SNAPSHOT.pom
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 26.498 s
+[INFO] Finished at: 2018-10-26T23:05:51-05:00
+[INFO] Final Memory: 34M/474M
+[INFO] ------------------------------------------------------------------------
+ ```
 
 ## Setting up Cloudant
 
