@@ -31,7 +31,7 @@ jobs:
       before_script:
       # Start CouchDB 2.1.2 and wait for it to start
       # Using this instead of built-in couchdb, which is 1.6.1
-      - docker run --name couchdb -p 5985:5985 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
+      - docker run --name couchdb -p 5985:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
       # Wait for CouchDB to Start
       - sleep 20
       # Test CouchDB
@@ -53,7 +53,7 @@ jobs:
       before_script:
       # Start CouchDB 2.1.2 and wait for it to start
       # Using this instead of built-in couchdb, which is 1.6.1
-      - docker run --name couchdb -p 5985:5985 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
+      - docker run --name couchdb -p 5985:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
       # Wait for CouchDB to Start
       - sleep 20
       # Test CouchDB
