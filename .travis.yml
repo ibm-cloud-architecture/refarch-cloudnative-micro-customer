@@ -31,11 +31,11 @@ jobs:
       before_script:
       # Start CouchDB 2.1.2 and wait for it to start
       # Using this instead of built-in couchdb, which is 1.6.1
-      - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
+      - docker run --name couchdb -p 5985:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
       # Wait for CouchDB to Start
       - sleep 20
       # Test CouchDB
-      - curl http://127.0.0.1:5984
+      - curl http://127.0.0.1:5985
       script:
       # Gradle Build
       - ./gradlew build -x test
@@ -44,7 +44,7 @@ jobs:
       # Wait for the Customer container to start accepting connections
       - sleep 25
       # Run Customer API Test
-      - bash scripts/api_tests.sh 127.0.0.1 8080 $HS256_KEY $TEST_USER $TEST_PASSWORD
+      - bash scripts/api_tests.sh 127.0.0.1 8082 $HS256_KEY $TEST_USER $TEST_PASSWORD
     - stage: docker build, deploy, and test
       services:
       - docker
@@ -53,11 +53,11 @@ jobs:
       before_script:
       # Start CouchDB 2.1.2 and wait for it to start
       # Using this instead of built-in couchdb, which is 1.6.1
-      - docker run --name couchdb -p 5984:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
+      - docker run --name couchdb -p 5985:5984 -e COUCHDB_USER=${COUCHDB_USER} -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} -d couchdb:2.1.2
       # Wait for CouchDB to Start
       - sleep 20
       # Test CouchDB
-      - curl http://127.0.0.1:5984
+      - curl http://127.0.0.1:5985
       # Get IP Address for CouchDB
       - COUCHDB_IP=$(docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress')
       #- docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress'
@@ -65,7 +65,7 @@ jobs:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
       # Start Customer Container and Connect to local MySQL Service
-      - docker run --net=host --name customer -d -p 8080:8080 -e HS256_KEY=${HS256_KEY} -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
+      - docker run --net=host --name customer -d -p 8082:8082 -e HS256_KEY=${HS256_KEY} -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
       # Wait for the Customer container to start accepting connections
       - sleep 25
       # Check that the Customer container is running
@@ -73,7 +73,7 @@ jobs:
       # Check logs to see if it started properly
       - docker logs customer
       # Run Customer API Test
-      - bash scripts/api_tests.sh 127.0.0.1 8080 $HS256_KEY $TEST_USER $TEST_PASSWORD
+      - bash scripts/api_tests.sh 127.0.0.1 8082 $HS256_KEY $TEST_USER $TEST_PASSWORD
     - stage: kubernetes build, deploy, and test
       services:
       - docker
@@ -85,7 +85,7 @@ jobs:
       # Install nsenter, which is needed for minikube to work
       - bash scripts/install_minikube_and_helm.sh
       # Install CouchDB
-      - helm upgrade --install couchdb --version 0.1.7 --set fullnameOverride=customer-couchdb,createAdminSecret=true,adminUsername=user,adminPassword=passw0rd,clusterSize=1,persistentVolume.enabled=false incubator/couchdb
+      - helm upgrade --install couchdb --version 0.1.7 --set service.externalPort=5985,fullnameOverride=customer-couchdb,createAdminSecret=true,adminUsername=user,adminPassword=passw0rd,clusterSize=1,persistentVolume.enabled=false incubator/couchdb
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
