@@ -103,9 +103,9 @@ Populate the database with default users. To do so, follow the below steps.
 - `cd cloudant`
 - `python3 populate.py localhost 8080`
 
-Or, you can access the cloudant dashboard at `http://localhost:8080/dashboard.html`, login with the credentials `admin` and `pass` and then create the docs as you can in the script [populate.py](./cloudant/populate.py). 
+Or, you can access the Cloudant dashboard at `http://localhost:8080/dashboard.html`, login with the credentials `admin` and `pass` and then create the docs as you can in the script [populate.py](./cloudant/populate.py). 
 
-By doing so, you will have one admin user named `user` and one basic user named `foo` created in your cloudant database.
+By doing so, you will have one admin user named `user` and one basic user named `foo` created in your Cloudant database.
 
 3. In this case, you will need to set this property in microprofile-config.properties
 https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/microprofile/src/main/resources/META-INF/microprofile-config.properties
@@ -148,8 +148,7 @@ We must set the Zipkin host and port to defaults to suppress some missing config
     export port=8080
     export auth_health=https://localhost:9443/health
     ```
-2. To enable authentication, the [Auth MicroService](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile) 
-must be running and the keystore must be set up. Please refer to the link for further instructions.
+2. To enable authentication, the [Auth MicroService](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile) must be running and the keystore must be set up. Please refer to the link for further instructions.
 
 3. Start your server.
 ```
@@ -176,7 +175,7 @@ You will see something similar to the below messages.
     curl -k -d 'grant_type=password&client_id=bluecomputeweb&client_secret=bluecomputewebs3cret&username=user&password=password&scope=openid' https://localhost:9443/oidc/endpoint/OP/token
     ```
 
-5. Validate the customer service. You should get the user information for the Customer that the JWT belongs to.
+5. Validate the Customer service. You should get the user information for the customer that the JWT belongs to.
 ```
 curl -k --request GET \
   --url https://localhost:8445/customer/rest/customer \
