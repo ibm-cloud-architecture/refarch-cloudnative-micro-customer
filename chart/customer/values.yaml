@@ -9,7 +9,7 @@ service:
   type: ClusterIP
   externalPort: 8082
   internalPort: 8082
-  nodePort: 31382
+  nodePort: 32382
 
 ingress:
   enabled: false
