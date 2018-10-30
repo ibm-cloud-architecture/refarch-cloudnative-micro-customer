@@ -103,7 +103,7 @@ Populate the database with default users. To do so, follow the below steps.
 - `cd cloudant`
 - `python3 populate.py localhost 8080`
 
-or you can access the cloudant dashboard at `http://localhost:8080/dashboard.html`, login with the credentials `admin` and `pass` and then create the docs as you can in the script [populate.py](./cloudant/populate.py). 
+Or, you can access the cloudant dashboard at `http://localhost:8080/dashboard.html`, login with the credentials `admin` and `pass` and then create the docs as you can in the script [populate.py](./cloudant/populate.py). 
 
 By doing so, you will have one admin user named `user` and one basic user named `foo` created in your cloudant database.
 
