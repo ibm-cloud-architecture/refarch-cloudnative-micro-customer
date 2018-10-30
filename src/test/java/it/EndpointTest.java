@@ -9,11 +9,11 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 public class EndpointTest {
-    
+
     public void testEndpoint(String endpoint, String expectedOutput) {
         String port = System.getProperty("liberty.test.port");
-        String war = System.getProperty("war.context");
-        String url = "http://localhost:" + port + "/" + war + endpoint;
+        //String war = System.getProperty("war.context");
+        String url = "http://localhost:" + port + "/" + endpoint;
         System.out.println("Testing " + url);
         Response response = sendRequest(url, "GET");
         int responseCode = response.getStatus();
