@@ -23,6 +23,9 @@ service:
   zipkinHost: zipkin
   zipkinPort: 9411
 
+volumes:
+  mountPath: /opt/ibm/wlp/usr/shared
+
 services:
 base:
   enabled: false

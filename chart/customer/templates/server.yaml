@@ -94,7 +94,7 @@ spec:
           mountPath: "/etc/keystorevol"
           readOnly: true
         - name: config-volume
-          mountPath: /opt/ibm/wlp/usr/shared
+          mountPath: {{ .Values.volumes.mountPath }}
       volumes:
       - name: keystorevol
         secret:
