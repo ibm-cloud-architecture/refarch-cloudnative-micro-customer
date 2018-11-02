@@ -1,4 +1,4 @@
 apiVersion: v1
 description: BlueCompute Customer Microservice
 name: customer
-version: 0.5.0
+version: 0.6.0

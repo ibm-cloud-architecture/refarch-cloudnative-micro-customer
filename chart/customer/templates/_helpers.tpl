@@ -18,6 +18,7 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 
 {{/* Customer Init Container Template */}}
 {{- define "customer.initcontainer" }}
+{{- if not (or .Values.global.istio.enabled .Values.istio.enabled) }}
 - name: test-customer
   image: {{ .Values.bash.image.repository }}:{{ .Values.bash.image.tag }}
   imagePullPolicy: {{ .Values.bash.image.pullPolicy }}
@@ -28,9 +29,11 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   env:
   {{- include "customer.couchdb.environmentvariables" . | indent 2 }}
 {{- end }}
+{{- end }}
 
 {{/* CouchDB Init Container Template */}}
 {{- define "customer.couchdb.initcontainer" }}
+{{- if not (or .Values.global.istio.enabled .Values.istio.enabled) }}
 - name: test-couchdb
   image: {{ .Values.bash.image.repository }}:{{ .Values.bash.image.tag }}
   imagePullPolicy: {{ .Values.couchdb.imagePullPolicy }}
@@ -40,6 +43,7 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   - "until curl --max-time 1 ${COUCHDB_PROTOCOL}://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_HOST}:${COUCHDB_PORT}; do echo waiting for couchdb; /bin/sleep 1; done"
   env:
   {{- include "customer.couchdb.environmentvariables" . | indent 2 }}
+{{- end }}
 {{- end }}
 
 {{/* Customer CouchDB Environment Variables */}}
