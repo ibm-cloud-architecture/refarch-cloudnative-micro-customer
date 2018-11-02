@@ -85,7 +85,7 @@ jobs:
       # Install nsenter, which is needed for minikube to work
       - bash scripts/install_minikube_and_helm.sh
       # Install CouchDB
-      - helm upgrade --install couchdb --version 0.1.7 --set service.externalPort=5985,fullnameOverride=customer-couchdb,createAdminSecret=true,adminUsername=user,adminPassword=passw0rd,clusterSize=1,persistentVolume.enabled=false incubator/couchdb
+      - helm upgrade --install couchdb --version 0.2.2 --set service.externalPort=5985,fullnameOverride=customer-couchdb,createAdminSecret=true,adminUsername=user,adminPassword=passw0rd,clusterSize=1,persistentVolume.enabled=false incubator/couchdb
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
