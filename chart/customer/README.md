@@ -59,8 +59,9 @@ $ helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incuba
 
 # Install CouchDB Chart
 $ helm upgrade --install couchdb \
-  --version 0.1.7 \
+  --version 0.2.2 \
   --set fullnameOverride=customer-couchdb \
+  --set service.externalPort=5985 \
   --set createAdminSecret=true \
   --set adminUsername=user \
   --set adminPassword=passw0rd \
