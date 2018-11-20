@@ -1,29 +1,15 @@
 #!/bin/bash
-HOST="localhost";
-PORT="8082";
-URL="http://${HOST}:${PORT}";
-DEPLOYMENT="customer-customer";
+URL="$1";
 SERVICE_PATH="micro/customer/search";
 
 HS256_KEY=E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a;
 TEST_USER=user;
 TEST_PASSWORD=passw0rd;
 
-# trap ctrl-c and call ctrl_c() to stop port forwarding
-trap ctrl_c INT
-
-function ctrl_c() {
-	echo "** Trapped CTRL-C... Killing Port Forwarding and Stopping Load";
-	killall kubectl;
-	exit 0;
-}
-
-function start_port_forwarding() {
-	echo "Forwarding service port ${PORT}";
-	kubectl port-forward deployment/${DEPLOYMENT} ${PORT}:${PORT} --pod-running-timeout=1h &
-	echo "Sleeping for 3 seconds while connection is established...";
-	sleep 3;
-}
+if [ -z "$URL" ]; then
+	URL="http://localhost:8082"
+	echo "No URL provided! Using ${URL}"
+fi
 
 function create_jwt_admin() {
 	# Secret Key
@@ -42,15 +28,13 @@ function create_jwt_admin() {
 	#echo $jwt	
 }
 
-# Port Forwarding
-start_port_forwarding
-
 # Load Generation
-echo "Generating load..."
+echo "Generating load on ${URL}/${SERVICE_PATH}"
 create_jwt_admin
 
 while true; do
 	curl -s -X GET "${URL}/${SERVICE_PATH}?username=${TEST_USER}" \
 		-H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}" > /dev/null;
+	echo -n .;
 	sleep 0.2;
 done
