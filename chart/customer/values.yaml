@@ -13,16 +13,15 @@ service:
 
 ingress:
   enabled: false
-  hostname: customer.bluecompute.com
+  hostname: "customer.bluecompute.com"
   path: /micro/customer
-  ibmCloud:
-    redirectToHTTPS: false
-
-tls:
-  enabled: false
-  secretName:
-  crt: ENTER_BASE64_ENCODED_CERTIFICATE
-  key: ENTER_BASE64_ENCODED_KEY
+  annotations:
+    ingress.bluemix.net/redirect-to-https: "True"
+  enableTLS: false
+  TLS:
+  - secretName: customer.bluecompute.com
+    hosts:
+      - customer.bluecompute.com
 
 hs256key:
   # If there is an existing secret with the key, provide it here
@@ -34,6 +33,8 @@ global:
     secretName:
   istio:
     enabled:
+    gateway:
+      name:
 
 testUser:
   createUser: true
@@ -53,6 +54,8 @@ couchdb:
   existingSecret:
   adminUsername: user
   adminPassword: passw0rd
+  # Used when using Istio
+  headless: customer-couchdb-couchdb
 
 resources:
   limits:
@@ -71,6 +74,16 @@ istio:
   mTLS: ISTIO_MUTUAL
   # LEAST_CONN, ROUND_ROBIN
   loadBalancer: LEAST_CONN
-  enableGateway: false
-  httpsRedirect: false
-  hosts:
+  gateway:
+    enabled: false
+    name:
+    hosts:
+      - "customer.bluecompute.com"
+    TLS:
+      enabled: false
+      # SIMPLE, MUTUAL
+      mode: SIMPLE
+      httpsRedirect: false
+      serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+      privateKey: /etc/istio/ingressgateway-certs/tls.key
+      caCertificates: /etc/istio/ingressgateway-ca-certs/ca-chain.cert.pem

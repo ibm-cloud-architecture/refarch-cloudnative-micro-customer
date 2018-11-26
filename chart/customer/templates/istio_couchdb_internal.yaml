@@ -1,0 +1,29 @@
+{{ if .Values.istio.enabled }}
+# CouchDB Service
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ .Values.couchdb.host }}
+spec:
+  host: {{ .Values.couchdb.host }}.{{ .Release.Namespace }}.svc.cluster.local
+  trafficPolicy:
+    portLevelSettings:
+    - port:
+        number: {{ .Values.couchdb.port }}
+      tls:
+        mode: DISABLE
+---
+# CouchDB Headless
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ .Values.couchdb.headless }}
+spec:
+  host: {{ .Values.couchdb.headless }}.{{ .Release.Namespace }}.svc.cluster.local
+  trafficPolicy:
+    portLevelSettings:
+    - port:
+        number: 5984
+      tls:
+        mode: DISABLE
+{{ end }}
