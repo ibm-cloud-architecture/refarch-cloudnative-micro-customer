@@ -12,15 +12,14 @@ server:
 # Spring properties
 spring:
   application:
-     name: customer
-
-     cloudant:
-        protocol: ${COUCHDB_PROTOCOL:http}
-        username: ${COUCHDB_USER:admin}
-        password: ${COUCHDB_PASSWORD:passw0rd}
-        host: ${COUCHDB_HOST:127.0.0.1}
-        port: ${COUCHDB_PORT:5985}
-        database: ${COUCHDB_DATABASE:customers}
+    name: customer
+    cloudant:
+      protocol: ${COUCHDB_PROTOCOL:http}
+      username: ${COUCHDB_USER:admin}
+      password: ${COUCHDB_PASSWORD:passw0rd}
+      host: ${COUCHDB_HOST:127.0.0.1}
+      port: ${COUCHDB_PORT:5985}
+      database: ${COUCHDB_DATABASE:customers}
 
 jwt:
   sharedSecret: ${HS256_KEY}
