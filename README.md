@@ -40,10 +40,10 @@ Here is an overview of the project's features:
 - Uses [`Spring Data JPA`](http://projects.spring.io/spring-data-jpa/) to persist data to CouchDB database.
 - Uses [`CouchDB`](http://couchdb.apache.org/) as the customer database.
 - Uses [`Docker`](https://docs.docker.com/) to package application binary and its dependencies.
-- Uses [`Helm`](https://helm.sh/) to package application and CouchDB deployment configuration and deploy to a [`Kubernetes`](https://kubernetes.io/) cluster. 
+- Uses [`Helm`](https://helm.sh/) to package application and CouchDB deployment configuration and deploy to a [`Kubernetes`](https://kubernetes.io/) cluster.
 
 ## APIs
-The Customer Microservice REST API is OAuth protected.  
+The Customer Microservice REST API is OAuth protected.
 - `POST /micro/customer`
   - Create a customer. - Return customer by username.  The caller of this API must pass a valid OAuth token with the scope `admin`.  The Customer object must be passed as JSON object in the request body with the following format:
     ```
@@ -82,18 +82,18 @@ The Customer Microservice REST API is OAuth protected.
     + [`helm`](https://docs.helm.sh/using_helm/#installing-helm)
 * Clone customer repository:
 ```bash
-$ git clone -b spring --single-branch https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git
-$ cd refarch-cloudnative-micro-customer
+git clone -b spring --single-branch https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git
+cd refarch-cloudnative-micro-customer
 ```
 
 ## Deploy Customer Application to Kubernetes Cluster
 In this section, we are going to deploy the Customer Application, along with a CouchDB service, to a Kubernetes cluster using Helm. To do so, follow the instructions below:
 ```bash
 # Add helm repos for CouchDB Chart
-$ helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
 
 # Install CouchDB Chart
-$ helm upgrade --install couchdb \
+helm upgrade --install couchdb \
   --version 0.2.2 \
   --set fullnameOverride=customer-couchdb \
   --set service.externalPort=5985 \
@@ -105,10 +105,10 @@ $ helm upgrade --install couchdb \
   incubator/couchdb
 
 # Go to Chart Directory
-$ cd chart/customer
+cd chart/customer
 
 # Deploy Customer to Kubernetes cluster
-$ helm upgrade --install customer --set service.type=NodePort .
+helm upgrade --install customer --set service.type=NodePort .
 ```
 
 The last command will give you instructions on how to access/test the Customer application. Please note that before the Customer application starts, the CouchDB deployment must be fully up and running, which normally takes a couple of minutes. With Kubernetes [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/), the Customer Deployment polls for CouchDB readiness status so that Customer can start once CouchDB is ready, or error out if CouchDB fails to start.
@@ -117,7 +117,7 @@ Also, once CouchDB is fully up and running, a [`Kubernetes Job`](https://kuberne
 
 To check and wait for the deployment status, you can run the following command:
 ```bash
-$ kubectl get deployments -w
+kubectl get deployments -w
 NAME                  DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 customer-customer     1         1         1            1           10h
 ```
@@ -131,8 +131,8 @@ Now that we have the customer service up and running, let's go ahead and test th
 #### a. Setup Customer Service Hostname and Port
 To make going through this document easier, we recommend you create environment variables for the customer service hostname/IP and port. To do so, run the following commands:
 ```bash
-$ export CUSTOMER_HOST=localhost
-$ export CUSTOMER_PORT=8082
+export CUSTOMER_HOST=localhost
+export CUSTOMER_PORT=8082
 ```
 
 Where:
@@ -147,12 +147,12 @@ As the APIs in this microservice as OAuth protected, the HS256 shared secret use
 
 To make things easier for you, we pasted below the 2048-bit secret that's included in the customer chart [here](chart/customer/values.yaml#L28), which you can export to your environment as follows:
 ```bash
-$ export HS256_KEY="E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a"
+export HS256_KEY="E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a"
 ```
 
 However, if you must create your own 2048-bit secret, one can be generated using the following command:
 ```bash
-$ cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 256 | head -n 1 | xargs echo -n
+cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 256 | head -n 1 | xargs echo -n
 ```
 
 Note that if the [Authorization Server](https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth) is also deployed, it must use the *same* HS256 shared secret.
@@ -180,7 +180,7 @@ Where:
 ### 1. Create a Customer
 Let's create a new customer with username `foo` and password `bar` and its respective profile with the following command:
 ```bash
-$ curl -X POST -i "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer" -H "Content-Type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${TEST_USER}\", \"password\": \"bar\", \"firstName\": \"foo\", \"lastName\": \"bar\", \"email\": \"foo@bar.com\"}"
+curl -X POST -i "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer" -H "Content-Type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${TEST_USER}\", \"password\": \"bar\", \"firstName\": \"foo\", \"lastName\": \"bar\", \"email\": \"foo@bar.com\"}"
 
 HTTP/1.1 201 Created
 Date: Mon, 20 Aug 2018 21:43:51 GMT
@@ -205,13 +205,13 @@ Where:
 Note the `Location` header returned, which contains the `CUSTOMER_ID` of the created customer.  For the GET calls below, copy the ID in the `Location` header (e.g. in the above, `41757d0170344f9ea47a2d9634bc9ba7`). This id will be used later when deleting the user. To save it in your environment, run the following command using the the id returned above:
 ```bash
 # In this case, we are using the id that was returned in our sample command above, which will differ for you
-$ CUSTOMER_ID=41757d0170344f9ea47a2d9634bc9ba7
+CUSTOMER_ID=41757d0170344f9ea47a2d9634bc9ba7
 ```
 
 ### 2. Search the Customer
 To search users with a particular username, i.e. `foo`, run the command below:
 ```bash
-$ curl -s -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/search?username=${TEST_USER}" -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}"
+curl -s -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/search?username=${TEST_USER}" -H 'Content-type: application/json' -H "Authorization: Bearer ${jwt}"
 
 [{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","email":"foo@bar.com","imageUrl":null,"customerId":"7145e43859764b3e8abc76784f1eb36a"}]
 ```
@@ -248,7 +248,7 @@ Where:
 #### Use `blue` Scoped JWT Token to Retrieve the Customer Record
 To retrieve the customer record using the `blue` scoped JWT token, run the command below:
 ```bash
-$ curl -s -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer" -H "Authorization: Bearer ${jwt_blue}"
+curl -s -X GET "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer" -H "Authorization: Bearer ${jwt_blue}"
 
 [{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","email":"foo@bar.com","imageUrl":null,"customerId":"7145e43859764b3e8abc76784f1eb36a"}]
 ```
@@ -258,7 +258,7 @@ Note that *only* the customer object identified by the encoded `user_name` is re
 ### 4. Delete the Customer
 Using either the `admin` or the `blue` scoped JWT token, you can delete the customer record. If using the `blue` scoped JWT token, *only* the customer object identified by the encoded `user_name` can be deleted. To run with the `blue` scoped JWT token to delete the user, run the command below:
 ```bash
-$ curl -X DELETE -i "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/${CUSTOMER_ID}" -H "Content-type: application/json" -H "Authorization: Bearer ${jwt_blue}"
+curl -X DELETE -i "http://${CUSTOMER_HOST}:${CUSTOMER_PORT}/micro/customer/${CUSTOMER_ID}" -H "Content-type: application/json" -H "Authorization: Bearer ${jwt_blue}"
 
 HTTP/1.1 200 OK
 Date: Mon, 20 Aug 2018 22:20:00 GMT
@@ -276,16 +276,16 @@ Where:
 If successful, you should get a `200 OK` status code as shown in the command above.
 
 ## Deploy Customer Application on Docker
-You can also run the Customer Application locally on Docker. Before we show you how to do so, you will need to have a running CouchDB deployment running somewhere. 
+You can also run the Customer Application locally on Docker. Before we show you how to do so, you will need to have a running CouchDB deployment running somewhere.
 
 ### Deploy the CouchDB Docker Container
 The easiest way to get CouchDB running is via a Docker container. To do so, run the following commands:
 ```bash
 # Start a CouchDB Container with a database user, a password, and create a new database
-$ docker run --name customercouchdb -p 5985:5985 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb
+docker run --name customercouchdb -p 5985:5984 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb:2.1.2
 
 # Get the CouchDB Container's IP Address
-$ docker inspect customercouchdb | grep "IPAddress"
+docker inspect customercouchdb | grep "IPAddress"
             "SecondaryIPAddresses": null,
             "IPAddress": "172.17.0.2",
                     "IPAddress": "172.17.0.2",
@@ -296,15 +296,15 @@ Make sure to select the IP Address in the `IPAddress` field. You will use this I
 To deploy the Customer container, run the following commands:
 ```bash
 # Build the Docker Image
-$ docker build -t customer .
+docker build -t customer .
 
 # Start the Customer Container
-$ docker run --name customer \
+docker run --name customer \
     -e COUCHDB_PROTOCOL=http \
     -e COUCHDB_USER=admin \
-    -e COUCHDB_PASSWORD=password \
+    -e COUCHDB_PASSWORD=passw0rd \
     -e COUCHDB_HOST=${COUCHDB_IP_ADDRESS} \
-    -e COUCHDB_PORT=5985 \
+    -e COUCHDB_PORT=5984 \
     -e HS256_KEY=${HS256_KEY} \
     -p 8082:8082 \
     -d customer
@@ -314,7 +314,7 @@ Where `${COUCHDB_IP_ADDRESS}` is the IP address of the CouchDB container, which 
 
 If everything works successfully, you should be able to get some data when you run the following command:
 ```bash
-$ curl http://localhost:8082/micro/customer
+curl http://localhost:8082/micro/customer
 ```
 
 ## Run Customer Service application on localhost
@@ -332,17 +332,17 @@ Once CouchDB is ready, we can run the Spring Boot Customer application locally a
 
 2. Build the application:
 ```bash
-$ ./gradlew build -x test
+./gradlew build -x test
 ```
 
 3. Run the application on localhost:
 ```bash
-$ java -jar build/libs/micro-customer-0.0.1.jar
+java -jar build/libs/micro-customer-0.0.1.jar
 ```
 
 4. Validate. You should get a list of all customer items:
 ```bash
-$ curl http://localhost:8082/micro/customer
+curl http://localhost:8082/micro/customer
 ```
 
 That's it, you have successfully deployed and tested the Customer microservice.
@@ -352,7 +352,7 @@ That's it, you have successfully deployed and tested the Customer microservice.
 The Spring Boot applications can be deployed on WebSphere Liberty as well. In this case, the embedded server i.e. the application server packaged up in the JAR file will be Liberty. For instructions on how to deploy the Customer application optimized for Docker on Open Liberty, which is the open source foundation for WebSphere Liberty, follow the instructions [here](OpenLiberty.MD)
 
 ## Optional: Setup CI/CD Pipeline
-If you would like to setup an automated Jenkins CI/CD Pipeline for this repository, we provided a sample [Jenkinsfile](Jenkinsfile), which uses the [Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/) syntax of the [Jenkins Kubernetes Plugin](https://github.com/jenkinsci/kubernetes-plugin) to automatically create and run Jenkis Pipelines from your Kubernetes environment. 
+If you would like to setup an automated Jenkins CI/CD Pipeline for this repository, we provided a sample [Jenkinsfile](Jenkinsfile), which uses the [Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/) syntax of the [Jenkins Kubernetes Plugin](https://github.com/jenkinsci/kubernetes-plugin) to automatically create and run Jenkis Pipelines from your Kubernetes environment.
 
 To learn how to use this sample pipeline, follow the guide below and enter the corresponding values for your environment and for this repository:
 * https://github.com/ibm-cloud-architecture/refarch-cloudnative-devops-kubernetes

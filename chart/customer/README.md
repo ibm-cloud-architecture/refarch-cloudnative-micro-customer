@@ -10,7 +10,7 @@ Here is an overview of the chart's features:
 - Uses [`Spring Data JPA`](http://projects.spring.io/spring-data-jpa/) to persist data to CouchDB database.
 - Uses [`CouchDB`](http://couchdb.apache.org/) as the customer database.
 - Uses [`Docker`](https://docs.docker.com/) to package application binary and its dependencies.
-- Uses [`Helm`](https://helm.sh/) to package application and CouchDB deployment configuration and deploy to a [`Kubernetes`](https://kubernetes.io/) cluster. 
+- Uses [`Helm`](https://helm.sh/) to package application and CouchDB deployment configuration and deploy to a [`Kubernetes`](https://kubernetes.io/) cluster.
 
 ## Chart Source
 The source for the `Customer` chart can be found at:
@@ -20,7 +20,7 @@ The source for the `CouchDB` chart can be found at:
 * https://github.com/helm/charts/tree/master/incubator/couchdb
 
 ## APIs
-The Customer Microservice REST API is OAuth protected.  
+The Customer Microservice REST API is OAuth protected.
 - `POST /micro/customer`
   - Create a customer. - Return customer by username.  The caller of this API must pass a valid OAuth token with the scope `admin`.  The Customer object must be passed as JSON object in the request body with the following format:
     ```
@@ -55,10 +55,10 @@ The Customer Microservice REST API is OAuth protected.
 To deploy the Customer Chart and its CouchDB dependency Chart to a Kubernetes cluster using Helm CLI, follow the instructions below:
 ```bash
 # Add helm repos for CouchDB Chart
-$ helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
 
 # Install CouchDB Chart
-$ helm upgrade --install couchdb \
+helm upgrade --install couchdb \
   --version 0.2.2 \
   --set fullnameOverride=customer-couchdb \
   --set service.externalPort=5985 \
@@ -70,11 +70,11 @@ $ helm upgrade --install couchdb \
   incubator/couchdb
 
 # Clone customer repository:
-$ git clone -b spring --single-branch https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git
+git clone -b spring --single-branch https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git
 
 # Go to Chart Directory
-$ cd refarch-cloudnative-micro-customer/chart/customer
+cd refarch-cloudnative-micro-customer/chart/customer
 
 # Deploy Customer to Kubernetes cluster
-$ helm upgrade --install customer --set service.type=NodePort .
+helm upgrade --install customer --set service.type=NodePort .
 ```

@@ -16,6 +16,12 @@ release: {{ .Release.Name | quote }}
 chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{- end }}
 
+{{/* Customer Environment Variables */}}
+{{- define "customer.environmentvariables" }}
+- name: SERVICE_PORT
+  value: {{ .Values.service.internalPort | quote }}
+{{- end }}
+
 {{/* Customer Init Container Template */}}
 {{- define "customer.initcontainer" }}
 {{- if not (or .Values.global.istio.enabled .Values.istio.enabled) }}
