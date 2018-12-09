@@ -40,7 +40,7 @@ jobs:
       # Gradle Build
       - ./gradlew build -x test
       # Start Application
-      - java -Deureka.client.fetchRegistry=false -Deureka.client.registerWithEureka=false -Djwt.sharedSecret=${HS256_KEY} -jar build/libs/micro-customer-0.0.1.jar &
+      - java -jar build/libs/micro-customer-0.0.1.jar &
       # Wait for the Customer container to start accepting connections
       - sleep 25
       # Run Customer API Test
@@ -59,13 +59,13 @@ jobs:
       # Test CouchDB
       - curl http://127.0.0.1:5985
       # Get IP Address for CouchDB
-      - COUCHDB_IP=$(docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress')
+      - COUCHDB_HOST=$(docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress')
       #- docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress'
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
       # Start Customer Container and Connect to local MySQL Service
-      - docker run --net=host --name customer -d -p 8082:8082 -e HS256_KEY=${HS256_KEY} -e COUCHDB_URI="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984" "${IMAGE_NAME}:${TAG}"
+      - docker run --net=host --name customer -d -p 8082:8082 -e COUCHDB_HOST="${COUCHDB_HOST}" -e COUCHDB_PORT="5984" -e HS256_KEY="${HS256_KEY}" "${IMAGE_NAME}:${TAG}"
       # Wait for the Customer container to start accepting connections
       - sleep 25
       # Check that the Customer container is running

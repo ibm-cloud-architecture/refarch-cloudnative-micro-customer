@@ -1,27 +1,25 @@
 eureka:
-  instance:
-     preferIpAddress: true
   client:
-    serviceUrl:
-       defaultZone: http://microservices-refapp-eureka-chrisking.mybluemix.net/eureka/
+    enabled: false
+    registerWithEureka: false
+  fetchRegistry: false
 
 # Server configuration
 server:
   context-path: /micro
-  port: 8082
+  port: ${SERVICE_PORT:8082}
 
 # Spring properties
 spring:
   application:
-     name: customer-microservice
-
-     cloudant:
-        protocol: http
-        username: admin
-        password: passw0rd
-        host: 127.0.0.1
-        port: 5985
-        database: customers
+    name: customer
+    cloudant:
+      protocol: ${COUCHDB_PROTOCOL:http}
+      username: ${COUCHDB_USER:admin}
+      password: ${COUCHDB_PASSWORD:passw0rd}
+      host: ${COUCHDB_HOST:127.0.0.1}
+      port: ${COUCHDB_PORT:5985}
+      database: ${COUCHDB_DATABASE:customers}
 
 jwt:
   sharedSecret: ${HS256_KEY}
