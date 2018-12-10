@@ -22,4 +22,4 @@ spring:
       database: ${COUCHDB_DATABASE:customers}
 
 jwt:
-  sharedSecret: ${HS256_KEY}
+  sharedSecret: ${HS256_KEY:}
