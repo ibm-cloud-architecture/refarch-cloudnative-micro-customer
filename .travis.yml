@@ -7,6 +7,8 @@ env:
     - IMAGE_NAME=bluecompute-customer
     - RELEASE_NAME=customer
     - TAG=travis-latest
+    - SERVICE_PORT=8082
+    - MANAGEMENT_PORT=8092
     - HS256_KEY=E6526VJkKYhyTFRFMC0pTECpHcZ7TGcq8pKsVVgz9KtESVpheEO284qKzfzg8HpWNBPeHOxNGlyudUHi6i8tFQJXC8PiI48RUpMh23vPDLGD35pCM0417gf58z5xlmRNii56fwRCmIhhV7hDsm3KO2jRv4EBVz7HrYbzFeqI45CaStkMYNipzSm2duuer7zRdMjEKIdqsby0JfpQpykHmC5L6hxkX0BT7XWqztTr6xHCwqst26O0g8r7bXSYjp4a
     - COUCHDB_USER=admin
     - COUCHDB_PASSWORD=passw0rd
@@ -40,11 +42,11 @@ jobs:
       # Gradle Build
       - ./gradlew build -x test
       # Start Application
-      - java -jar build/libs/micro-customer-0.0.1.jar &
-      # Wait for the Customer container to start accepting connections
-      - sleep 25
-      # Run Customer API Test
-      - bash scripts/api_tests.sh 127.0.0.1 8082 $HS256_KEY $TEST_USER $TEST_PASSWORD
+      - java -jar build/libs/micro-${RELEASE_NAME}-0.0.1.jar &
+      # Let the application start
+      - bash scripts/health_check.sh
+      # Run API Test
+      - bash scripts/api_tests.sh 127.0.0.1 ${SERVICE_PORT}
     - stage: docker build, deploy, and test
       services:
       - docker
@@ -60,52 +62,54 @@ jobs:
       - curl http://127.0.0.1:5985
       # Get IP Address for CouchDB
       - COUCHDB_HOST=$(docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress')
-      #- docker inspect couchdb | jq -r '.[0].NetworkSettings.IPAddress'
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
-      # Start Customer Container and Connect to local MySQL Service
-      - docker run --net=host --name customer -d -p 8082:8082 -e COUCHDB_HOST="${COUCHDB_HOST}" -e COUCHDB_PORT="5984" -e HS256_KEY="${HS256_KEY}" "${IMAGE_NAME}:${TAG}"
-      # Wait for the Customer container to start accepting connections
-      - sleep 25
-      # Check that the Customer container is running
+      # Start Container and Connect to CouchDB Service
+      - docker run --net=host --name ${RELEASE_NAME} -d -p ${SERVICE_PORT}:${SERVICE_PORT} -p ${MANAGEMENT_PORT}:${MANAGEMENT_PORT} -e COUCHDB_HOST="${COUCHDB_HOST}" -e COUCHDB_PORT="5984" -e HS256_KEY="${HS256_KEY}" "${IMAGE_NAME}:${TAG}"
+      # Check that the container is running
       - docker ps
       # Check logs to see if it started properly
-      - docker logs customer
-      # Run Customer API Test
-      - bash scripts/api_tests.sh 127.0.0.1 8082 $HS256_KEY $TEST_USER $TEST_PASSWORD
+      - docker logs -f ${RELEASE_NAME} &
+      # Let the application start
+      - bash scripts/health_check.sh
+      # Run API Test
+      - bash scripts/api_tests.sh 127.0.0.1 ${SERVICE_PORT} $HS256_KEY $TEST_USER $TEST_PASSWORD
     - stage: kubernetes build, deploy, and test
       services:
       - docker
       env:
       - CHANGE_MINIKUBE_NONE_USER=true
+      - CHART_NAME=customer
       install:
         - true
       before_script:
       # Install nsenter, which is needed for minikube to work
       - bash scripts/install_minikube_and_helm.sh
       # Install CouchDB
-      - helm upgrade --install couchdb --version 0.2.2 --set service.externalPort=5985,fullnameOverride=customer-couchdb,createAdminSecret=true,adminUsername=user,adminPassword=passw0rd,clusterSize=1,persistentVolume.enabled=false incubator/couchdb
+      - helm upgrade --install couchdb --version 0.2.2 --set service.externalPort=5985,fullnameOverride=${RELEASE_NAME}-couchdb,createAdminSecret=true,adminUsername=${COUCHDB_USER},adminPassword=${COUCHDB_PASSWORD},clusterSize=1,persistentVolume.enabled=false incubator/couchdb
+      # Wait for CouchDB to start
+      #- kubectl rollout status statefulset/${RELEASE_NAME}-couchdb-couchdb
       script:
       # Build Docker image
       - docker build -t "${IMAGE_NAME}:${TAG}" .
-      # Download Customer chart dependencies (MySQL)
-      - cd chart/customer; helm dependency update; cd ../..
       # helm lint
-      - helm lint chart/customer
+      - helm lint chart/${CHART_NAME}
       # helm package
-      - helm package chart/customer
-      # helm install Customer from packaged chart. Use pullPolicy=Never so it uses local docker image
-      - CHART_VERSION="$(cat chart/customer/Chart.yaml | grep version | awk '{print $2}')"
-      - helm upgrade --install customer --set service.type=NodePort,testUser.createUser=false,image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never customer-${CHART_VERSION}.tgz
-      # Wait for Customer to be ready
-      - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
-      - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')
-      - echo $READY
-      - until [ -n "$READY" ] && [ ${READY} -ge 1 ]; do READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}'); kubectl get deployments -o wide; echo "Waiting for customer to be ready"; sleep 10; done
-      # Wait for Customer deployment to start accepting connections
-      - sleep 35
-      # Run Customer API Test
-      - MINIKUBE_IP=$(minikube ip)
-      - NODE_PORT=$(kubectl get service ${RELEASE_NAME}-customer -o=jsonpath='{.spec.ports[0].nodePort}')
-      - bash scripts/api_tests.sh $MINIKUBE_IP $NODE_PORT $HS256_KEY $TEST_USER $TEST_PASSWORD
+      - helm package chart/${CHART_NAME}
+      # helm install from packaged chart. Use pullPolicy=Never so it uses local docker image
+      - CHART_VERSION="$(cat chart/${CHART_NAME}/Chart.yaml | grep version | awk '{print $2}')"
+      - helm upgrade --install ${RELEASE_NAME} --set image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never,testUser.createUser=false ${CHART_NAME}-${CHART_VERSION}.tgz
+      # Get Deployment Name
+      - DEPLOYMENT="deployment/${RELEASE_NAME}-${CHART_NAME}"
+      # Wait for deployment to be ready
+      - kubectl rollout status ${DEPLOYMENT}
+      # Port Forwarding
+      - kubectl port-forward ${DEPLOYMENT} ${SERVICE_PORT} ${MANAGEMENT_PORT} &
+      - kubectl logs -f ${DEPLOYMENT} &
+      - echo "Sleeping for 3 seconds while connection is established..."
+      - sleep 3
+      # Let the application start
+      - bash scripts/health_check.sh
+      # Run API Test
+      - bash scripts/api_tests.sh 127.0.0.1 ${SERVICE_PORT} $HS256_KEY $TEST_USER $TEST_PASSWORD
