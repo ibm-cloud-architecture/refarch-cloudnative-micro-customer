@@ -30,9 +30,9 @@ def managementPort = env.MANAGEMENT_PORT ?: "8092"
 //     - These variables get picked up by the Java application automatically
 //     - There were issues with Jenkins credentials plugin interfering with setting up the password directly
 
-def couchDBProtocol = env.COUCHDB_PROTOCOL
+def couchDBProtocol = env.COUCHDB_PROTOCOL ?: "http"
 def couchDBHost = env.COUCHDB_HOST
-def couchDBPort = env.COUCHDB_PORT ?: "3306"
+def couchDBPort = env.COUCHDB_PORT ?: "5985"
 def couchDBDatabase = env.COUCHDB_DATABASE ?: "customerdb"
 
 // HS256_KEY Secret
@@ -117,7 +117,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, names
                     --set couchdb.database=${COUCHDB_DATABASE} \
                     --set couchdb.username=${COUCHDB_USER} \
                     --set couchdb.password=${COUCHDB_PASSWORD} \
-                    --set hs256key.secret=`echo ${HS256_KEY} | base64` \
+                    --set hs256key.secret="${HS256_KEY}" \
                     chart/${MICROSERVICE_NAME} --wait --tls
                 set -x
                 """

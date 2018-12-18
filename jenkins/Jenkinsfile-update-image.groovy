@@ -29,9 +29,9 @@ def managementPort = env.MANAGEMENT_PORT ?: "8092"
 //     - These variables get picked up by the Java application automatically
 //     - There were issues with Jenkins credentials plugin interfering with setting up the password directly
 
-def couchDBProtocol = env.COUCHDB_PROTOCOL
+def couchDBProtocol = env.COUCHDB_PROTOCOL ?: "http"
 def couchDBHost = env.COUCHDB_HOST
-def couchDBPort = env.COUCHDB_PORT ?: "3306"
+def couchDBPort = env.COUCHDB_PORT ?: "5985"
 def couchDBDatabase = env.COUCHDB_DATABASE ?: "customerdb"
 
 // HS256_KEY Secret
