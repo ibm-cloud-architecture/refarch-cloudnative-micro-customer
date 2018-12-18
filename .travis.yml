@@ -97,12 +97,9 @@ jobs:
       - helm package chart/${CHART_NAME}
       # helm install from packaged chart. Use pullPolicy=Never so it uses local docker image
       - CHART_VERSION="$(cat chart/${CHART_NAME}/Chart.yaml | grep version | awk '{print $2}')"
-      - helm upgrade --install ${RELEASE_NAME} --set image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never,testUser.createUser=false ${CHART_NAME}-${CHART_VERSION}.tgz
+      - helm upgrade --install ${RELEASE_NAME} --set image.repository="${IMAGE_NAME}",image.tag="${TAG}",image.pullPolicy=Never,testUser.createUser=false,couchdb.adminUsername=${COUCHDB_USER},couchdb.adminPassword=${COUCHDB_PASSWORD} ${CHART_NAME}-${CHART_VERSION}.tgz
       # Get Deployment Name
       - DEPLOYMENT="deployment/${RELEASE_NAME}-${CHART_NAME}"
-      # Get logs
-      - sleep 30
-      - kubectl logs -f ${DEPLOYMENT} &
       # Wait for deployment to be ready
       - kubectl get pods -w &
       - kubectl rollout status ${DEPLOYMENT}
