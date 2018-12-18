@@ -101,8 +101,10 @@ jobs:
       # Get Deployment Name
       - DEPLOYMENT="deployment/${RELEASE_NAME}-${CHART_NAME}"
       # Wait for deployment to be ready
-      - kubectl logs -f ${DEPLOYMENT} &
+      - kubectl get pods -w &
       - kubectl rollout status ${DEPLOYMENT}
+      # Get logs
+      - kubectl logs -f ${DEPLOYMENT} &
       # Port Forwarding
       - kubectl port-forward ${DEPLOYMENT} ${SERVICE_PORT} ${MANAGEMENT_PORT} &
       - echo "Sleeping for 3 seconds while connection is established..."
