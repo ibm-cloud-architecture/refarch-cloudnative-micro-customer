@@ -33,7 +33,10 @@ def managementPort = env.MANAGEMENT_PORT ?: "8092"
 def couchDBProtocol = env.COUCHDB_PROTOCOL ?: "http"
 def couchDBHost = env.COUCHDB_HOST
 def couchDBPort = env.COUCHDB_PORT ?: "5985"
-def couchDBDatabase = env.COUCHDB_DATABASE ?: "customerdb"
+def couchDBDatabase = env.COUCHDB_DATABASE ?: "customers"
+
+// Default User Creation
+def createUser = env.CREATE_USER ?: "false"
 
 // HS256_KEY Secret
 def hs256Key = env.HS256_KEY
@@ -58,6 +61,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, names
         envVar(key: 'COUCHDB_HOST', value: couchDBHost),
         envVar(key: 'COUCHDB_PORT', value: couchDBPort),
         envVar(key: 'COUCHDB_DATABASE', value: couchDBDatabase),
+        envVar(key: 'CREATE_USER', value: createUser),
         envVar(key: 'HS256_KEY', value: hs256Key),
         envVar(key: 'HELM_HOME', value: helmHome)
     ],
@@ -117,6 +121,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, names
                     --set couchdb.database=${COUCHDB_DATABASE} \
                     --set couchdb.adminUsername=${COUCHDB_USER} \
                     --set couchdb.adminPassword=${COUCHDB_PASSWORD} \
+                    --set testUser.createUser=${CREATE_USER} \
                     --set hs256key.secret="${HS256_KEY}" \
                     chart/${MICROSERVICE_NAME} --wait --tls
                 set -x

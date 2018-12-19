@@ -60,6 +60,8 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   value: {{ .Values.couchdb.protocol | quote }}
 - name: COUCHDB_PORT
   value: {{ .Values.couchdb.port | quote }}
+- name: COUCHDB_DATABASE
+  value: {{ .Values.couchdb.database | quote }}
 - name: COUCHDB_USER
   valueFrom:
     secretKeyRef:

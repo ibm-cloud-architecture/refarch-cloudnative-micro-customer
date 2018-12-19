@@ -55,6 +55,7 @@ couchdb:
   existingSecret:
   adminUsername: user
   adminPassword: passw0rd
+  database: customers
   # Used when using Istio
   headless: customer-couchdb-couchdb
 
