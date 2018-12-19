@@ -247,8 +247,8 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, names
                     --set couchdb.host=${COUCHDB_HOST} \
                     --set couchdb.port=${COUCHDB_PORT} \
                     --set couchdb.database=${COUCHDB_DATABASE} \
-                    --set couchdb.username=${COUCHDB_USER} \
-                    --set couchdb.password=${COUCHDB_PASSWORD} \
+                    --set couchdb.adminUsername=${COUCHDB_USER} \
+                    --set couchdb.adminPassword=${COUCHDB_PASSWORD} \
                     --set hs256key.secret="${HS256_KEY}" \
                     chart/${MICROSERVICE_NAME} --wait --tls
                 set -x
