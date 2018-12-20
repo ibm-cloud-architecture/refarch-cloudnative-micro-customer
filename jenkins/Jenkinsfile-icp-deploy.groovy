@@ -35,8 +35,10 @@ def couchDBHost = env.COUCHDB_HOST
 def couchDBPort = env.COUCHDB_PORT ?: "5985"
 def couchDBDatabase = env.COUCHDB_DATABASE ?: "customers"
 
-// Default User Creation
+// Test User Creation
 def createUser = env.CREATE_USER ?: "true"
+def testUser = env.TEST_USER ?: "testuser"
+def testPassword = env.TEST_PASSWORD ?: "passw0rd"
 
 // HS256_KEY Secret
 def hs256Key = env.HS256_KEY
@@ -62,10 +64,18 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, names
         envVar(key: 'COUCHDB_PORT', value: couchDBPort),
         envVar(key: 'COUCHDB_DATABASE', value: couchDBDatabase),
         envVar(key: 'CREATE_USER', value: createUser),
+        envVar(key: 'TEST_USER', value: testUser),
+        envVar(key: 'TEST_PASSWORD', value: testPassword),
         envVar(key: 'HS256_KEY', value: hs256Key),
         envVar(key: 'HELM_HOME', value: helmHome)
     ],
+    volumes: [
+        hostPathVolume(mountPath: '/home/gradle/.gradle', hostPath: '/tmp/jenkins/.gradle'),
+        hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')
+    ],
     containers: [
+        containerTemplate(name: 'jdk', image: 'ibmcase/openjdk-bash:alpine', ttyEnabled: true, command: 'cat'),
+        containerTemplate(name: 'docker' , image: 'ibmcase/docker-bash:1', ttyEnabled: true, command: 'cat'),
         containerTemplate(name: 'kubernetes', image: 'ibmcase/jenkins-slave-utils:1', ttyEnabled: true, command: 'cat')
   ]) {
 
@@ -153,7 +163,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, names
                 bash scripts/health_check.sh "http://127.0.0.1:${MANAGEMENT_PORT}"
 
                 # Run tests
-                bash scripts/api_tests.sh 127.0.0.1 ${MICROSERVICE_PORT}
+                bash scripts/api_tests.sh 127.0.0.1 ${MICROSERVICE_PORT} ${HS256_KEY} ${TEST_USER} ${TEST_PASSWORD}
 
                 # Kill port forwarding
                 killall kubectl || true
