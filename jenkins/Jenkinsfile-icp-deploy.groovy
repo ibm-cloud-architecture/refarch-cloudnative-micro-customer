@@ -36,7 +36,7 @@ def couchDBPort = env.COUCHDB_PORT ?: "5985"
 def couchDBDatabase = env.COUCHDB_DATABASE ?: "customers"
 
 // Default User Creation
-def createUser = env.CREATE_USER ?: "false"
+def createUser = env.CREATE_USER ?: "true"
 
 // HS256_KEY Secret
 def hs256Key = env.HS256_KEY
