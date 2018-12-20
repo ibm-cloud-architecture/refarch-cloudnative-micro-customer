@@ -14,7 +14,7 @@ spec:
       initContainers:
       {{- include "customer.couchdb.initcontainer" . | indent 6 }}
       containers:
-      - name: customer
+      - name: {{ .Chart.Name | quote }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         ports:
