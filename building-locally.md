@@ -21,7 +21,7 @@ To build the application, we used maven build. Maven is a project management too
 
    `git checkout microprofile`
    
-3. The Auth and Keystore services are required to be ran since a JWT is required to access the Customer endpoints.
+3. The Auth and Keystore services are required to be run because a JWT is required to access the Customer endpoints.
 Follow the instructions below to run these services.
 https://github.com/ibm-cloud-architecture/refarch-cloudnative-auth/tree/microprofile/building-locally.md
    
@@ -78,43 +78,65 @@ By default, the application runs on [WebSphere Liberty with Web Profile](https:/
 
 ## Setting up Cloudant
 
-To set up the Cloudant database locally, we are running it as a docker container. You need [Docker](https://www.docker.com/) as a prerequisite.
-To run cloudant on docker locally, run the commands below.
+To set up the Cloudant database locally, we are run it as a docker container. You need [Docker](https://www.docker.com/) as a prerequisite.
+To run Cloudant on docker locally, run the commands below.
 
-1. Pull the Cloudant docker image.
+1. Pull the Cloudant docker image:
 
-```
-docker pull ibmcom/cloudant-developer
-```
+	```
+	docker pull ibmcom/cloudant-developer
+	```
 
-2. Run the docker image.
+2. Run the docker image:
 
-```
-docker run \
-       --detach \
-       --volume cloudant:/srv \
-       --name cloudant-developer \
-       --publish 8080:80 \
-       --hostname cloudant.dev \
-       ibmcom/cloudant-developer
-```
+	```
+	docker run \
+	       --detach \
+	       --volume cloudant:/srv \
+	       --name cloudant-developer \
+	       --publish 8080:80 \
+	       --hostname cloudant.dev \
+	       ibmcom/cloudant-developer
+	```
 
-Populate the database with default users. To do so, follow the below steps.
-- `cd cloudant`
-- `python3 populate.py localhost 8080`
+* If your database isn't populated already, you can run a script to populate the database with default users. By doing so, you will have one admin user named `user` and one basic user named `foo` created in your Cloudant database. There are three approaches:
 
-Or, you can access the Cloudant dashboard at `http://localhost:8080/dashboard.html`, login with the credentials `admin` and `pass` and then create the docs as you can in the script [populate.py](./cloudant/populate.py). 
+	1. You can access the Cloudant dashboard at `http://localhost:8080/dashboard.html`, login with the credentials `admin` and `pass` and then create the docs as you can in the script [populate.py](./cloudant/populate.py).
 
-By doing so, you will have one admin user named `user` and one basic user named `foo` created in your Cloudant database.
+	2. Run the `populate.py` script directly. This will require you to have the Cloudant Python library installed, which you can obtain with `pip install cloudant`:  
+	
+		```
+		cd cloudant
+		python3 populate.py localhost 8080
+		```
+		
+	3. Run the `populate.py` script in a Docker container. This is probably the most complex approach but works if the previous options do not. The second step requires `cloudant-developer` to run on a network, so `docker stop` and `docker rm` your img if you created it already.
 
-3. In this case, you will need to set this property in microprofile-config.properties
-https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/microprofile/src/main/resources/META-INF/microprofile-config.properties
+		```
+		# Create a Docker network for container to container communication
+		docker network create cloudant
+		
+		# The cloudant-developer container must run on the network
+		docker run --detach --volume cloudant:/srv --name cloudant-developer --publish $cloudantPort:80 --hostname cloudant.dev --network cloudant ibmcom/cloudant-developer
+		
+		# Fetch the IP
+		export GATEWAY=$(docker network inspect cloudant | grep "Gateway" | awk '/"/{print $2}' | sed -e 's/^"//' -e 's/"$//')
+		
+		# Build the populate image (Will upload to Dockerhub soon)
+		cd cloudant/
+		docker build -t populate .
+		
+		# And run it
+		docker run populate $GATEWAY 8080
+		```
+
+In this case, you will need to set this property in [microprofile-config.properties](./src/main/resources/META-INF/microprofile-config.properties)
 
 ```
 application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
 ```
 
-This requires a rebuild, run `mvn install`.
+This requires a rebuild, run `mvn clean install`.
 
 ## Setting up Zipkin
 
@@ -122,7 +144,7 @@ This is an optional step.
 
 In our sample application, we used Zipkin as our distributed tracing system.
 
-If you want to access the traces for inventory service, run Zipkin as a docker container locally. You can find the instructions and more details [here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/Zipkin/README.md)
+If you want to access the traces for inventory service, run Zipkin as a docker container locally. You can find the instructions and more details [here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/blob/microprofile/Zipkin/README.md).
 
 ## Running the app and stopping it
 

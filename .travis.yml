@@ -1,0 +1,101 @@
+sudo: required
+language: java
+env:
+  global:
+    - zipkinHost=localhost
+    - zipkinPort=9411
+    - cloudantPort=8080
+    - customerHttpPort=9084
+    - customerHttpsPort=9445
+    - jwtid=myMpJwt
+    - jwtUri=https://localhost:9443/oidc/endpoint/OP/jwk
+    - jwtIssuer=https://localhost:9443/oidc/endpoint/OP
+    - IMAGE_NAME=customer-mp
+    - TAG=travis
+    - RELEASE_NAME=cust
+stages:
+  - local build and test
+jobs:
+  include:
+    - stage: local build and test
+      services:
+      - docker
+      before_script:
+      # Pull the Cloudant Docker image
+      - docker pull ibmcom/cloudant-developer
+      # Create a network for container communication (Populate to Cloudant)
+      - docker network create cloudant
+      # Setup and run Cloudant (Volumes not supported on Travis however)
+      - docker run --detach --volume cloudant:/srv --name cloudant-developer --publish $cloudantPort:80 --hostname cloudant.dev --network cloudant ibmcom/cloudant-developer
+      # Wait for Cloudant to Start
+      - sleep 25
+      # Check Cloudant status
+      - curl http://localhost:$cloudantPort
+      # Fetch network IP: Inspect Networt | Fetch Gateway | Parse IP | Remove Quotes
+      - export GATEWAY=$(docker network inspect cloudant | grep "Gateway" | awk '/"/{print $2}' | sed -e 's/^"//' -e 's/"$//')
+      # Populate the DB to test user creation and searching (Will replace with a pull and run when uploaded to Dockerhub)
+      - cd cloudant/
+      - docker build -t populate .
+      - docker run populate $GATEWAY $cloudantPort
+      - cd -
+      # Verify DB population
+      - curl http://admin:pass@localhost:$cloudantPort/customers/_design/username_searchIndex/_search/usernames\?query\=usernames:user\&include_docs\=true
+      # Define a Keystore
+      - keytool -genkeypair -dname "cn=bc.ibm.com, o=User, ou=IBM, c=US" -alias bckey -keyalg RSA -keysize 2048 -keypass password -storetype JKS -keystore ./BCKeyStoreFile.jks -storepass password -validity 3650
+      - keytool -list -keystore ./BCKeyStoreFile.jks -storepass password
+      - keytool -export -alias bckey -file client.cer -keystore ./BCKeyStoreFile.jks -storepass password -noprompt
+      - keytool -import -v -trustcacerts -alias bckey -file client.cer -keystore ./truststore.jks -storepass password -noprompt
+      - mkdir keystorevol && cp *.jks $_
+      - sudo cp -r keystorevol /etc/
+      # Swap MP Config for local testing
+      - cd src/main/resources/META-INF
+      - mv microprofile-config.properties      .microprofile-config.properties # Make hidden
+      - mv microprofile-config.properties.local microprofile-config.properties # Make main
+      - cd -
+      # Create Auth, put keystore in, and start it
+      - docker pull ibmcase/auth-mp:v3.0.0
+      - docker create --name auth --publish 9443:9443 --publish 9080:9080 ibmcase/auth-mp:v3.0.0
+      - docker cp keystorevol auth:/etc/
+      - docker start auth
+      script:
+      # Maven Build
+      - mvn clean install
+      # Start Application
+      - mvn liberty:start-server -DtestServerHttpPort=$customerHttpPort -DtestServerHttpsPort=$customerHttpsPort
+      - sleep 25
+      # Run Catalog API Test
+      - bash scripts/api_tests.sh localhost $customerHttpsPort
+    - stage: kubernetes build, deploy, and test
+      services:
+      - docker
+      env:
+      - CHANGE_MINIKUBE_NONE_USER=true
+      install:
+        - true
+      before_script:
+      # Install nsenter, which is needed for minikube to work
+      - bash scripts/install_minikube_and_helm.sh
+      # Run Kubernetes Job and run Auth
+      - helm install --name keystore services-bc-mp/keystore
+      - helm install --set service.name=service --name auth services-bc-mp/auth
+      script:
+      # Maven Build
+      - mvn clean install
+      # Build Docker image
+      - docker build -t "${IMAGE_NAME}:${TAG}" .
+      # Swap server.yaml because ReleaseName conflicts
+      - cp scripts/server.yaml chart/customer/templates/server.yaml
+      # Install Customer
+      - helm install --set service.auth=service --set image.repository=${IMAGE_NAME} --set image.tag=${TAG} --name ${RELEASE_NAME} ./chart/customer/
+      # Wait for Customer to be ready
+      - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
+      - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')
+      - echo $READY
+      - until [ -n "$READY" ] && [ ${READY} -ge 1 ]; do READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}'); kubectl get deployments -o wide; echo "Waiting for customer to be ready"; sleep 10; done
+      # Wait for cust deployment to start accepting connections
+      - sleep 35
+      # Run auth API Test
+      - MINIKUBE_IP=$(minikube ip)
+      - CUST_NODE_PORT=$(kubectl get service ${RELEASE_NAME}-customer -o=jsonpath='{.spec.ports[1].nodePort}')
+      - AUTH_NODE_PORT=$(kubectl get service auth-service -o=jsonpath='{.spec.ports[1].nodePort}')
+      - bash scripts/api_tests.sh $MINIKUBE_IP $CUST_NODE_PORT $MINIKUBE_IP $AUTH_NODE_PORT

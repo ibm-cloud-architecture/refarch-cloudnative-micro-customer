@@ -19,7 +19,7 @@ This repository contains the **MicroProfile** implementation of the **Customer S
 * [Deploying the App](#deploying-the-app)
     + [IBM Cloud Private](#ibm-cloud-private)
     + [Minikube](#minikube)
-    + [Run Customer Service locally](#run-customer-service-locally)
+    + [Run Customer Service locally](#run-the-customer-service-locally)
 * [References](#references)
 
 ### Introduction
@@ -38,8 +38,7 @@ The Customer Microservice serves 'IBM Cloud Native Reference Architecture' suite
 ### API Endpoints
 
 ```
-GET     /customer/rest/customer           # Returns all customers.
-GET     /customer/rest/customer/{id}      # Returns customer by id
+GET     /customer/rest/customer           # Returns customer using provided JWT
 ```
 
 ### Implementation
@@ -139,7 +138,7 @@ To deploy it on Minikube, please follow the instructions provided [here](https:/
 
 ### Run The Customer Service locally
 To deploy the app locally and test the individual service, please follow the instructions provided
-[here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/microprofile/building-locally.md)
+[here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/blob/microprofile/building-locally.md).
 ## References
 
 1. [Microprofile](https://microprofile.io/)

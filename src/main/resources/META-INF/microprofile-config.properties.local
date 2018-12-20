@@ -1,0 +1,13 @@
+# Cloudant
+protocol=http
+host=localhost
+port=8080
+
+user=admin
+password=pass
+
+database=customers
+application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
+
+#Auth
+auth_health=https://localhost:9443/health

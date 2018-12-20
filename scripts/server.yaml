@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.service.name }}"
+  labels:
+    chart: "{{ .Release.Name }}-{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: {{ .Release.Name }}
+    implementation: microprofile
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: http
+    port: {{ .Values.service.servicePort }}
+  - name: https
+    port: {{ .Values.service.servicePortHttps }}
+  selector:
+    app: bluecompute
+    micro: customer
+    service: server
+    release: {{ .Release.Name }}
+    implementation: microprofile
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.service.name }}"
+  labels:
+    app: bluecompute
+    micro: customer
+    service: server
+    tier: backend
+    release: {{ .Release.Name }}
+    implementation: microprofile
+    chart: '{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}'
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: bluecompute
+        micro: customer
+        service: server
+        tier: backend
+        release: {{ .Release.Name }}
+        implementation: microprofile
+
+    spec:
+      containers:
+      # Liberty Server Container
+      - name: "{{ .Chart.Name }}"
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Never
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 9443
+            scheme: HTTPS
+          initialDelaySeconds: 60
+          timeoutSeconds: 60
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9443
+            scheme: HTTPS
+          initialDelaySeconds: 1500
+          timeoutSeconds: 500
+        env:
+          - name: host
+            value: "{{ .Release.Name }}-{{ .Values.service.cloudantservicename }}"
+          - name: auth_health
+            value: "https://auth-{{ .Values.service.auth }}:9443/health"
+          - name: PORT
+            value: "{{ .Values.service.servicePort }}"
+          - name: RELEASE_NAME
+            value: "{{ .Release.Name }}"
+          - name: jwtid
+            value: "{{ .Values.jwt.id }}"
+          - name: jwksUri
+            value: "https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
+          - name: jwksIssuer
+            value: "https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP"
+          - name: zipkinHost
+            value: "{{ .Release.Name }}-{{ .Values.service.zipkinHost }}"
+          - name: zipkinPort
+            value: "{{ .Values.service.zipkinPort }}"
+          - name: administratorRealm
+            value: "user:https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/user"
+        resources:
+          requests:
+            cpu: "{{ .Values.image.resources.requests.cpu }}"
+            memory: "{{ .Values.image.resources.requests.memory }}"
+        volumeMounts:
+        - name: keystorevol
+          mountPath: "/etc/keystorevol"
+          readOnly: true
+        - name: config-volume
+          mountPath: {{ .Values.volumes.mountPath }}
+      volumes:
+      - name: keystorevol
+        secret:
+          secretName: keystoresecret
+      - name: config-volume
+        configMap:
+          name: {{ .Release.Name }}-{{ .Chart.Name }}-config
