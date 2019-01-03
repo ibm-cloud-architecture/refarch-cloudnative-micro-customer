@@ -34,5 +34,5 @@ RUN mv ./micro-customer-0.0.1.jar app.jar
 COPY startup.sh startup.sh
 COPY scripts scripts
 
-EXPOSE 8082
+EXPOSE 8082 8092
 ENTRYPOINT ["./startup.sh"]
