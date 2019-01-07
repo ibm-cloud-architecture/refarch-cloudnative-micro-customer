@@ -14,11 +14,13 @@ def podLabel = "customer"
 def cloud = env.CLOUD ?: "kubernetes"
 def registryCredsID = env.REGISTRY_CREDENTIALS ?: "registry-credentials-id"
 def serviceAccount = env.SERVICE_ACCOUNT ?: "jenkins"
+def tls = env.TLS ?: "" // Set to "--tls" for IBM Cloud Private
 
 // Pod Environment Variables
 def namespace = env.NAMESPACE ?: "default"
 def registry = env.REGISTRY ?: "docker.io"
 def imageName = env.IMAGE_NAME ?: "ibmcase/bluecompute-customer"
+def imageTag = env.IMAGE_TAG ?: "latest"
 def serviceLabels = env.SERVICE_LABELS ?: "app=customer,tier=backend" //,version=v1"
 def microServiceName = env.MICROSERVICE_NAME ?: "customer"
 def servicePort = env.MICROSERVICE_PORT ?: "8082"
@@ -53,6 +55,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
         envVar(key: 'NAMESPACE', value: namespace),
         envVar(key: 'REGISTRY', value: registry),
         envVar(key: 'IMAGE_NAME', value: imageName),
+        envVar(key: 'IMAGE_TAG', value: imageTag),
         envVar(key: 'SERVICE_LABELS', value: serviceLabels),
         envVar(key: 'MICROSERVICE_NAME', value: microServiceName),
         envVar(key: 'MICROSERVICE_PORT', value: servicePort),
@@ -80,148 +83,26 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
     node(podLabel) {
         checkout scm
 
-        // Local
-        container(name:'jdk', shell:'/bin/bash') {
-            stage('Local - Build and Unit Test') {
-                sh """
-                #!/bin/bash
-                ./gradlew build
-                """
-            }
-            stage('Local - Run and Test') {
-                sh """
-                #!/bin/bash
-
-                JAVA_OPTS="-Dspring.application.cloudant.protocol=${COUCHDB_PROTOCOL}"
-                JAVA_OPTS="\${JAVA_OPTS} -Dspring.application.cloudant.host=${COUCHDB_HOST}"
-                JAVA_OPTS="\${JAVA_OPTS} -Dspring.application.cloudant.port=${COUCHDB_PORT}"
-                JAVA_OPTS="\${JAVA_OPTS} -Dspring.application.cloudant.database=${COUCHDB_DATABASE}"
-                JAVA_OPTS="\${JAVA_OPTS} -Dserver.port=${MICROSERVICE_PORT}"
-
-                java \${JAVA_OPTS} -jar build/libs/micro-customer-0.0.1.jar &
-
-                PID=`echo \$!`
-
-                # Let the application start
-                bash scripts/health_check.sh "http://127.0.0.1:${MANAGEMENT_PORT}"
-
-                # Run tests
-                bash scripts/api_tests.sh 127.0.0.1 ${MICROSERVICE_PORT} ${HS256_KEY} ${TEST_USER} ${TEST_PASSWORD}
-
-                # Kill process
-                kill \${PID}
-                """
-            }
-        }
-
-        // Docker
-        container(name:'docker', shell:'/bin/bash') {
-            stage('Docker - Build Image') {
-                sh """
-                #!/bin/bash
-
-                # Get image
-                if [ "${REGISTRY}" == "docker.io" ]; then
-                    IMAGE=${IMAGE_NAME}:${env.BUILD_NUMBER}
-                else
-                    IMAGE=${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${env.BUILD_NUMBER}
-                fi
-
-                docker build -t \${IMAGE} .
-                """
-            }
-            stage('Docker - Run and Test') {
-                sh """
-                #!/bin/bash
-
-                # Get image
-                if [ "${REGISTRY}" == "docker.io" ]; then
-                    IMAGE=${IMAGE_NAME}:${env.BUILD_NUMBER}
-                else
-                    IMAGE=${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${env.BUILD_NUMBER}
-                fi
-
-                # Kill Container if it already exists
-                docker kill ${MICROSERVICE_NAME} || true
-                docker rm ${MICROSERVICE_NAME} || true
-
-                # Start Container
-                echo "Starting ${MICROSERVICE_NAME} container"
-                set +x
-                docker run --name ${MICROSERVICE_NAME} -d \
-                    -p ${MICROSERVICE_PORT}:${MICROSERVICE_PORT} \
-                    -p ${MANAGEMENT_PORT}:${MANAGEMENT_PORT} \
-                    -e SERVICE_PORT=${MICROSERVICE_PORT} \
-                    -e COUCHDB_PROTOCOL=${COUCHDB_PROTOCOL} \
-                    -e COUCHDB_HOST=${COUCHDB_HOST} \
-                    -e COUCHDB_PORT=${COUCHDB_PORT} \
-                    -e COUCHDB_USER=${COUCHDB_USER} \
-                    -e COUCHDB_PASSWORD=${COUCHDB_PASSWORD} \
-                    -e COUCHDB_DATABASE=${COUCHDB_DATABASE} \
-                    -e HS256_KEY=${HS256_KEY} \
-                    \${IMAGE}
-                set -x
-
-                # Check that application started successfully
-                docker ps
-
-                # Check the logs
-                docker logs -f ${MICROSERVICE_NAME} &
-                PID=`echo \$!`
-
-                # Get the container IP Address
-                CONTAINER_IP=`docker inspect ${MICROSERVICE_NAME} | jq -r '.[0].NetworkSettings.IPAddress'`
-
-                # Let the application start
-                bash scripts/health_check.sh "http://\${CONTAINER_IP}:${MANAGEMENT_PORT}"
-
-                # Run tests
-                bash scripts/api_tests.sh \${CONTAINER_IP} ${MICROSERVICE_PORT} ${HS256_KEY} ${TEST_USER} ${TEST_PASSWORD}
-
-                # Kill process
-                kill \${PID}
-
-                # Kill Container
-                docker kill ${MICROSERVICE_NAME} || true
-                docker rm ${MICROSERVICE_NAME} || true
-                """
-            }
-            stage('Docker - Push Image to Registry') {
-                withCredentials([usernamePassword(credentialsId: registryCredsID,
-                                               usernameVariable: 'USERNAME',
-                                               passwordVariable: 'PASSWORD')]) {
-                    sh """
-                    #!/bin/bash
-
-                    # Get image
-                    if [ "${REGISTRY}" == "docker.io" ]; then
-                        IMAGE=${IMAGE_NAME}:${env.BUILD_NUMBER}
-                    else
-                        IMAGE=${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${env.BUILD_NUMBER}
-                    fi
-
-                    docker login -u ${USERNAME} -p ${PASSWORD} ${REGISTRY}
-
-                    docker push \${IMAGE}
-                    """
-                }
-            }
-        }
-
         // Kubernetes
         container(name:'kubernetes', shell:'/bin/bash') {
-            stage('Initialize CLIs') {
-                withCredentials([usernamePassword(credentialsId: clusterCredentialId,
-                                               passwordVariable: 'CLUSTER_PASSWORD',
-                                               usernameVariable: 'CLUSTER_USERNAME')]) {
-                    sh """
-                    echo "Initializing Helm ..."
-                    export HELM_HOME=${HELM_HOME}
-                    helm init -c
-
-                    echo "Login with cloudctl ..."
-                    cloudctl login -a ${CLUSTER_URL} -u ${CLUSTER_USERNAME}  -p "${CLUSTER_PASSWORD}" -c ${CLUSTER_ACCOUNT_ID} -n ${NAMESPACE} --skip-ssl-validation
-                    """
+            stage('Initialize helm') {
+                sh """
+                echo "Initializing Helm ..."
+                export HELM_HOME=${HELM_HOME}
+                helm init -c
+                """
+            }
+            // Initialize cloudctl for IBM Cloud Private
+            if (env.TLS && env.TLS == "--tls") {
+                stage ('Initialize cloudctl') {
+                    withCredentials([usernamePassword(credentialsId: clusterCredentialId,
+                                                   passwordVariable: 'CLUSTER_PASSWORD',
+                                                   usernameVariable: 'CLUSTER_USERNAME')]) {
+                        sh """
+                        echo "Login with cloudctl ..."
+                        cloudctl login -a ${CLUSTER_URL} -u ${CLUSTER_USERNAME}  -p "${CLUSTER_PASSWORD}" -c ${CLUSTER_ACCOUNT_ID} -n ${NAMESPACE} --skip-ssl-validation
+                        """
+                    }
                 }
             }
             stage('Kubernetes - Deploy new Docker Image') {
@@ -237,8 +118,8 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
 
                 # Helm Parameters
                 if [ "${DEPLOY_NEW_VERSION}" == "true" ]; then
-                    NAME="${MICROSERVICE_NAME}-v${env.BUILD_NUMBER}"
-                    VERSION_LABEL="--set labels.version=v${env.BUILD_NUMBER}"
+                    NAME="${MICROSERVICE_NAME}-v${IMAGE_TAG}"
+                    VERSION_LABEL="--set labels.version=v${IMAGE_TAG}"
                 else
                     NAME="${MICROSERVICE_NAME}"
                 fi
@@ -249,7 +130,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
                 helm upgrade --install \${NAME} --namespace ${NAMESPACE} \${VERSION_LABEL} \
                     --set fullnameOverride=\${NAME} \
                     --set image.repository=\${IMAGE} \
-                    --set image.tag=${env.BUILD_NUMBER} \
+                    --set image.tag=${IMAGE_TAG} \
                     --set service.externalPort=${MICROSERVICE_PORT} \
                     --set couchdb.protocol=${COUCHDB_PROTOCOL} \
                     --set couchdb.host=${COUCHDB_HOST} \
@@ -259,7 +140,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
                     --set couchdb.adminPassword=${COUCHDB_PASSWORD} \
                     --set testUser.createUser=${CREATE_USER} \
                     --set hs256key.secret="${HS256_KEY}" \
-                    chart/${MICROSERVICE_NAME} --wait --tls
+                    chart/${MICROSERVICE_NAME} --wait ${TLS}
                 set -x
                 """
             }
@@ -269,7 +150,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
 
                 # Get deployment
                 if [ "${DEPLOY_NEW_VERSION}" == "true" ]; then
-                    QUERY_LABELS="${SERVICE_LABELS},version=v${env.BUILD_NUMBER}"
+                    QUERY_LABELS="${SERVICE_LABELS},version=v${IMAGE_TAG}"
                 else
                     QUERY_LABELS="${SERVICE_LABELS}"
                 fi
