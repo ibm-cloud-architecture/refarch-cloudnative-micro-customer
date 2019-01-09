@@ -14,6 +14,7 @@ def podLabel = "customer"
 def cloud = env.CLOUD ?: "kubernetes"
 def registryCredsID = env.REGISTRY_CREDENTIALS ?: "registry-credentials-id"
 def serviceAccount = env.SERVICE_ACCOUNT ?: "jenkins"
+def tls = env.TLS ?: "" // Set to "--tls" for IBM Cloud Private
 
 // Pod Environment Variables
 def namespace = env.NAMESPACE ?: "default"
@@ -71,11 +72,11 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
     ],
     volumes: [
         hostPathVolume(mountPath: '/home/gradle/.gradle', hostPath: '/tmp/jenkins/.gradle'),
-        hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')
+        emptyDirVolume(mountPath: '/var/lib/docker', memory: false)
     ],
     containers: [
         containerTemplate(name: 'jdk', image: 'ibmcase/openjdk-bash:alpine', ttyEnabled: true, command: 'cat'),
-        containerTemplate(name: 'docker' , image: 'ibmcase/docker-bash:1', ttyEnabled: true, command: 'cat'),
+        containerTemplate(name: 'docker', image: 'ibmcase/docker:18.09-dind', privileged: true),
         containerTemplate(name: 'kubernetes', image: 'ibmcase/jenkins-slave-utils:1', ttyEnabled: true, command: 'cat')
   ]) {
 
@@ -84,18 +85,24 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
 
         // Kubernetes
         container(name:'kubernetes', shell:'/bin/bash') {
-            stage('Initialize CLIs') {
-                withCredentials([usernamePassword(credentialsId: clusterCredentialId,
-                                               passwordVariable: 'CLUSTER_PASSWORD',
-                                               usernameVariable: 'CLUSTER_USERNAME')]) {
-                    sh """
-                    echo "Initializing Helm ..."
-                    export HELM_HOME=${HELM_HOME}
-                    helm init -c
-
-                    echo "Login with cloudctl ..."
-                    cloudctl login -a ${CLUSTER_URL} -u ${CLUSTER_USERNAME}  -p "${CLUSTER_PASSWORD}" -c ${CLUSTER_ACCOUNT_ID} -n ${NAMESPACE} --skip-ssl-validation
-                    """
+            stage('Initialize helm') {
+                sh """
+                echo "Initializing Helm ..."
+                export HELM_HOME=${HELM_HOME}
+                helm init -c
+                """
+            }
+            // Initialize cloudctl for IBM Cloud Private
+            if (env.TLS && env.TLS == "--tls") {
+                stage ('Initialize cloudctl') {
+                    withCredentials([usernamePassword(credentialsId: clusterCredentialId,
+                                                   passwordVariable: 'CLUSTER_PASSWORD',
+                                                   usernameVariable: 'CLUSTER_USERNAME')]) {
+                        sh """
+                        echo "Login with cloudctl ..."
+                        cloudctl login -a ${CLUSTER_URL} -u ${CLUSTER_USERNAME}  -p "${CLUSTER_PASSWORD}" -c ${CLUSTER_ACCOUNT_ID} -n ${NAMESPACE} --skip-ssl-validation
+                        """
+                    }
                 }
             }
             stage('Kubernetes - Deploy new Docker Image') {
@@ -133,7 +140,7 @@ podTemplate(label: podLabel, cloud: cloud, serviceAccount: serviceAccount, envVa
                     --set couchdb.adminPassword=${COUCHDB_PASSWORD} \
                     --set testUser.createUser=${CREATE_USER} \
                     --set hs256key.secret="${HS256_KEY}" \
-                    chart/${MICROSERVICE_NAME} --wait --tls
+                    chart/${MICROSERVICE_NAME} --wait ${TLS}
                 set -x
                 """
             }
