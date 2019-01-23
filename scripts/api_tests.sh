@@ -47,13 +47,6 @@ function parse_arguments {
 	fi
 }
 
-# Thanks, https://gist.github.com/cjus/1047794#gistcomment-37563
-function jsonValue {
-	KEY=$1
-	num=$2
-	awk -F"[,:}]" '{for(i=1;i<=NF;i++){if($i~/'$KEY'\042/){print $(i+1)}}}' | tr -d '"' | sed -n ${num}p
-}
-
 # Test health
 function test_health {
 	echo "Testing the customer health endpoint to see if connected to Auth and Cloudant"
@@ -62,22 +55,32 @@ function test_health {
 }
 
 # Testing only endpoint
-# This sequence of commands work locally.
-# TODO: The cust curl sometimes returns 'Cloudant is down' when Health and direct curls prove otherwise. Restart build works.
-# TODO: Something about the token/command returns no results when searching for users.
 function get_user {
 	ACCESS_TOKEN=$(curl -k -d "grant_type=password&client_id=bluecomputeweb&client_secret=bluecomputewebs3cret&username=user&password=password&scope=openid" https://${AUTH_HOST}:${AUTH_PORT}/oidc/endpoint/OP/token | jq '.access_token')
-	# echo $ACCESS_TOKEN
+	echo $ACCESS_TOKEN
 
-	CURL=$(curl -k --request GET --url https://${CUSTOMER_HOST}:${CUSTOMER_PORT}/customer/rest/customer --header "Authorization: Bearer ${ACCESS_TOKEN}" --header "Content-Type: application/json" | jq -r '.rows' | jq '.[].doc.username')	
-	echo "Found user with name: \"$CURL\""
+	CURL=$(curl -k --request GET --url https://${CUSTOMER_HOST}:${CUSTOMER_PORT}/customer/rest/customer --header "Authorization: Bearer ${ACCESS_TOKEN}" --header "Content-Type: application/json" | jq -r '.rows' | jq '.[].doc.username' | sed -e 's/^"//' -e 's/"$//')	
+	echo "Found user with name: $CURL"
 
-	if [ "$RETRIEVED_USER" != "user" ]; then
-		echo "search_user: ❌ could not find user";
-		echo "Printing out result of the curl command below:"
+	# echo "Get Pods"
+	# echo $(kubectl get pods)
+	# CUST_POD=$(kubectl get pods | grep cust-customer | awk '{print $1}')
+	# AUTH_POD=$(kubectl get pods | grep auth | awk '{print $1}')
+	# echo "Describe Keystore"
+	# kubectl describe pod $(kubectl get deployments | grep keystore-keystore | awk '{print $1}')
+	# echo "Describe Auth"
+	# kubectl describe pod $AUTH_POD
+	# echo "Logs Auth"
+	# kubectl logs $AUTH_POD
+	# echo "Describe Customer"
+	# kubectl describe pod $CUST_POD
+	# echo "Logs Cust"
+	# kubectl logs $CUST_POD
+
+	if [ "$CURL" != "user" ]; then
+		echo "search_user: ❌ could not find user, but found $CURL";
 		echo $(curl -k --request GET --url https://${CUSTOMER_HOST}:${CUSTOMER_PORT}/customer/rest/customer --header "Authorization: Bearer ${ACCESS_TOKEN}" --header "Content-Type: application/json")
-    echo "Check first curl in travis for comparison. If line above says 0 rows, still figuring out why travis can't find it."
-		    # exit 1;
+		  exit 1;
     else
     	echo "search_user: ✅";
   fi

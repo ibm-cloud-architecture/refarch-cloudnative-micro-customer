@@ -88,7 +88,7 @@ public class CustomerService {
     public javax.ws.rs.core.Response getCustomerByUsername() throws Exception{
         try {
             String username = "usernames:" + jwt.getSubject();
-            return defaultCloudantClient.getCustomerByUsername(username, "true");
+            return defaultCloudantClient.searchUsername(username, "true");
         }
         catch (Exception e){
             e.printStackTrace();
@@ -98,7 +98,6 @@ public class CustomerService {
     }
 
     @Produces("application/json")
-    @GET
     public javax.ws.rs.core.Response fallbackService() {
         System.out.println();
         return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).entity("Cloudant Service is down.").build();

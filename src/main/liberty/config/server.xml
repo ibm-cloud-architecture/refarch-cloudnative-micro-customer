@@ -16,15 +16,16 @@
   <webApplication name="customer" location="${app.location}"/>
 
   <!--These values are defined in pom.xml-->
-    <mpJwt
-         id="${env.jwtid}"
-         jwksUri="${env.jwksUri}"
-         issuer="${env.jwksIssuer}">
-    </mpJwt>
+  <mpJwt
+    id="${env.jwtid}"
+    jwksUri="${env.jwksUri}"
+    issuer="${env.jwksIssuer}">
+  </mpJwt>
 
-    <administrator-role>
-      <user-access-id>${env.administratorRealm}</user-access-id>
-    </administrator-role>
+  <!--Credentials necessary to authorize user-->
+  <administrator-role>
+    <user-access-id>${env.administratorRealm}</user-access-id>
+  </administrator-role>
 
   <ssl id="defaultSSLConfig" keyStoreRef="bcKeyStore" trustStoreRef="bcTrustStore"/>
   <keyStore id="bcKeyStore" location="/etc/keystorevol/BCKeyStoreFile.jks" type="JKS" password="password"/>

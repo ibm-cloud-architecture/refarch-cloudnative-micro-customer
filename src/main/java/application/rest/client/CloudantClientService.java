@@ -24,6 +24,6 @@ public interface CloudantClientService {
     @GET
     @Path("/_design/username_searchIndex/_search/usernames")
     @Produces("application/json")
-    public javax.ws.rs.core.Response getCustomerByUsername(@QueryParam("query") String query, @QueryParam("include_docs") String include_docs) throws UnknownCustomerException;
+    public javax.ws.rs.core.Response searchUsername(@QueryParam("query") String query, @QueryParam("include_docs") String include_docs) throws UnknownCustomerException;
     
 }
