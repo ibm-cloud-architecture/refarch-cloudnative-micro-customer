@@ -64,7 +64,7 @@ function get_user {
 
 	# echo "Get Pods"
 	# echo $(kubectl get pods)
-	# CUST_POD=$(kubectl get pods | grep cust-customer | awk '{print $1}')
+	CUST_POD=$(kubectl get pods | grep cust-customer | awk '{print $1}')
 	# AUTH_POD=$(kubectl get pods | grep auth | awk '{print $1}')
 	# echo "Describe Keystore"
 	# kubectl describe pod $(kubectl get deployments | grep keystore-keystore | awk '{print $1}')
@@ -74,8 +74,8 @@ function get_user {
 	# kubectl logs $AUTH_POD
 	# echo "Describe Customer"
 	# kubectl describe pod $CUST_POD
-	# echo "Logs Cust"
-	# kubectl logs $CUST_POD
+	echo "Logs Cust"
+	kubectl logs $CUST_POD
 
 	if [ "$CURL" != "user" ]; then
 		echo "search_user: ❌ could not find user, but found $CURL";
