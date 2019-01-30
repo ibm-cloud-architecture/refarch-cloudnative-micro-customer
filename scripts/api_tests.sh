@@ -65,15 +65,15 @@ function get_user {
 	# echo "Get Pods"
 	# echo $(kubectl get pods)
 	CUST_POD=$(kubectl get pods | grep cust-customer | awk '{print $1}')
-	# AUTH_POD=$(kubectl get pods | grep auth | awk '{print $1}')
-	# echo "Describe Keystore"
-	# kubectl describe pod $(kubectl get deployments | grep keystore-keystore | awk '{print $1}')
-	# echo "Describe Auth"
-	# kubectl describe pod $AUTH_POD
-	# echo "Logs Auth"
-	# kubectl logs $AUTH_POD
-	# echo "Describe Customer"
-	# kubectl describe pod $CUST_POD
+	AUTH_POD=$(kubectl get pods | grep auth | awk '{print $1}')
+	echo "Describe Keystore"
+	kubectl describe pod $(kubectl get deployments | grep keystore-keystore | awk '{print $1}')
+	echo "Describe Auth"
+	kubectl describe pod $AUTH_POD
+	echo "Logs Auth"
+	kubectl logs $AUTH_POD
+	echo "Describe Customer"
+	kubectl describe pod $CUST_POD
 	echo "Logs Cust"
 	kubectl logs $CUST_POD
 
