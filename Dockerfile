@@ -5,9 +5,6 @@ MAINTAINER IBM Java engineering at IBM Cloud
 USER root
 COPY /target/liberty/wlp/usr/servers/defaultServer /config/
 COPY /target/liberty/wlp/usr/extension /opt/ibm/wlp/usr/extension
-# RUN chown 1001:0 /config/
-# RUN chown 1001:0 /opt/ibm/wlp/usr/extension
-# RUN chown 1001:0 /config/jvm.options
 
 # To read LTPA keys
 RUN chown 1001:0 /opt/ibm/wlp/usr/servers/defaultServer/resources/security/ltpa.keys
