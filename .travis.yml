@@ -73,7 +73,7 @@ jobs:
       env:
       - CHANGE_MINIKUBE_NONE_USER=true
       install:
-        - true
+      - true
       before_script:
       # Install nsenter, which is needed for minikube to work
       - bash scripts/install_minikube_and_helm.sh
@@ -89,10 +89,10 @@ jobs:
       # Maven Build
       - mvn clean install
       # Build Docker image
-      # - docker build -t "${IMAGE_NAME}:${TAG}" .
+      - docker build -t "${IMAGE_NAME}:${TAG}" .
       # Install Customer
-      # - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --set image.repository=${IMAGE_NAME} --set image.tag=${TAG} --name ${RELEASE_NAME} ./chart/customer/
-      - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --name ${RELEASE_NAME} ./chart/customer/
+      - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --set image.repository=${IMAGE_NAME} --set image.tag=${TAG} --name ${RELEASE_NAME} ./chart/customer/
+      # - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --name ${RELEASE_NAME} ./chart/customer/
       # Wait for Customer to be ready
       - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
       - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')

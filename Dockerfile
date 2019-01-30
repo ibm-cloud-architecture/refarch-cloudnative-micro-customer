@@ -1,13 +1,16 @@
-FROM websphere-liberty:microProfile
+FROM websphere-liberty:18.0.0.4-webProfile8
 
 MAINTAINER IBM Java engineering at IBM Cloud
 
+USER root
 COPY /target/liberty/wlp/usr/servers/defaultServer /config/
-
 COPY /target/liberty/wlp/usr/extension /opt/ibm/wlp/usr/extension
 
-# Install required features if not present
+# To read LTPA keys
+RUN chown 1001:0 /opt/ibm/wlp/usr/servers/defaultServer/resources/security/ltpa.keys
+USER 1001
 
+# Install required features if not present
 RUN installUtility install --acceptLicense defaultServer
 
 CMD ["/opt/ibm/wlp/bin/server", "run", "defaultServer"]
