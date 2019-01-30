@@ -16,57 +16,57 @@ stages:
   - kubernetes build, deploy, and test
 jobs:
   include:
-    # - stage: local build and test
-    #   services:
-    #   - docker
-    #   env:
-    #     - jwksUri=https://localhost:9443/oidc/endpoint/OP/jwk
-    #     - jwksIssuer=https://localhost:9443/oidc/endpoint/OP
-    #     - host=localhost
-    #     - port=8080
-    #     - application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
-    #     - auth_health=https://localhost:9443/health
-    #   before_script:
-    #   # Pull the Cloudant Docker image
-    #   - docker pull ibmcom/cloudant-developer
-    #   # Create a network for container communication (Populate to Cloudant)
-    #   - docker network create cloudant
-    #   # Setup and run Cloudant (Volumes not supported on Travis however)
-    #   - docker run --detach --volume cloudant:/srv --name cloudant-developer --publish $cloudantPort:80 --hostname cloudant.dev --network cloudant ibmcom/cloudant-developer
-    #   # Wait for Cloudant to Start
-    #   - sleep 25
-    #   # Check Cloudant status
-    #   - curl http://localhost:$cloudantPort
-    #   # Fetch network IP: Inspect Networt | Fetch Gateway | Parse IP | Remove Quotes
-    #   - export GATEWAY=$(docker network inspect cloudant | grep "Gateway" | awk '/"/{print $2}' | sed -e 's/^"//' -e 's/"$//')
-    #   # Populate the DB to test user creation and searching (Will replace with a pull and run when uploaded to Dockerhub)
-    #   - cd cloudant/
-    #   - docker build -t populate .
-    #   - docker run populate $GATEWAY $cloudantPort
-    #   - cd -
-    #   # Verify DB population
-    #   - curl http://admin:pass@localhost:$cloudantPort/customers/_design/username_searchIndex/_search/usernames\?query\=usernames:user\&include_docs\=true
-    #   # Define a Keystore
-    #   - bash scripts/keygen.sh
-    #   - sudo cp -r keystorevol /etc/
-    #   # Swap MP Config for local testing
-    #   - cd src/main/resources/META-INF
-    #   - mv microprofile-config.properties      .microprofile-config.properties # Make hidden
-    #   - mv microprofile-config.properties.local microprofile-config.properties # Make main
-    #   - cd -
-    #   # Create Auth, put keystore in, and start it
-    #   - docker pull ibmcase/auth-mp:v3.0.0
-    #   - docker create --name auth --publish 9443:9443 --publish 9080:9080 ibmcase/auth-mp:v3.0.0
-    #   - docker cp keystorevol auth:/etc/
-    #   - docker start auth
-    #   script:
-    #   # Maven Build
-    #   - mvn clean install
-    #   # Start Application
-    #   - mvn liberty:start-server -DtestServerHttpPort=$customerHttpPort -DtestServerHttpsPort=$customerHttpsPort
-    #   - sleep 25
-    #   # Run Catalog API Test
-    #   - bash scripts/api_tests.sh localhost $customerHttpsPort
+    - stage: local build and test
+      services:
+      - docker
+      env:
+        - jwksUri=https://localhost:9443/oidc/endpoint/OP/jwk
+        - jwksIssuer=https://localhost:9443/oidc/endpoint/OP
+        - host=localhost
+        - port=8080
+        - application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
+        - auth_health=https://localhost:9443/health
+      before_script:
+      # Pull the Cloudant Docker image
+      - docker pull ibmcom/cloudant-developer
+      # Create a network for container communication (Populate to Cloudant)
+      - docker network create cloudant
+      # Setup and run Cloudant (Volumes not supported on Travis however)
+      - docker run --detach --volume cloudant:/srv --name cloudant-developer --publish $cloudantPort:80 --hostname cloudant.dev --network cloudant ibmcom/cloudant-developer
+      # Wait for Cloudant to Start
+      - sleep 25
+      # Check Cloudant status
+      - curl http://localhost:$cloudantPort
+      # Fetch network IP: Inspect Networt | Fetch Gateway | Parse IP | Remove Quotes
+      - export GATEWAY=$(docker network inspect cloudant | grep "Gateway" | awk '/"/{print $2}' | sed -e 's/^"//' -e 's/"$//')
+      # Populate the DB to test user creation and searching (Will replace with a pull and run when uploaded to Dockerhub)
+      - cd cloudant/
+      - docker build -t populate .
+      - docker run populate $GATEWAY $cloudantPort
+      - cd -
+      # Verify DB population
+      - curl http://admin:pass@localhost:$cloudantPort/customers/_design/username_searchIndex/_search/usernames\?query\=usernames:user\&include_docs\=true
+      # Define a Keystore
+      - bash scripts/keygen.sh
+      - sudo cp -r keystorevol /etc/
+      # Swap MP Config for local testing
+      - cd src/main/resources/META-INF
+      - mv microprofile-config.properties      .microprofile-config.properties # Make hidden
+      - mv microprofile-config.properties.local microprofile-config.properties # Make main
+      - cd -
+      # Create Auth, put keystore in, and start it
+      - docker pull ibmcase/auth-mp:v3.0.0
+      - docker create --name auth --publish 9443:9443 --publish 9080:9080 ibmcase/auth-mp:v3.0.0
+      - docker cp keystorevol auth:/etc/
+      - docker start auth
+      script:
+      # Maven Build
+      - mvn clean install
+      # Start Application
+      - mvn liberty:start-server -DtestServerHttpPort=$customerHttpPort -DtestServerHttpsPort=$customerHttpsPort
+      - sleep 25
+      # Run Catalog API Test
+      - bash scripts/api_tests.sh localhost $customerHttpsPort
     - stage: kubernetes build, deploy, and test
       services:
       - docker
@@ -93,10 +93,6 @@ jobs:
       # Install Customer
       - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --set image.repository=${IMAGE_NAME} --set image.tag=${TAG} --name ${RELEASE_NAME} ./chart/customer/
       # - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --name ${RELEASE_NAME} ./chart/customer/
-      # Logs
-      - CUST_POD=$(kubectl get pods | grep cust-customer | awk '{print $1}')
-      - echo "Logs Cust"
-      - kubectl logs $CUST_POD
       # Wait for Customer to be ready
       - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
       - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')
