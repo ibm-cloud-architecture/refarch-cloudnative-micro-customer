@@ -73,7 +73,7 @@ jobs:
       env:
       - CHANGE_MINIKUBE_NONE_USER=true
       install:
-        - true
+      - true
       before_script:
       # Install nsenter, which is needed for minikube to work
       - bash scripts/install_minikube_and_helm.sh
