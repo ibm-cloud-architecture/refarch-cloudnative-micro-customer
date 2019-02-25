@@ -23,7 +23,7 @@ RUN apk --no-cache update \
  && update-ca-certificates
 
 # Create app directory
-ENV APP_HOME=/
+ENV APP_HOME=/app
 RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
 
@@ -33,6 +33,14 @@ RUN mv ./micro-customer-0.0.1.jar app.jar
 
 COPY startup.sh startup.sh
 COPY scripts scripts
+
+# Create User and Chown
+RUN addgroup -g 2000 blue \
+	&& adduser -u 2000 -G blue -s /bin/bash -D blue \
+	&& chown -R blue:blue $APP_HOME \
+	&& chmod -R 0775 $APP_HOME
+
+USER blue
 
 EXPOSE 8082 8092
 ENTRYPOINT ["./startup.sh"]
