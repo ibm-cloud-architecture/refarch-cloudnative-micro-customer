@@ -36,6 +36,8 @@ spec:
           failureThreshold: 6
         resources:
 {{ toYaml .Values.resources | indent 10 }}
+        securityContext:
+        {{- include "customer.securityContext" . | indent 10 }}
         env:
         {{- include "customer.environmentvariables" . | indent 8 }}
         {{- include "customer.couchdb.environmentvariables" . | indent 8 }}
