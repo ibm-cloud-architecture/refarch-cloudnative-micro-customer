@@ -32,6 +32,10 @@ spec:
               curl --max-time 5 -X POST http://{{- template "customer.fullname" . }}:{{ .Values.service.externalPort }}/micro/customer -H "Content-type: application/json" -H "Authorization: Bearer ${jwt}" -d "{\"username\": \"${TEST_USER}\", \"password\": \"${TEST_PASSWORD}\", \"firstName\": \"user\", \"lastName\": \"name\", \"email\": \"user@name.com\"}";
             done
         imagePullPolicy: {{ .Values.bash.image.pullPolicy }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        securityContext:
+        {{- include "customer.securityContext" . | indent 10 }}
         env:
         {{- include "customer.testuser.environmentvariables" . | indent 8 }}
         {{- include "customer.hs256key.environmentvariables" . | indent 8 }}
