@@ -1,4 +1,5 @@
 sudo: required
+dist: xenial
 language: java
 jdk:
   - openjdk8
@@ -79,13 +80,19 @@ jobs:
       services:
       - docker
       env:
+      # Minikube variables
       - CHANGE_MINIKUBE_NONE_USER=true
+      - MINIKUBE_WANTUPDATENOTIFICATION=false
+      - MINIKUBE_WANTREPORTERRORPROMPT=false
+      - MINIKUBE_HOME=$HOME
+      - KUBECONFIG=$HOME/.kube/config
+      # Application variables
       - CHART_NAME=customer
       install:
         - true
       before_script:
-      # Install nsenter, which is needed for minikube to work
-      - bash scripts/install_minikube_and_helm.sh
+      # Install minikube and helm
+      - wget https://raw.githubusercontent.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/spring/scripts/install_minikube_and_helm.sh && chmod +x install_minikube_and_helm.sh && bash install_minikube_and_helm.sh && rm install_minikube_and_helm.sh
       # Install CouchDB
       - helm upgrade --install couchdb --version 0.2.2 --set service.externalPort=5985,fullnameOverride=${RELEASE_NAME}-couchdb,createAdminSecret=true,adminUsername=${COUCHDB_USER},adminPassword=${COUCHDB_PASSWORD},clusterSize=1,persistentVolume.enabled=false incubator/couchdb
       script:
@@ -101,7 +108,6 @@ jobs:
       # Get Deployment Name
       - DEPLOYMENT="deployment/${RELEASE_NAME}-${CHART_NAME}"
       # Wait for deployment to be ready
-      - kubectl get pods -w &
       - kubectl rollout status ${DEPLOYMENT}
       # Get logs
       - kubectl logs -f ${DEPLOYMENT} &
