@@ -20,6 +20,8 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{- define "customer.environmentvariables" }}
 - name: SERVICE_PORT
   value: {{ .Values.service.internalPort | quote }}
+- name: JAVA_TMP_DIR
+  value: /spring-tmp
 {{- end }}
 
 {{/* Customer Init Container Template */}}
@@ -33,7 +35,7 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   - "-c"
   - "until curl --max-time 1 http://{{- template "customer.fullname" . }}:{{ .Values.service.externalPort }}; do echo waiting for customer-service; sleep 1; done"
   resources:
-{{ toYaml .Values.resources | indent 4 }}
+  {{- include "customer.resources" . | indent 4 }}
   securityContext:
   {{- include "customer.securityContext" . | indent 4 }}
   env:
@@ -52,7 +54,7 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   - "-c"
   - "until curl --max-time 1 ${COUCHDB_PROTOCOL}://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_HOST}:${COUCHDB_PORT}; do echo waiting for couchdb; /bin/sleep 1; done"
   resources:
-{{ toYaml .Values.resources | indent 4 }}
+  {{- include "customer.resources" . | indent 4 }}
   securityContext:
   {{- include "customer.securityContext" . | indent 4 }}
   env:
@@ -117,6 +119,14 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   value: {{ .Values.testUser.username | quote }}
 - name: TEST_PASSWORD
   value: {{ .Values.testUser.password | quote }}
+{{- end }}
+
+{{/* Customer Resources */}}
+{{- define "customer.resources" }}
+limits:
+  memory: {{ .Values.resources.limits.memory }}
+requests:
+  memory: {{ .Values.resources.requests.memory }}
 {{- end }}
 
 {{/* Customer Security Context */}}
