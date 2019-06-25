@@ -50,8 +50,9 @@ function parse_arguments {
 # Test health
 function test_health {
 	echo "Testing the customer health endpoint to see if connected to Auth and Cloudant"
+	echo $(curl -k https://$CUSTOMER_HOST:$CUSTOMER_PORT)
 	HEALTH_RESPONSE=$(curl -k https://$CUSTOMER_HOST:$CUSTOMER_PORT/health)
-	echo ${HEALTH_RESPONSE}
+	echo $HEALTH_RESPONSE
 }
 
 # Testing only endpoint
@@ -59,7 +60,9 @@ function get_user {
 	ACCESS_TOKEN=$(curl -k -d "grant_type=password&client_id=bluecomputeweb&client_secret=bluecomputewebs3cret&username=user&password=password&scope=openid" https://${AUTH_HOST}:${AUTH_PORT}/oidc/endpoint/OP/token | jq '.access_token')
 	echo $ACCESS_TOKEN
 
-	CURL=$(curl -k --request GET --url https://${CUSTOMER_HOST}:${CUSTOMER_PORT}/customer/rest/customer --header "Authorization: Bearer ${ACCESS_TOKEN}" --header "Content-Type: application/json" | jq -r '.rows' | jq '.[].doc.username' | sed -e 's/^"//' -e 's/"$//')	
+	OUTPUT=$(curl -k --request GET --url https://${CUSTOMER_HOST}:${CUSTOMER_PORT}/customer/rest/customer --header "Authorization: Bearer ${ACCESS_TOKEN}" --header "Content-Type: application/json")
+	echo "Output $OUTPUT"
+	CURL=$(curl -k --request GET --url https://${CUSTOMER_HOST}:${CUSTOMER_PORT}/customer/rest/customer --header "Authorization: Bearer ${ACCESS_TOKEN}" --header "Content-Type: application/json" | jq -r '.docs' | jq '.[].username' | sed -e 's/^"//' -e 's/"$//')	
 	echo "Found user with name: $CURL"
 
 	# echo "Get Pods"

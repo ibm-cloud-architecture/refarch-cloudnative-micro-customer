@@ -1,13 +1,13 @@
-# Cloudant
+# CouchDB
 protocol=http
 host=localhost
-port=8080
+port=5984
 
 user=admin
-password=pass
+password=passw0rd
 
 database=customers
-application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
+application.rest.client.CouchDBClientService/mp-rest/url=http://localhost:5984
 
 #Auth
 auth_health=https://localhost:9443/health

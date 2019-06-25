@@ -1,16 +1,8 @@
 sudo: required
 language: java
-env:
-  global:
-    - zipkinHost=localhost
-    - zipkinPort=9411
-    - cloudantPort=8080
-    - customerHttpPort=9084
-    - customerHttpsPort=9445
-    - jwtid=myMpJwt
-    - IMAGE_NAME=customer-mp
-    - TAG=travis
-    - RELEASE_NAME=cust
+dist: xenial
+jdk:
+  - openjdk8
 stages:
   - local build and test
   - kubernetes build, deploy, and test
@@ -20,32 +12,33 @@ jobs:
       services:
       - docker
       env:
+        - zipkinHost=localhost
+        - zipkinPort=9411
         - jwksUri=https://localhost:9443/oidc/endpoint/OP/jwk
         - jwksIssuer=https://localhost:9443/oidc/endpoint/OP
-        - host=localhost
-        - port=8080
-        - application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
-        - auth_health=https://localhost:9443/health
+        - administratorRealm=https://localhost:9443/oidc/endpoint/OP
+        - customerHttpPort=9084
+        - customerHttpsPort=9445        
+        - CDB_PORT=5984
       before_script:
-      # Pull the Cloudant Docker image
-      - docker pull ibmcom/cloudant-developer
-      # Create a network for container communication (Populate to Cloudant)
-      - docker network create cloudant
-      # Setup and run Cloudant (Volumes not supported on Travis however)
-      - docker run --detach --volume cloudant:/srv --name cloudant-developer --publish $cloudantPort:80 --hostname cloudant.dev --network cloudant ibmcom/cloudant-developer
-      # Wait for Cloudant to Start
-      - sleep 25
-      # Check Cloudant status
-      - curl http://localhost:$cloudantPort
-      # Fetch network IP: Inspect Networt | Fetch Gateway | Parse IP | Remove Quotes
-      - export GATEWAY=$(docker network inspect cloudant | grep "Gateway" | awk '/"/{print $2}' | sed -e 's/^"//' -e 's/"$//')
-      # Populate the DB to test user creation and searching (Will replace with a pull and run when uploaded to Dockerhub)
-      - cd cloudant/
+      # Pull the CouchDB Docker image
+      - docker pull couchdb:2.1.2
+      # Setup and run CouchDB
+      - docker run -p ${CDB_PORT}:5984 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb --hostname cloudant.dev
+      # Wait for CouchDB to Start
+      - sleep 20
+      # Check CouchDB status
+      - curl http://localhost:$CDB_PORT
+      # Fetch network IP: Use jq to parse and use sed to remove quotes
+      - export GATEWAY=$(docker network inspect bridge | jq '.[].IPAM.Config' | jq '.[].Gateway' | sed 's/"//g')
+      # Create the populate image
+      - cd populate/
       - docker build -t populate .
-      - docker run populate $GATEWAY $cloudantPort
+      - docker run populate $GATEWAY $CDB_PORT
+      # Verify local DB population
+      - chmod +x ./test_populate.sh
+      - sudo ./test_populate.sh
       - cd -
-      # Verify DB population
-      - curl http://admin:pass@localhost:$cloudantPort/customers/_design/username_searchIndex/_search/usernames\?query\=usernames:user\&include_docs\=true
       # Define a Keystore
       - bash scripts/keygen.sh
       - sudo cp -r keystorevol /etc/
@@ -56,7 +49,7 @@ jobs:
       - cd -
       # Create Auth, put keystore in, and start it
       - docker pull ibmcase/auth-mp:v3.0.0
-      - docker create --name auth --publish 9443:9443 --publish 9080:9080 ibmcase/auth-mp:v3.0.0
+      - docker create --name auth -p 9443:9443 -p 9080:9080 ibmcase/auth-mp:v3.0.0
       - docker cp keystorevol auth:/etc/
       - docker start auth
       script:
@@ -64,7 +57,7 @@ jobs:
       - mvn clean install
       # Start Application
       - mvn liberty:start-server -DtestServerHttpPort=$customerHttpPort -DtestServerHttpsPort=$customerHttpsPort
-      - sleep 25
+      - sleep 20
       # Run Catalog API Test
       - bash scripts/api_tests.sh localhost $customerHttpsPort
     - stage: kubernetes build, deploy, and test
@@ -72,38 +65,45 @@ jobs:
       - docker
       env:
       - CHANGE_MINIKUBE_NONE_USER=true
+      - RELEASE_NAME=cust
+      - IMAGE_NAME=customer
+      - IMAGE_TAG=travis
       install:
       - true
       before_script:
-      # Install nsenter, which is needed for minikube to work
-      - bash scripts/install_minikube_and_helm.sh
-      # Define a local Keystore
-      - bash scripts/keygen.sh
-      - sudo cp -r keystorevol /etc/
+      - curl -O https://raw.githubusercontent.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/microprofile/utility_scripts/install_minikube_and_helm.sh
+      - chmod +x install_minikube_and_helm.sh
+      - bash install_minikube_and_helm.sh
+      # Add helm repos
+      - helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+      - helm repo add services-bc-mp https://raw.githubusercontent.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/microprofile/docs/charts/services-bc-mp
       # Run Kubernetes Job and run Auth (May not need keystore chart)
       - helm install --name keystore services-bc-mp/keystore
       - helm install --name auth services-bc-mp/auth
+      - helm upgrade --install couchdb --version 0.2.2 --set fullnameOverride=customer --set service.externalPort=5984 --set createAdminSecret=true --set adminUsername=admin --set adminPassword=passw0rd --set clusterSize=1 --set persistentVolume.enabled=false incubator/couchdb
+      # Wait for CouchDB to be ready
+      - sleep 25
       - MINIKUBE_IP=$(minikube ip)
       - AUTH_NODE_PORT=$(kubectl get service auth-auth -o=jsonpath='{.spec.ports[1].nodePort}')
+      # Define a Keystore
+      - bash scripts/keygen.sh
+      - sudo cp -r keystorevol /etc/
       script:
       # Maven Build
       - mvn clean install
       # Build Docker image
-      - docker build -t "${IMAGE_NAME}:${TAG}" .
-      # Install Customer
-      - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --set image.repository=${IMAGE_NAME} --set image.tag=${TAG} --name ${RELEASE_NAME} ./chart/customer/
-      # - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --name ${RELEASE_NAME} ./chart/customer/
+      - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+      # Create the populate image
+      - cd populate/
+      - docker build -t populate . # <-- Temporary solution until populate image is updated. Or maybe we keep.
+      - cd -
+      # Install Customer <-- Reminder to update the load_data.yaml to point to agreed populate image later
+      - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --set image.repository=$IMAGE_NAME --set image.tag=$IMAGE_TAG --name $RELEASE_NAME ./chart/customer/
       # Wait for Customer to be ready
       - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
       - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')
       - echo $READY
       - until [ -n "$READY" ] && [ ${READY} -ge 1 ]; do READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}'); kubectl get deployments -o wide; echo "Waiting for customer to be ready"; sleep 10; done
-      # Wait for Cloudant to be ready
-      - READY=$(kubectl get deployments ${RELEASE_NAME}-cloudant -o yaml | grep "readyReplicas" | awk '{print $2}')
-      - echo $READY
-      - until [ -n "$READY" ] && [ ${READY} -ge 1 ]; do READY=$(kubectl get deployments ${RELEASE_NAME}-cloudant -o yaml | grep "readyReplicas" | awk '{print $2}'); kubectl get deployments -o wide; echo "Waiting for cloudant to be ready"; sleep 10; done
-      # Wait for cust deployment to start accepting connections
-      - sleep 35
       # Run auth API Test
       - CUST_NODE_PORT=$(kubectl get service ${RELEASE_NAME}-customer -o=jsonpath='{.spec.ports[1].nodePort}')
       - bash scripts/api_tests.sh $MINIKUBE_IP $CUST_NODE_PORT $MINIKUBE_IP $AUTH_NODE_PORT

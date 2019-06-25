@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Release.Name }}-{{ .Chart.Name }}-config
-data:
-  jvm.options: |
-    -Dapplication.rest.client.CloudantClientService/mp-rest/url=http://{{ .Release.Name }}-{{ .Values.service.cloudantservicename }}:{{ .Values.cloudant.port }}

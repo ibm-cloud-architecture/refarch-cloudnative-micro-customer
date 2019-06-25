@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-populate"
+spec:
+  template:
+    spec:
+      containers:
+      - name: populate
+        image: populate
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh", "-c", "python3 /tmp/populate.py  {{ .Values.couchdb.host }} {{ .Values.couchdb.port }}"]
+      restartPolicy: Never
