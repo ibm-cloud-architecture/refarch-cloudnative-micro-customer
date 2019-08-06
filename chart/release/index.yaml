@@ -1,0 +1,15 @@
+apiVersion: v1
+entries:
+  customer:
+  - apiVersion: v1
+    created: "2019-08-06T14:24:16.572135-05:00"
+    description: A Helm chart for Kubernetes
+    digest: 81307176e4559a2d2cb2187c2669472681375dde27aeb0071faa93122a21528c
+    home: https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/microprofile
+    name: customer
+    sources:
+    - https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer/tree/microprofile
+    urls:
+    - customer-0.0.1.tgz
+    version: 0.0.1
+generated: "2019-08-06T14:24:16.570258-05:00"
