@@ -39,15 +39,23 @@ jwt:
   id: myMpJwt
 
 couchdb:
+  clusterSize: 1
+  fullnameOverride: customer
   host: customer-svc-couchdb
-  protocol: http
-  port: 5984
-  existingSecret:
   adminUsername: admin
   adminPassword: passw0rd
   database: customers
+  port: 5984
+  service:
+    externalPort: 5984
+    type: NodePort
+    annotations:
+      sidecar.istio.io/inject: "false"
   # Used when using Istio
-  headless: customer-couchdb-couchdb
+  # headless: customer-couchdb-couchdb
+  # service:
+  #   annotations:
+  #     sidecar.istio.io/inject: "false"
 
 ## Persist data to a persistent volume
 persistence:
@@ -61,5 +69,38 @@ persistence:
   ##
   #storageClass: "-"
   accessMode: ReadWriteOnce
+
+labels:
+  app: customer
+  version: v1
+  tier: backend
+  implementation: microprofile
+
+global:
+  istio:
+    enabled: false
+    gateway: 
+    name: customer-gateway
+
+istio:
+  enabled: false
+  # ISTIO_MUTUAL, SIMPLE, DISABLE
+  # mTLS: ISTIO_MUTUAL
+  mTLS: SIMPLE
+  # LEAST_CONN, ROUND_ROBIN
+  loadBalancer: LEAST_CONN
+  gateway:
+    enabled: false
+    name: customer-gateway
+    hosts:
+      - "customer.bluecompute.com"
+    TLS:
+      enabled: false
+      # SIMPLE, MUTUAL
+      mode: SIMPLE
+      httpsRedirect: true
+      serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+      privateKey: /etc/istio/ingressgateway-certs/tls.key
+      caCertificates: /etc/istio/ingressgateway-ca-certs/ca-chain.cert.pem
 
 travis: false

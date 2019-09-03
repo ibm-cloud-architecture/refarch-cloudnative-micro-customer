@@ -80,9 +80,6 @@ jobs:
       # Run Kubernetes Job and run Auth (May not need keystore chart)
       - helm install --name keystore services-bc-mp/keystore
       - helm install --name auth services-bc-mp/auth
-      - helm upgrade --install couchdb --version 0.2.2 --set fullnameOverride=customer --set service.externalPort=5984 --set createAdminSecret=true --set adminUsername=admin --set adminPassword=passw0rd --set clusterSize=1 --set persistentVolume.enabled=false incubator/couchdb
-      # Wait for CouchDB to be ready
-      - sleep 25
       - MINIKUBE_IP=$(minikube ip)
       - AUTH_NODE_PORT=$(kubectl get service auth-auth -o=jsonpath='{.spec.ports[1].nodePort}')
       # Define a Keystore
@@ -98,7 +95,12 @@ jobs:
       - docker build -t populate . # <-- Temporary solution until populate image is updated. Or maybe we keep.
       - cd -
       # Install Customer <-- Reminder to update the load_data.yaml to point to agreed populate image later
+      - helm dependency update ./chart/customer
       - helm install --set travis=true --set service.minikubeIp=$MINIKUBE_IP --set service.authKubePort=$AUTH_NODE_PORT --set image.repository=$IMAGE_NAME --set image.tag=$IMAGE_TAG --name $RELEASE_NAME ./chart/customer/
+      # Wait for CouchDB to be installed and populated from Customer installation
+      - COMPLETION=$( kubectl get jobs -o json | jq '.items | .[] | select(.metadata.name=="cust-populate") | .status.succeeded' )
+      - echo $COMPLETION
+      - until [ -n "$COMPLETION" ] && [ $COMPLETION -ge 1 ]; do COMPLETION=$( kubectl get jobs -o json | jq '.items | .[] | select(.metadata.name=="cust-populate") | .status.succeeded' ); kubectl get pods -o wide; echo "Waiting for customer populate job to be completed"; sleep 10; done
       # Wait for Customer to be ready
       - kubectl get deployments ${RELEASE_NAME}-customer -o yaml
       - READY=$(kubectl get deployments ${RELEASE_NAME}-customer -o yaml | grep "readyReplicas" | awk '{print $2}')

@@ -23,3 +23,7 @@ src/main/liberty/config/server.env
 /bin/
 .gradle/
 build/
+
+chart/customer/charts
+*.tgz
+*.lock

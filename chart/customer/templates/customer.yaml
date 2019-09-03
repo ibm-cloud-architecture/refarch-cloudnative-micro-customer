@@ -3,9 +3,7 @@ kind: Service
 metadata:
   name: "{{ .Release.Name }}-{{ .Values.service.name }}"
   labels:
-    chart: "{{ .Release.Name }}-{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
-    release: {{ .Release.Name }}
-    implementation: microprofile
+    {{- include "customer.labels" . | indent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -14,11 +12,7 @@ spec:
   - name: https
     port: {{ .Values.service.servicePortHttps }}
   selector:
-    app: bluecompute
-    micro: customer
-    service: server
-    release: {{ .Release.Name }}
-    implementation: microprofile
+    {{- include "customer.labels" . | indent 4 }}
 
 ---
 
@@ -27,24 +21,13 @@ kind: Deployment
 metadata:
   name: "{{ .Release.Name }}-{{ .Values.service.name }}"
   labels:
-    app: bluecompute
-    micro: customer
-    service: server
-    tier: backend
-    release: {{ .Release.Name }}
-    implementation: microprofile
-    chart: '{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}'
+    {{- include "customer.labels" . | indent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
       labels:
-        app: bluecompute
-        micro: customer
-        service: server
-        tier: backend
-        release: {{ .Release.Name }}
-        implementation: microprofile
+        {{- include "customer.labels" . | indent 8 }}
 
     spec:
       containers:
@@ -81,13 +64,13 @@ spec:
             value: "https://{{ .Values.service.minikubeIp }}:{{ .Values.service.authKubePort }}/health"
         {{ else }}
           - name: jwksUri
-            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
+            value: "https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
           - name: jwksIssuer
-            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP"
+            value: "https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP"
           - name: administratorRealm
-            value: "user:https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/user"
+            value: "user:https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/user"
           - name: auth_health
-            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/health"
+            value: "https://auth-{{ .Values.service.auth }}:9443/health"
         {{ end }}
           - name: host
             value: "{{ .Values.service.dbService }}"
