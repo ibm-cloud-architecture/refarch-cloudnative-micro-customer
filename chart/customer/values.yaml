@@ -51,11 +51,6 @@ couchdb:
     type: NodePort
     annotations:
       sidecar.istio.io/inject: "false"
-  # Used when using Istio
-  # headless: customer-couchdb-couchdb
-  # service:
-  #   annotations:
-  #     sidecar.istio.io/inject: "false"
 
 ## Persist data to a persistent volume
 persistence:

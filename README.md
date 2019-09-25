@@ -1,6 +1,6 @@
 ###### refarch-cloudnative-micro-customer
 
-## Microprofile based Microservice Apps Integration with IBM Cloudant
+## Microprofile based Microservice Apps Integration with Apache CouchDB 
 
 This repository contains the **MicroProfile** implementation of the **Customer Service** which is a part of 'IBM Cloud Native Reference Architecture' suite, available [here](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/microprofile).
 
@@ -24,16 +24,16 @@ This repository contains the **MicroProfile** implementation of the **Customer S
 
 ### Introduction
 
-This project is built to demonstrate how to build Customer Microservices applications using Microprofile. This application provides basic operations of creating and querying customer profiles from [IBM Cloudant](https://www.ibm.com/cloud/cloudant) NoSQL database as part of the Customer Profile function of BlueCompute. Additionally the Auth Microservice calls this microservice to perform Customer username/password authentication.
+This project is built to demonstrate how to build Customer Microservices applications using Microprofile. This application provides basic operations of creating and querying customer profiles from [Apache's CouchDB](http://couchdb.apache.org/) NoSQL database as part of the Customer Profile function of BlueCompute. Additionally the Auth Microservice calls this microservice to perform Customer username/password authentication.
 
 - Based on [MicroProfile](https://microprofile.io/).
 - OAuth protect the microservice REST API using JWT token signed with a HS256 shared secret.
-- Persist Customer data in an [IBM Cloudant](https://www.ibm.com/cloud/cloudant) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
+- Persist Customer data in an [Apache's CouchDB](http://couchdb.apache.org/) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
 - Deployment options for Minikube environment and ICP.
 
 ### How it works
 
-The Customer Microservice serves 'IBM Cloud Native Reference Architecture' suite, available at https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes, Microservice-based reference application. Though it is a part of a bigger application, Customer service is itself an application in turn that queries the Cloudant Database.
+The Customer Microservice serves 'IBM Cloud Native Reference Architecture' suite, available at https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes, Microservice-based reference application. Though it is a part of a bigger application, Customer service is itself an application in turn that queries the CouchDB Database.
 
 ### API Endpoints
 

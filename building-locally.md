@@ -3,7 +3,7 @@
 ## Table of Contents
 
 * [Building the app](#building-the-app)
-* [Setting up Cloudant](#setting-up-cloudant)
+* [Setting up CouchDB](#setting-up-couchdb)
 * [Setting up Zipkin](#setting-up-zipkin) (Optional)
 * [Running the app and stopping it](#running-the-app-and-stopping-it)
 
@@ -76,64 +76,39 @@ By default, the application runs on [WebSphere Liberty with Web Profile](https:/
 [INFO] ------------------------------------------------------------------------
  ```
 
-## Setting up Cloudant
+## Setting up CouchDB
 
-To set up the Cloudant database locally, we are run it as a docker container. You need [Docker](https://www.docker.com/) as a prerequisite.
-To run Cloudant on docker locally, run the commands below.
+We use the official CouchDB image to set up the CouchDB database locally. You need [Docker](https://www.docker.com/) as a prerequisite.
+To run CouchDB on docker locally, run the commands below.
 
-1. Pull the Cloudant docker image:
+1. Pull the official CouchDB docker image:
 
 	```
-	docker pull ibmcom/cloudant-developer
+	docker pull couchdb
 	```
 
 2. Run the docker image:
 
 	```
-	docker run \
-	       --detach \
-	       --volume cloudant:/srv \
-	       --name cloudant-developer \
-	       --publish 8080:80 \
-	       --hostname cloudant.dev \
-	       ibmcom/cloudant-developer
+	docker run -d -e COUCHDB_USER='admin' -e COUCHDB_PASSWORD='passw0rd' -p 5984:5984 couchdb
 	```
 
-* If your database isn't populated already, you can run a script to populate the database with default users. By doing so, you will have one admin user named `user` and one basic user named `foo` created in your Cloudant database. There are three approaches:
+* If your database isn't populated already, you can run a script to populate the database with default users. By doing so, you will have one admin user named `user` and one basic user named `foo` created in your CouchDB database. There are three approaches:
 
-	1. You can access the Cloudant dashboard at `http://localhost:8080/dashboard.html`, login with the credentials `admin` and `pass` and then create the docs as you can in the script [populate.py](./cloudant/populate.py).
-
-	2. Run the `populate.py` script directly. This will require you to have the Cloudant Python library installed, which you can obtain with `pip install cloudant`:  
+	1. Run the `populate.py` script directly. This will require you to have the Cloudant Python library installed, which you can obtain with `pip install cloudant`:  
 	
 		```
-		cd cloudant
-		python3 populate.py localhost 8080
+		cd populate
+		python3 populate.py localhost 5984
 		```
 		
-	3. Run the `populate.py` script in a Docker container. This is probably the most complex approach but works if the previous options do not. The second step requires `cloudant-developer` to run on a network, so `docker stop` and `docker rm` your img if you created it already.
-
-		```
-		# Create a Docker network for container to container communication
-		docker network create cloudant
+	2. 	1. You can access the newly created an populated `customers` database at `http://localhost:5984/customers`.
 		
-		# The cloudant-developer container must run on the network
-		docker run --detach --volume cloudant:/srv --name cloudant-developer --publish $cloudantPort:80 --hostname cloudant.dev --network cloudant ibmcom/cloudant-developer
-		
-		# Fetch the IP
-		export GATEWAY=$(docker network inspect cloudant | grep "Gateway" | awk '/"/{print $2}' | sed -e 's/^"//' -e 's/"$//')
-		
-		# Build the populate image (Will upload to Dockerhub soon)
-		cd cloudant/
-		docker build -t populate .
-		
-		# And run it
-		docker run populate $GATEWAY 8080
-		```
 
 In this case, you will need to set this property in [microprofile-config.properties](./src/main/resources/META-INF/microprofile-config.properties)
 
 ```
-application.rest.client.CloudantClientService/mp-rest/url=http://localhost:8080
+application.rest.client.CouchDBClientService/mp-rest/url=http://localhost:5984
 ```
 
 This requires a rebuild, run `mvn clean install`.
