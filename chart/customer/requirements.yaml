@@ -1,4 +1,4 @@
 dependencies:
   - name: couchdb
-    version: 0.2.2
-    repository: http://storage.googleapis.com/kubernetes-charts-incubator
+    version: 2.4.0
+    repository: https://apache.github.io/couchdb-helm

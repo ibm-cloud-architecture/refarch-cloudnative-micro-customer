@@ -25,5 +25,4 @@ src/main/liberty/config/server.env
 build/
 
 chart/customer/charts
-*.tgz
 *.lock
