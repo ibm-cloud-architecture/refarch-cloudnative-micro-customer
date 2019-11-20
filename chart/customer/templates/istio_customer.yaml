@@ -52,4 +52,16 @@ spec:
         host: {{ .Release.Name }}-{{ .Values.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
         port:
           number: {{ .Values.service.servicePort }}
+    retries:
+      attempts: 4
+      retryOn: 5xx
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.service.name }}-mpft-config
+data:
+  MP_Fault_Tolerance_NonFallback_Enabled: "false"
 {{ end }}

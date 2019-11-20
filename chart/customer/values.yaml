@@ -98,4 +98,7 @@ istio:
       privateKey: /etc/istio/ingressgateway-certs/tls.key
       caCertificates: /etc/istio/ingressgateway-ca-certs/ca-chain.cert.pem
 
+ingress:
+  path: /customer/rest
+
 travis: false
