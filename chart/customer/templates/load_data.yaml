@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}-populate"
+  name: "{{ .Release.Name }}-{{ .Values.service.name }}-populate"
 spec:
   template:
     # Used with istio
