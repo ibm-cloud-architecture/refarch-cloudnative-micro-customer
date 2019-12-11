@@ -65,7 +65,7 @@ jobs:
       - docker
       env:
       - CHANGE_MINIKUBE_NONE_USER=true
-      - RELEASE_NAME=cust
+      - RELEASE_NAME=customer
       - IMAGE_NAME=customer
       - IMAGE_TAG=travis
       install:

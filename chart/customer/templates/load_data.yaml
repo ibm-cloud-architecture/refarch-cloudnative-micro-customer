@@ -13,5 +13,5 @@ spec:
       - name: populate
         image: populate
         imagePullPolicy: IfNotPresent
-        command: ["/bin/sh", "-c", "python3 /tmp/populate.py  {{ .Values.couchdb.host }} {{ .Values.couchdb.port }}"]
+        command: ["/bin/sh", "-c", "python3 /tmp/populate.py  {{ .Values.couchdb.host }} {{ .Values.couchdb.service.externalPort }}"]
       restartPolicy: Never
