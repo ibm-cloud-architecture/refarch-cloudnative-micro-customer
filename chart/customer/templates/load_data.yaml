@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}-populate"
+  name: "{{ .Release.Name }}-{{ .Values.service.name }}-populate"
 spec:
   template:
     # Used with istio
@@ -13,5 +13,5 @@ spec:
       - name: populate
         image: populate
         imagePullPolicy: IfNotPresent
-        command: ["/bin/sh", "-c", "python3 /tmp/populate.py  {{ .Values.couchdb.host }} {{ .Values.couchdb.port }}"]
+        command: ["/bin/sh", "-c", "python3 /tmp/populate.py  {{ .Values.couchdb.host }} {{ .Values.couchdb.service.externalPort }}"]
       restartPolicy: Never
