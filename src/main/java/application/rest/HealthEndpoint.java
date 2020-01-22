@@ -14,15 +14,15 @@ import org.eclipse.microprofile.health.Health;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 
+
 @Health
 @ApplicationScoped
-
 public class HealthEndpoint implements HealthCheck {
-	
-	private Config config = ConfigProvider.getConfig();  
+
+	private Config config = ConfigProvider.getConfig();
 	private String auth_url = config.getValue("auth_health", String.class);
-    private String CouchDB_url = config.getValue("application.rest.client.CouchDBClientService/mp-rest/url", String.class);
-    		
+	private String CouchDB_url = "http://" + System.getenv("COUCHDB_HOST") + ":" + System.getenv("COUCHDB_PORT");
+
 	@Override
 	public HealthCheckResponse call() {
 		// TODO Auto-generated method stub
@@ -45,6 +45,7 @@ public class HealthEndpoint implements HealthCheck {
 		// Checking if the CouchDB database is UP
 		URL url;
 		try {
+			System.out.println("CouchDB URL: " + CouchDB_url);
 			url = new URL(CouchDB_url); 
 			HttpURLConnection con = (HttpURLConnection)url.openConnection();
 			if(con!=null){
@@ -69,6 +70,7 @@ public class HealthEndpoint implements HealthCheck {
 		// Checking if the Auth service is UP
 		URL url;
 		try {
+			System.out.println("AUTH_URL: " + auth_url );
 			url = new URL(auth_url); 
 			HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
 			if(con!=null){

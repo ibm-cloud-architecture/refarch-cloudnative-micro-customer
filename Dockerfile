@@ -1,4 +1,4 @@
-FROM websphere-liberty:18.0.0.4-webProfile8
+FROM websphere-liberty:19.0.0.2-webProfile8
 
 MAINTAINER IBM Java engineering at IBM Cloud
 

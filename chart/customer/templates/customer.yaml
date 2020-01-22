@@ -36,7 +36,7 @@ spec:
       - name: "{{ .Chart.Name }}"
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         # image: customer
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         readinessProbe:
           httpGet:
             path: /health
@@ -44,7 +44,6 @@ spec:
             scheme: HTTPS
           initialDelaySeconds: 60
           periodSeconds: 20
-          failureThreshold: 6
         livenessProbe:
           httpGet:
             path: /
@@ -52,7 +51,6 @@ spec:
             scheme: HTTPS
           initialDelaySeconds: 60
           periodSeconds: 10
-          failureThreshold: 6
         env:
           {{ if .Values.travis }} 
           - name: jwksUri
@@ -65,16 +63,14 @@ spec:
             value: "https://{{ .Values.service.minikubeIp }}:{{ .Values.service.authKubePort }}/health"
         {{ else }}
           - name: jwksUri
-            value: "https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
+            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/jwk"
           - name: jwksIssuer
-            value: "https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP"
+            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP"
           - name: administratorRealm
-            value: "user:https://auth-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/user"
+            value: "user:https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/oidc/endpoint/OP/user"
           - name: auth_health
-            value: "https://auth-{{ .Values.service.auth }}:9443/health"
+            value: "https://{{ .Release.Name }}-{{ .Values.service.auth }}:9443/health"
         {{ end }}
-          - name: host
-            value: "{{ .Values.service.dbService }}"
           - name: PORT
             value: "{{ .Values.service.servicePort }}"
           - name: RELEASE_NAME
@@ -85,6 +81,10 @@ spec:
             value: "{{ .Release.Name }}-{{ .Values.service.zipkinHost }}"
           - name: zipkinPort
             value: "{{ .Values.service.zipkinPort }}"
+          - name: COUCHDB_HOST
+            value: "{{ .Release.Name }}-{{ .Values.couchdb.hostSuffix }}"
+          - name: COUCHDB_PORT
+            value: "{{ .Values.couchdb.port }}"
         resources:
           requests:
             memory: "{{ .Values.image.resources.requests.memory }}"

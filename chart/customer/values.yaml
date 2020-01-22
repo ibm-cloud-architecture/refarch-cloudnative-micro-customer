@@ -14,7 +14,6 @@ image:
 
 service:
   name: customer
-  dbService: customer-svc-couchdb
   type: NodePort
   servicePort: 9080
   servicePortHttps: 9443
@@ -40,7 +39,7 @@ jwt:
 
 couchdb:
   clusterSize: 1
-  host: customer-svc-couchdb
+  hostSuffix: svc-couchdb
   adminUsername: admin
   adminPassword: passw0rd
   database: customers

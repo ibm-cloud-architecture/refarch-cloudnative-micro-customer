@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: populate
-        image: populate
+        image: ibmcase/populate
         imagePullPolicy: IfNotPresent
-        command: ["/bin/sh", "-c", "python3 /tmp/populate.py  {{ .Values.couchdb.host }} {{ .Values.couchdb.service.externalPort }}"]
+        command: ["/bin/sh", "-c", "python3 /tmp/populate.py  {{ .Release.Name }}-{{ .Values.couchdb.hostSuffix }} {{ .Values.couchdb.port }}"]
       restartPolicy: Never

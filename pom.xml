@@ -15,7 +15,6 @@
         <jwksUri>https://auth:9443/oidc/endpoint/OP/jwk</jwksUri>
         <jwksIssuer>https://auth:9443/oidc/endpoint/OP</jwksIssuer>
         <administratorRealm>https://auth:9443/oidc/endpoint/OP/user</administratorRealm>
-
         <app.name>customer</app.name>
         <testServerHttpPort>9080</testServerHttpPort>
         <testServerHttpsPort>9443</testServerHttpsPort>
@@ -24,7 +23,7 @@
         <packaging.type>usr</packaging.type>
         <groupId.liberty-runtime>com.ibm.websphere.appserver.runtime</groupId.liberty-runtime>
         <artifactId.liberty-runtime>wlp-webProfile8</artifactId.liberty-runtime>
-        <version.liberty-runtime>18.0.0.4</version.liberty-runtime>
+        <version.liberty-runtime>19.0.0.2</version.liberty-runtime>
     </properties>
 
     <dependencies>

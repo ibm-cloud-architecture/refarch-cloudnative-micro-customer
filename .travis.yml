@@ -18,23 +18,25 @@ jobs:
         - jwksIssuer=https://localhost:9443/oidc/endpoint/OP
         - administratorRealm=https://localhost:9443/oidc/endpoint/OP
         - customerHttpPort=9084
-        - customerHttpsPort=9445        
-        - CDB_PORT=5984
+        - customerHttpsPort=9445      
+        - COUCHDB_HOST=localhost
+        - COUCHDB_PORT=5984
+        - POPULATE_IMAGE=ibmcase/populate
       before_script:
       # Pull the CouchDB Docker image
       - docker pull couchdb:2.1.2
       # Setup and run CouchDB
-      - docker run -p ${CDB_PORT}:5984 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb --hostname cloudant.dev
+      - docker run -p ${COUCHDB_PORT}:5984 -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=passw0rd -d couchdb --hostname cloudant.dev
       # Wait for CouchDB to Start
       - sleep 20
       # Check CouchDB status
-      - curl http://localhost:$CDB_PORT
+      - curl http://localhost:$COUCHDB_PORT
       # Fetch network IP: Use jq to parse and use sed to remove quotes
       - export GATEWAY=$(docker network inspect bridge | jq '.[].IPAM.Config' | jq '.[].Gateway' | sed 's/"//g')
       # Create the populate image
       - cd populate/
-      - docker build -t populate .
-      - docker run populate $GATEWAY $CDB_PORT
+      - docker build -t ${POPULATE_IMAGE} .
+      - docker run ${POPULATE_IMAGE} $GATEWAY $COUCHDB_PORT
       # Verify local DB population
       - chmod +x ./test_populate.sh
       - sudo ./test_populate.sh
@@ -68,6 +70,7 @@ jobs:
       - RELEASE_NAME=customer
       - IMAGE_NAME=customer
       - IMAGE_TAG=travis
+      - POPULATE_IMAGE=ibmcase/populate
       install:
       - true
       before_script:
@@ -93,7 +96,7 @@ jobs:
       - docker build -t $IMAGE_NAME:$IMAGE_TAG .
       # Create the populate image
       - cd populate/
-      - docker build -t populate . # <-- Temporary solution until populate image is updated. Or maybe we keep.
+      - docker build -t ${POPULATE_IMAGE} . # <-- Temporary solution until populate image is updated. Or maybe we keep.
       - cd -
       # Install Customer <-- Reminder to update the load_data.yaml to point to agreed populate image later
       - helm dependency update ./chart/customer

@@ -1,6 +1,8 @@
 package application.rest;
 
 import java.time.temporal.ChronoUnit;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -29,8 +31,11 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.opentracing.Traced;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
+
 
 import application.rest.client.CouchDBClientService;
+import application.rest.client.UnknownCustomerExceptionManager;
 import model.Customer;
 @Path("/customer")
 @RequestScoped
@@ -48,10 +53,25 @@ public class CustomerService {
 
     @Inject
     private JsonWebToken jwt;
+    
+    String temp = "http://" + System.getenv("COUCHDB_HOST") + ":" + System.getenv("COUCHDB_PORT");
+    URL apiUrl = createApiUrl(temp);
+    CouchDBClientService cdb =
+        RestClientBuilder.newBuilder()
+                        .baseUrl(apiUrl)
+                        .register(UnknownCustomerExceptionManager.class)
+                        .build(CouchDBClientService.class);
 
-    @Inject
-    @RestClient
-    private CouchDBClientService cdb;
+    private URL createApiUrl(String url) { 
+        URL apiUrl = null;
+        try {
+            apiUrl = new URL(temp);
+        }
+        catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return apiUrl;
+    }
 
     @Timeout(value = 2, unit = ChronoUnit.SECONDS)
     @Retry(maxRetries = 2, maxDuration= 2000)
@@ -81,8 +101,7 @@ public class CustomerService {
     @Counted(name="Customer",
             absolute = true,
             displayName="Customer Call count",
-            description="Number of times the Customer call happened.",
-            monotonic=true)
+            description="Number of times the Customer call happened.")
     @Metered(name="CustomerMeter",
             displayName="Customer Call Frequency",
             description="Rate of the calls made to CouchDB")
