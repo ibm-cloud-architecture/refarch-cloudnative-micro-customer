@@ -14,4 +14,6 @@ spec:
         image: ibmcase/populate
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh", "-c", "python3 /tmp/populate.py  {{ .Release.Name }}-{{ .Values.couchdb.hostSuffix }} {{ .Values.couchdb.port }}"]
+      completions: 1
+      activeDeadlineSeconds: 600
       restartPolicy: Never

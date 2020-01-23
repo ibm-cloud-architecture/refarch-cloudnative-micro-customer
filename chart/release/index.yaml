@@ -2,9 +2,9 @@ apiVersion: v1
 entries:
   customer:
   - apiVersion: v1
-    created: "2020-01-22T14:11:07.424086-06:00"
+    created: "2020-01-22T16:38:29.691459-06:00"
     description: A Helm chart for Kubernetes
-    digest: f6439f5d0f90ad732d226325531e27acbd311ae7bc1f2479c8f71aff6998d422
+    digest: d2e572b0baf8043611ebe17f55436526fa5386f6045995b4336c990d4d054ea7
     home: https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/microprofile
     name: customer
     sources:
@@ -13,7 +13,7 @@ entries:
     - customer-0.1.2.tgz
     version: 0.1.2
   - apiVersion: v1
-    created: "2020-01-22T14:11:07.422554-06:00"
+    created: "2020-01-22T16:38:29.690819-06:00"
     description: A Helm chart for Kubernetes
     digest: adf21351b6687962856df80aaa71d2cc792b9fb82946091756cab9ed88e317eb
     home: https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/microprofile
@@ -24,7 +24,7 @@ entries:
     - customer-0.1.1.tgz
     version: 0.1.1
   - apiVersion: v1
-    created: "2020-01-22T14:11:07.418833-06:00"
+    created: "2020-01-22T16:38:29.688953-06:00"
     description: A Helm chart for Kubernetes
     digest: 5624b6ec9885c712fb91e0ba58eac9b2c54f096df2caa62e1c2eaffc0c5c2e8d
     home: https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/microprofile
@@ -35,7 +35,7 @@ entries:
     - customer-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v1
-    created: "2020-01-22T14:11:07.416005-06:00"
+    created: "2020-01-22T16:38:29.687091-06:00"
     description: A Helm chart for Kubernetes
     digest: 81307176e4559a2d2cb2187c2669472681375dde27aeb0071faa93122a21528c
     home: https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes/tree/microprofile
@@ -45,4 +45,4 @@ entries:
     urls:
     - customer-0.0.1.tgz
     version: 0.0.1
-generated: "2020-01-22T14:11:07.414069-06:00"
+generated: "2020-01-22T16:38:29.683591-06:00"
