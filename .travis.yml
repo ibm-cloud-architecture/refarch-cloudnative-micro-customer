@@ -58,7 +58,7 @@ jobs:
       # Maven Build
       - mvn clean install
       # Start Application
-      - mvn liberty:start-server -DtestServerHttpPort=$customerHttpPort -DtestServerHttpsPort=$customerHttpsPort
+      - mvn liberty:start -DtestServerHttpPort=$customerHttpPort -DtestServerHttpsPort=$customerHttpsPort
       - sleep 20
       # Run Catalog API Test
       - bash scripts/api_tests.sh localhost $customerHttpsPort
